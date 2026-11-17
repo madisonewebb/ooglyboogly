@@ -115,3 +115,7 @@ secrets will be committed only as Sealed Secrets, which only the cluster can dec
 
 Not yet enabled. Litestream (≥ 0.5.2) will replicate SQLite to the NAS over SFTP; see the TODO in
 `manifests/base/kustomization.yaml`.
+
+## License
+
+[MIT](LICENSE)

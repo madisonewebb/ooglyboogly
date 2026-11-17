@@ -2,6 +2,7 @@
   "name": "rollhouse",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@12.21.0",
   "engines": {
