@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.kubeconfig
+kubeconfig*
+test-results/
+playwright-report/
+blob-report/
+.tilt-*/
+data/
+*.db
+*.db-*
+.DS_Store
