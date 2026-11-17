@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rollhouse
+spec:
+  replicas: 1
+  # SQLite on a ReadWriteOnce volume allows exactly one writer.
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      # local-path binds the volume to whichever node the pod first lands on,
+      # and it must never be the NAS.
+      nodeSelector:
+        kubernetes.io/hostname: k3s-control-plane
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: rollhouse
+          image: ghcr.io/madisonewebb/rollhouse
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: rollhouse-config
+          env:
+            - name: PORT
+              value: '8080'
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: rollhouse-data
+        - name: tmp
+          emptyDir: {}

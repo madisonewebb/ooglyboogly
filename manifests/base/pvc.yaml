@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rollhouse-data
+  annotations:
+    # ArgoCD must never remove the game database.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
