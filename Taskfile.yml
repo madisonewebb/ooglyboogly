@@ -1,0 +1,87 @@
+version: '3'
+
+# Task is the single entry point for every command, locally and in CI.
+
+vars:
+  IMAGE: ghcr.io/madisonewebb/rollhouse
+
+tasks:
+  install:
+    desc: Install all workspace dependencies
+    cmds:
+      - pnpm install --frozen-lockfile
+
+  setup-hooks:
+    desc: Install pre-commit hooks
+    deps: [install]
+    cmds:
+      - pre-commit install
+
+  dev:
+    desc: Run server and client with live reload (Tilt + docker-compose)
+    cmds:
+      - tilt up
+
+  lint:
+    desc: ESLint and Prettier check
+    cmds:
+      - pnpm exec eslint .
+      - pnpm exec prettier --check .
+
+  format:
+    desc: Auto-fix lint and formatting
+    cmds:
+      - pnpm exec eslint . --fix
+      - pnpm exec prettier --write .
+
+  typecheck:
+    desc: tsc across all packages
+    cmds:
+      - pnpm -r --parallel typecheck
+
+  test:
+    desc: Vitest unit tests (coverage on the rules engine)
+    cmds:
+      - pnpm exec vitest run --coverage
+
+  build:
+    desc: Production build of client and server
+    cmds:
+      - pnpm -r build
+
+  e2e:
+    desc: Playwright against the production build (run task build first)
+    dir: e2e
+    cmds:
+      - pnpm exec playwright test {{.CLI_ARGS}}
+
+  e2e-install:
+    desc: Install Playwright browsers (CI adds --with-deps)
+    dir: e2e
+    cmds:
+      - pnpm exec playwright install {{.CLI_ARGS}} chromium webkit
+
+  smoke:
+    desc: Post-deploy smoke test (needs BASE_URL and EXPECTED_SHA)
+    dir: e2e
+    requires:
+      vars: [BASE_URL, EXPECTED_SHA]
+    env:
+      BASE_URL: '{{.BASE_URL}}'
+      EXPECTED_SHA: '{{.EXPECTED_SHA}}'
+    cmds:
+      - node smoke.ts
+
+  docker-build:
+    desc: Build the production image locally
+    cmds:
+      - docker build -f docker/Dockerfile --build-arg GIT_SHA={{.GIT_SHA}} -t {{.IMAGE}}:local .
+    vars:
+      GIT_SHA:
+        sh: git rev-parse HEAD 2>/dev/null || echo dev
+
+  manifests:
+    desc: Render the kustomize overlays (sanity check)
+    cmds:
+      - kubectl kustomize manifests/overlays/staging > /dev/null
+      - kubectl kustomize manifests/overlays/prod > /dev/null

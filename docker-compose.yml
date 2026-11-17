@@ -1,0 +1,28 @@
+# Local dev stack, driven by `task dev` (Tilt). Source is bind-mounted, so
+# tsx and Vite reload on save.
+services:
+  server:
+    image: node:26.13.1-slim
+    working_dir: /app
+    command: sh -c "npm i -g pnpm@12.21.0 >/dev/null && pnpm install --frozen-lockfile && pnpm --filter @rollhouse/server dev"
+    environment:
+      PORT: '8080'
+      BASE_URL: http://localhost:8080
+      GIT_SHA: dev
+    ports: ['8080:8080']
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+
+  web:
+    image: node:26.13.1-slim
+    working_dir: /app
+    command: sh -c "npm i -g pnpm@12.21.0 >/dev/null && pnpm install --frozen-lockfile && pnpm --filter @rollhouse/web dev --host 0.0.0.0"
+    ports: ['5173:5173']
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    depends_on: [server]
+
+volumes:
+  node_modules:
