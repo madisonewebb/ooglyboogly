@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { faceCounts, isFiveKind, jokerLowerValue, scoreBox, upperBoxFor } from './scoring';
+import { faceCounts, isYatzy, jokerLowerValue, scoreBox, upperBoxFor } from './scoring';
 import { d } from './test-helpers';
 
 describe('upper boxes', () => {
@@ -29,8 +29,8 @@ describe('of a kind', () => {
     ['fourKind', '55552', 22],
     ['fourKind', '66666', 30],
     ['fourKind', '55522', 0],
-    ['fiveKind', '22222', 50],
-    ['fiveKind', '22221', 0],
+    ['yatzy', '22222', 50],
+    ['yatzy', '22221', 0],
   ] as const)('%s on %s scores %i', (box, dice, points) => {
     expect(scoreBox(box, d(dice))).toBe(points);
   });
@@ -40,7 +40,7 @@ describe('full house', () => {
   it.each([
     ['33322', 25],
     ['26262', 25],
-    ['33333', 0], // five of a kind is not a full house (unless it's a joker)
+    ['33333', 0], // a Yatzy is not a full house (unless it's a joker)
     ['33332', 0],
     ['33221', 0],
     ['12345', 0],
@@ -89,9 +89,9 @@ describe('helpers', () => {
     expect(faceCounts(d('11366'))).toEqual([0, 2, 0, 1, 0, 0, 2]);
   });
 
-  it('detects five of a kind', () => {
-    expect(isFiveKind(d('44444'))).toBe(true);
-    expect(isFiveKind(d('44443'))).toBe(false);
+  it('detects a Yatzy', () => {
+    expect(isYatzy(d('44444'))).toBe(true);
+    expect(isYatzy(d('44443'))).toBe(false);
   });
 
   it('gives joker lower boxes full value', () => {

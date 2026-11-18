@@ -27,18 +27,18 @@ describe('cardOptions without a joker', () => {
     expect(o.options.map((x) => x.box)).not.toContain('ones');
   });
 
-  it('scores five of a kind normally while this card’s Five of a Kind box is open', () => {
+  it('scores a Yatzy normally while this card’s Yatzy box is open', () => {
     const o = cardOptions(card({ fours: 12 }), d('44444'));
     expect(o.joker).toBe(false);
-    expect(value(o, 'fiveKind')).toBe(50);
+    expect(value(o, 'yatzy')).toBe(50);
     expect(value(o, 'fullHouse')).toBe(0); // no joker, so no full house
     expect(allowed(o)).toContain('chance');
   });
 });
 
-describe('joker rules (Five of a Kind box filled on this card)', () => {
+describe('joker rules (Yatzy box filled on this card)', () => {
   it('forces the matching upper box when open, with the bonus after a 50', () => {
-    const o = cardOptions(card({ fiveKind: 50 }), d('44444'));
+    const o = cardOptions(card({ yatzy: 50 }), d('44444'));
     expect(o.joker).toBe(true);
     expect(o.bonus).toBe(true);
     expect(allowed(o)).toEqual(['fours']);
@@ -47,15 +47,15 @@ describe('joker rules (Five of a Kind box filled on this card)', () => {
   });
 
   it('applies the joker but no bonus after a 0', () => {
-    const o = cardOptions(card({ fiveKind: 0 }), d('22222'));
+    const o = cardOptions(card({ yatzy: 0 }), d('22222'));
     expect(o.joker).toBe(true);
     expect(o.bonus).toBe(false);
     expect(allowed(o)).toEqual(['twos']);
   });
 
   it('opens every open lower box at full value when the matching upper box is filled', () => {
-    const o = cardOptions(card({ fiveKind: 50, sixes: 24 }), d('66666'));
-    expect(allowed(o)).toEqual(LOWER_BOXES.filter((b) => b !== 'fiveKind'));
+    const o = cardOptions(card({ yatzy: 50, sixes: 24 }), d('66666'));
+    expect(allowed(o)).toEqual(LOWER_BOXES.filter((b) => b !== 'yatzy'));
     expect(value(o, 'fullHouse')).toBe(25);
     expect(value(o, 'smallStraight')).toBe(30);
     expect(value(o, 'largeStraight')).toBe(40);
@@ -68,10 +68,7 @@ describe('joker rules (Five of a Kind box filled on this card)', () => {
   });
 
   it('allows only the lower boxes that are still open', () => {
-    const o = cardOptions(
-      card({ fiveKind: 0, ones: 3, largeStraight: 40, chance: 22 }),
-      d('11111'),
-    );
+    const o = cardOptions(card({ yatzy: 0, ones: 3, largeStraight: 40, chance: 22 }), d('11111'));
     expect(allowed(o)).toEqual(['threeKind', 'fourKind', 'fullHouse', 'smallStraight']);
   });
 
@@ -88,8 +85,17 @@ describe('joker rules (Five of a Kind box filled on this card)', () => {
     expect(value(o2, 'fives')).toBe(0);
   });
 
+  it('earns at most three bonuses per card, then still plays as a joker', () => {
+    const third = cardOptions(card({ yatzy: 50 }, 2), d('33333'));
+    expect(third.bonus).toBe(true);
+    const fourth = cardOptions(card({ yatzy: 50 }, 3), d('33333'));
+    expect(fourth.bonus).toBe(false);
+    expect(fourth.joker).toBe(true);
+    expect(allowed(fourth)).toEqual(['threes']);
+  });
+
   it('still earns the bonus when forced into a 0', () => {
-    const c = card({ ...onlyOpen('ones'), fiveKind: 50 });
+    const c = card({ ...onlyOpen('ones'), yatzy: 50 });
     const o = cardOptions(c, d('66666'));
     expect(allowed(o)).toEqual(['ones']);
     expect(value(o, 'ones')).toBe(0);

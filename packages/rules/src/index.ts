@@ -1,5 +1,5 @@
 export * from './types';
-export { faceCounts, isFiveKind, scoreBox, upperBoxFor } from './scoring';
+export { faceCounts, isYatzy, scoreBox, upperBoxFor } from './scoring';
 export { cardOptions, type BoxOption, type CardOptions } from './options';
 export {
   activePlayers,

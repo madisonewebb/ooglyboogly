@@ -1,7 +1,7 @@
 import {
   type Box,
   type Die,
-  FIVE_KIND,
+  YATZY,
   FULL_HOUSE,
   LARGE_STRAIGHT,
   SMALL_STRAIGHT,
@@ -18,7 +18,7 @@ export function faceCounts(dice: readonly Die[]): number[] {
 
 const sum = (dice: readonly Die[]) => dice.reduce<number>((a, b) => a + b, 0);
 
-export function isFiveKind(dice: readonly Die[]): boolean {
+export function isYatzy(dice: readonly Die[]): boolean {
   return faceCounts(dice).some((c) => c === 5);
 }
 
@@ -58,8 +58,8 @@ export function scoreBox(box: Box, dice: readonly Die[]): number {
         : 0;
     case 'largeStraight':
       return hasRun(counts, 1, 5) || hasRun(counts, 2, 5) ? LARGE_STRAIGHT : 0;
-    case 'fiveKind':
-      return most === 5 ? FIVE_KIND : 0;
+    case 'yatzy':
+      return most === 5 ? YATZY : 0;
     case 'chance':
       return sum(dice);
   }

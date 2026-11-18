@@ -156,31 +156,44 @@ describe('scoring', () => {
   });
 
   it('enforces the joker order', () => {
-    const g = withCard(play(newGame(), roll(0, '44444')), 0, 0, card({ fiveKind: 50 }));
+    const g = withCard(play(newGame(), roll(0, '44444')), 0, 0, card({ yatzy: 50 }));
     expectError(g, score(0, 'chance'), 'JOKER_FORCED');
     const next = applyMove(g, score(0, 'fours'));
     expect(next.players[0]!.cards[0]).toEqual({
-      boxes: { fiveKind: 50, fours: 20 },
-      fiveKindBonuses: 1,
+      boxes: { yatzy: 50, fours: 20 },
+      yatzyBonuses: 1,
     });
   });
 
   it('awards the bonus per card: a 50 on card 1 earns nothing on card 2', () => {
-    let g = play(newGame({ cardsPerPlayer: 2 }), roll(0, '55555'), score(0, 'fiveKind', 0));
-    g = play(g, roll(0, '55555'), score(0, 'fiveKind', 1));
-    expect(g.players[0]!.cards[1]).toEqual({ boxes: { fiveKind: 50 }, fiveKindBonuses: 0 });
+    let g = play(newGame({ cardsPerPlayer: 2 }), roll(0, '55555'), score(0, 'yatzy', 0));
+    g = play(g, roll(0, '55555'), score(0, 'yatzy', 1));
+    expect(g.players[0]!.cards[1]).toEqual({ boxes: { yatzy: 50 }, yatzyBonuses: 0 });
     g = play(g, roll(0, '55555'), score(0, 'fives', 0));
-    expect(g.players[0]!.cards[0]!.fiveKindBonuses).toBe(1);
+    expect(g.players[0]!.cards[0]!.yatzyBonuses).toBe(1);
+  });
+
+  it('stops adding bonuses after three on a card', () => {
+    let g = play(newGame(), roll(0, '55555'), score(0, 'yatzy'));
+    for (const box of ['fives', 'chance', 'fullHouse', 'smallStraight'] as const) {
+      g = play(g, roll(0, '55555'), score(0, box));
+    }
+    expect(g.players[0]!.cards[0]!.yatzyBonuses).toBe(3);
+    expect(g.players[0]!.cards[0]!.boxes).toMatchObject({
+      chance: 25,
+      fullHouse: 25,
+      smallStraight: 30,
+    });
   });
 
   it('applies the joker without a bonus when the card’s box holds 0', () => {
-    let g = play(newGame(), roll(0, '12346'), score(0, 'fiveKind'));
+    let g = play(newGame(), roll(0, '12346'), score(0, 'yatzy'));
     g = play(g, roll(0, '22222'));
     expectError(g, score(0, 'chance'), 'JOKER_FORCED');
     g = applyMove(g, score(0, 'twos'));
     expect(g.players[0]!.cards[0]).toEqual({
-      boxes: { fiveKind: 0, twos: 10 },
-      fiveKindBonuses: 0,
+      boxes: { yatzy: 0, twos: 10 },
+      yatzyBonuses: 0,
     });
   });
 });
@@ -221,7 +234,7 @@ describe('take turns', () => {
   });
 
   it('takes the bonus back on undo', () => {
-    const base = withCard(play(game(), roll(2, '66666')), 2, 0, card({ fiveKind: 50 }));
+    const base = withCard(play(game(), roll(2, '66666')), 2, 0, card({ yatzy: 50 }));
     const g = play(base, score(2, 'sixes'), undo(2));
     expect(g).toEqual(base);
   });
@@ -233,7 +246,7 @@ describe('everyone at once', () => {
   it('lets every player act at their own pace', () => {
     let g = game();
     expect(activePlayers(g)).toEqual([0, 1]);
-    g = play(g, roll(1, '12345'), roll(0, '66666'), score(0, 'fiveKind'), roll(0, '11111'));
+    g = play(g, roll(1, '12345'), roll(0, '66666'), score(0, 'yatzy'), roll(0, '11111'));
     expect(g.players[1]!.turn.rolls).toBe(1);
     expect(g.players[0]!.turn.rolls).toBe(1);
   });

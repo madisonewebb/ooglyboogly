@@ -12,7 +12,7 @@ export const LOWER_BOXES = [
   'fullHouse',
   'smallStraight',
   'largeStraight',
-  'fiveKind',
+  'yatzy',
   'chance',
 ] as const;
 export const BOXES = [...UPPER_BOXES, ...LOWER_BOXES] as const;
@@ -26,8 +26,10 @@ export const UPPER_BONUS_THRESHOLD = 63;
 export const FULL_HOUSE = 25;
 export const SMALL_STRAIGHT = 30;
 export const LARGE_STRAIGHT = 40;
-export const FIVE_KIND = 50;
-export const FIVE_KIND_BONUS = 100;
+export const YATZY = 50;
+export const YATZY_BONUS = 100;
+/** Bonus boxes per card; a further Yatzy still plays as a joker but earns nothing. */
+export const MAX_YATZY_BONUSES = 3;
 
 export const MIN_CARDS = 1;
 export const MAX_CARDS = 5;
@@ -85,8 +87,8 @@ export type Move = RollMove | HoldMove | ScoreMove | UndoMove;
 export interface Card {
   /** Filled boxes and the points written in them. */
   readonly boxes: Readonly<Partial<Record<Box, number>>>;
-  /** Extra Five of a Kinds written on this card while its box held 50. */
-  readonly fiveKindBonuses: number;
+  /** Extra Yatzys written on this card while its box held 50. */
+  readonly yatzyBonuses: number;
 }
 
 export interface Turn {

@@ -1,6 +1,6 @@
 import {
   type Card,
-  FIVE_KIND_BONUS,
+  YATZY_BONUS,
   type GameState,
   LOWER_BOXES,
   UPPER_BONUS,
@@ -12,7 +12,7 @@ export interface CardTotal {
   upper: number;
   upperBonus: number;
   lower: number;
-  fiveKindBonus: number;
+  yatzyBonus: number;
   /** Before any multiplier. */
   raw: number;
   /** 1, or the card's position (1 to 5) with classic multipliers on. */
@@ -32,10 +32,10 @@ export function cardTotal(card: Card, index: number, multipliers: boolean): Card
   const upper = add(card, UPPER_BOXES);
   const upperBonus = upper >= UPPER_BONUS_THRESHOLD ? UPPER_BONUS : 0;
   const lower = add(card, LOWER_BOXES);
-  const fiveKindBonus = card.fiveKindBonuses * FIVE_KIND_BONUS;
-  const raw = upper + upperBonus + lower + fiveKindBonus;
+  const yatzyBonus = card.yatzyBonuses * YATZY_BONUS;
+  const raw = upper + upperBonus + lower + yatzyBonus;
   const multiplier = multipliers ? index + 1 : 1;
-  return { upper, upperBonus, lower, fiveKindBonus, raw, multiplier, total: raw * multiplier };
+  return { upper, upperBonus, lower, yatzyBonus, raw, multiplier, total: raw * multiplier };
 }
 
 /** A player's final score is the sum of all their cards. */

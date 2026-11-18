@@ -7,7 +7,7 @@ import { cardTotal, playerTotal } from './totals';
 import {
   BOXES,
   type Die,
-  FIVE_KIND,
+  YATZY,
   FULL_HOUSE,
   type GameSetup,
   type GameState,
@@ -45,7 +45,7 @@ describe('scoring properties', () => {
         expect([0, FULL_HOUSE]).toContain(scoreBox('fullHouse', ds));
         expect([0, SMALL_STRAIGHT]).toContain(scoreBox('smallStraight', ds));
         expect([0, LARGE_STRAIGHT]).toContain(scoreBox('largeStraight', ds));
-        expect([0, FIVE_KIND]).toContain(scoreBox('fiveKind', ds));
+        expect([0, YATZY]).toContain(scoreBox('yatzy', ds));
         expect(scoreBox('chance', ds)).toBe(total);
         // A large straight is always a small one; four of a kind is always three.
         if (scoreBox('largeStraight', ds)) expect(scoreBox('smallStraight', ds)).toBe(30);
@@ -95,7 +95,7 @@ function simulate(setup: GameSetup, seed: number) {
           apply({ type: 'hold', player, die: r(5), held: false });
       }
       const free = state.players[player]!.turn.held.filter((h) => !h).length;
-      // Now and then roll five of a kind so the joker paths get exercised.
+      // Now and then roll a Yatzy so the joker paths get exercised.
       const same = r(8) === 0 ? face() : null;
       apply({ type: 'roll', player, values: Array.from({ length: free }, () => same ?? face()) });
       continue;
@@ -155,10 +155,11 @@ describe('whole-game properties', () => {
           expect(t.total).toBe(t.cards.reduce((s, c) => s + c.total, 0));
           p.cards.forEach((c, ci) => {
             const ct = cardTotal(c, ci, setup.multipliers);
-            expect(ct.raw).toBe(ct.upper + ct.upperBonus + ct.lower + ct.fiveKindBonus);
+            expect(ct.raw).toBe(ct.upper + ct.upperBonus + ct.lower + ct.yatzyBonus);
             expect(ct.total).toBe(ct.raw * (setup.multipliers ? ci + 1 : 1));
-            // Bonuses only exist on cards whose Five of a Kind box holds 50.
-            if (c.fiveKindBonuses > 0) expect(c.boxes.fiveKind).toBe(50);
+            // Bonuses only exist on cards whose Yatzy box holds 50.
+            if (c.yatzyBonuses > 0) expect(c.boxes.yatzy).toBe(50);
+            expect(c.yatzyBonuses).toBeLessThanOrEqual(3);
           });
         });
       }),

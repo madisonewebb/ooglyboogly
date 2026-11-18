@@ -16,9 +16,9 @@ export const setup = (over: Partial<GameSetup> = {}): GameSetup => {
   };
 };
 
-export const card = (boxes: Partial<Record<Box, number>> = {}, fiveKindBonuses = 0): Card => ({
+export const card = (boxes: Partial<Record<Box, number>> = {}, yatzyBonuses = 0): Card => ({
   boxes,
-  fiveKindBonuses,
+  yatzyBonuses,
 });
 
 /** A state with some boxes pre-filled on one player's card. */

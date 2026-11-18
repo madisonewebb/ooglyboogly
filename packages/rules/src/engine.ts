@@ -35,7 +35,7 @@ const freshTurn = (): Turn => ({
   rolls: 0,
 });
 
-const emptyCard = (): Card => ({ boxes: {}, fiveKindBonuses: 0 });
+const emptyCard = (): Card => ({ boxes: {}, yatzyBonuses: 0 });
 
 const isInt = (n: unknown, min: number, max: number): boolean =>
   typeof n === 'number' && Number.isInteger(n) && n >= min && n <= max;
@@ -171,7 +171,7 @@ function score(state: GameState, move: ScoreMove): GameState {
 
   const written: Card = {
     boxes: { ...card.boxes, [move.box]: option.value },
-    fiveKindBonuses: card.fiveKindBonuses + (bonus ? 1 : 0),
+    yatzyBonuses: card.yatzyBonuses + (bonus ? 1 : 0),
   };
   const next = withPlayer(state, move.player, {
     cards: ps.cards.map((c, i) => (i === move.card ? written : c)),
@@ -192,7 +192,7 @@ function undo(state: GameState, move: UndoMove): GameState {
   const boxes = Object.fromEntries(
     Object.entries(card.boxes).filter(([box]) => box !== last.box),
   ) as Partial<Record<Box, number>>;
-  const restored: Card = { boxes, fiveKindBonuses: card.fiveKindBonuses - (last.bonus ? 1 : 0) };
+  const restored: Card = { boxes, yatzyBonuses: card.yatzyBonuses - (last.bonus ? 1 : 0) };
   const next = withPlayer(state, move.player, {
     cards: ps.cards.map((c, i) => (i === last.card ? restored : c)),
     turn: last.turn,

@@ -13,13 +13,13 @@ describe('cardTotal', () => {
     expect(cardTotal(c, 0, false)).toMatchObject({ upper: 62, upperBonus: 0, raw: 62 });
   });
 
-  it('adds the lower section and 100 per Five of a Kind bonus', () => {
-    const c = card({ fiveKind: 50, fullHouse: 25, chance: 22, sixes: 30 }, 2);
+  it('adds the lower section and 100 per Yatzy bonus', () => {
+    const c = card({ yatzy: 50, fullHouse: 25, chance: 22, sixes: 30 }, 2);
     expect(cardTotal(c, 0, false)).toEqual({
       upper: 30,
       upperBonus: 0,
       lower: 97,
-      fiveKindBonus: 200,
+      yatzyBonus: 200,
       raw: 327,
       multiplier: 1,
       total: 327,
