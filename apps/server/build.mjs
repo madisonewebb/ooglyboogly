@@ -16,7 +16,7 @@ await build({
   target: 'node26',
   sourcemap: true,
   // ws optionally loads these native addons and falls back without them.
-  external: ['bufferutil', 'utf-8-validate'],
+  external: ['bufferutil', 'utf-8-validate', 'node:*'],
   // Lets bundled CommonJS dependencies call require() inside an ES module.
   banner: {
     js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);",

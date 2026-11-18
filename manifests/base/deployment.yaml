@@ -21,6 +21,74 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 30
+      initContainers:
+        # Restore from the NAS only when the volume has no database yet and a
+        # backup exists, so a dead disk loses about a second of play.
+        - name: litestream-restore
+          image: litestream/litestream:0.5.18
+          args:
+            - restore
+            - -if-db-not-exists
+            - -if-replica-exists
+            - /data/rollhouse.db
+          envFrom:
+            - configMapRef:
+                name: rollhouse-config
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: litestream-config
+              mountPath: /etc/litestream.yml
+              subPath: litestream.yml
+            - name: litestream-ssh
+              mountPath: /etc/litestream-ssh
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+        # Native sidecar: starts before the app and stops after it, so the
+        # last writes are shipped on shutdown.
+        - name: litestream
+          image: litestream/litestream:0.5.18
+          restartPolicy: Always
+          args: [replicate]
+          envFrom:
+            - configMapRef:
+                name: rollhouse-config
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: litestream-config
+              mountPath: /etc/litestream.yml
+              subPath: litestream.yml
+            - name: litestream-ssh
+              mountPath: /etc/litestream-ssh
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
       containers:
         - name: rollhouse
           image: ghcr.io/madisonewebb/rollhouse
@@ -68,3 +136,10 @@ spec:
             claimName: rollhouse-data
         - name: tmp
           emptyDir: {}
+        - name: litestream-config
+          configMap:
+            name: rollhouse-litestream
+        - name: litestream-ssh
+          secret:
+            secretName: rollhouse-litestream
+            defaultMode: 0440

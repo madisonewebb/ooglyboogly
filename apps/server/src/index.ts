@@ -1,11 +1,15 @@
 import { BRAND_NAME } from '@rollhouse/shared';
 import { createGameServer } from './app';
 import { loadConfig } from './config';
+import { openDatabase, recordBoot } from './db';
 
 const config = loadConfig();
+const db = openDatabase(config.dataDir);
+const boots = recordBoot(db, config.gitSha, config.version);
 const server = createGameServer(config);
 
 server.onShutdown(() => {
+  db.close();
   console.log(`${BRAND_NAME}: shut down cleanly`);
 });
 
@@ -22,5 +26,5 @@ function failToListen(err: unknown): never {
 );
 await server.listen(config.port).catch(failToListen);
 console.log(
-  `${BRAND_NAME} ${config.version} (${config.gitSha}) listening on :${config.port}, base URL ${config.baseUrl}`,
+  `${BRAND_NAME} ${config.version} (${config.gitSha}) listening on :${config.port}, base URL ${config.baseUrl}, boot #${boots}`,
 );
