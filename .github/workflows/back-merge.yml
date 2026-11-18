@@ -1,0 +1,63 @@
+name: Back-merge
+
+# When main gets a change that develop doesn't have (in practice, a
+# release-please release commit), open a PR back into develop so the two
+# branches don't drift. Plain develop -> main promotions are skipped.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: back-merge
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Open a main -> develop PR if needed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin develop
+          # Three-dot diff: what main changed since it last shared history with
+          # develop. Empty after a develop -> main merge.
+          if git diff --quiet origin/develop...origin/main; then
+            echo "develop already has everything on main"
+            exit 0
+          fi
+
+          # PR from a throwaway branch, not from main itself: the repo deletes
+          # head branches on merge, and main isn't protected.
+          BRANCH="back-merge/main-${GITHUB_SHA::7}"
+          git push origin "origin/main:refs/heads/$BRANCH"
+
+          # One back-merge PR at a time; close any older one this replaces.
+          for pr in $(gh pr list --base develop --state open --json number,headRefName \
+              --jq '.[] | select(.headRefName | startswith("back-merge/")) | select(.headRefName != "'"$BRANCH"'") | .number'); do
+            gh pr close "$pr" --delete-branch --comment "Superseded by a newer back-merge."
+          done
+
+          if gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number' | grep -q .; then
+            echo "PR for $BRANCH already open"
+            exit 0
+          fi
+
+          gh pr create --base develop --head "$BRANCH" \
+            --title "chore: back-merge main into develop" \
+            --body "$(printf '%s\n' \
+              "Brings main's changes (usually a release-please version bump and CHANGELOG) back into develop so the branches don't drift." \
+              "" \
+              "**Merge with a merge commit, not squash**, or develop still won't contain main's commits." \
+              "" \
+              "CI doesn't run on PRs opened by the workflow token. The diff is only what release-please wrote, and CI runs on develop after the merge.")"
