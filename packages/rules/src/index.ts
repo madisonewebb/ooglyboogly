@@ -1,8 +1,15 @@
-/**
- * Pure rules reducer for Rollhouse. Implemented in milestone 2.
- *
- * Dice never come from Math.random (ESLint enforces this here and in
- * apps/server); the server rolls with crypto.randomInt.
- */
-export const DICE_PER_ROLL = 5;
-export const FACES = 6;
+export * from './types';
+export { faceCounts, isYatzy, scoreBox, upperBoxFor } from './scoring';
+export { cardOptions, type BoxOption, type CardOptions } from './options';
+export {
+  activePlayers,
+  applyMove,
+  createGame,
+  isCardFull,
+  isPlayerDone,
+  replay,
+  tryMove,
+  validateSetup,
+  type MoveResult,
+} from './engine';
+export { cardTotal, playerTotal, type CardTotal, type PlayerTotal } from './totals';
