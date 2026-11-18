@@ -14,6 +14,11 @@ export default tseslint.config(
       sourceType: 'module',
       globals: { ...globals.node },
     },
+    rules: {
+      // noUncheckedIndexedAccess makes every index lookup possibly undefined;
+      // `!` after a bounds check is clearer than a dead branch.
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
   },
   {
     files: ['apps/web/src/**/*.{ts,tsx}'],

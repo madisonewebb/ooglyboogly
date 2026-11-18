@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@colyseus/sdk": "0.18.10",
+    "@rollhouse/rules": "workspace:*",
     "@rollhouse/shared": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
