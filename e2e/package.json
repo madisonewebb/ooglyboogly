@@ -1,0 +1,16 @@
+{
+  "name": "@rollhouse/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test",
+    "smoke": "node smoke.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@colyseus/sdk": "0.18.10",
+    "@playwright/test": "1.65.1",
+    "@types/node": "^26.6.6"
+  }
+}

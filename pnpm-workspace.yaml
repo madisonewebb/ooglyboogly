@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+  - e2e
+
+allowBuilds:
+  esbuild: true
+  # Optional native speed-up for msgpackr; the bundled server doesn't use it.
+  msgpackr-extract: false
