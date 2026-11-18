@@ -115,8 +115,47 @@ secrets will be committed only as Sealed Secrets, which only the cluster can dec
 
 ## Backups
 
-Not yet enabled. Litestream (≥ 0.5.2) will replicate SQLite to the NAS over SFTP; see the TODO in
-`manifests/base/kustomization.yaml`.
+Litestream 0.5.18 runs as a native sidecar and copies every change to `/data/rollhouse.db` to
+castillo-nas over SFTP within about a second, keeping 14 days (`manifests/base/litestream.yml`).
+An init container restores from the NAS when the volume has no database and a backup exists.
+
+| Environment | Replica on the NAS                        |
+| ----------- | ----------------------------------------- |
+| staging     | `/volume1/backups/rollhouse/data/staging` |
+| prod        | `/volume1/backups/rollhouse/data/prod`    |
+
+The SSH private key is committed only as a SealedSecret per namespace
+(`manifests/overlays/<env>/litestream-sealedsecret.yaml`). The NAS host key is pinned in
+`litestream.yml`. It has to be the ECDSA key, because Litestream's SSH client always negotiates
+ECDSA first.
+
+### NAS side (set up by hand, outside Git)
+
+- System user `rollhouse-backup` (UID below 1000, so it can't collide with UGOS users), shell
+  `nologin`, no password.
+- `/volume1/backups/rollhouse` is owned by root (the chroot), and `data/{prod,staging}` is owned by
+  the user.
+- `/etc/ssh/rollhouse-backup/authorized_keys`: the key, limited to `from="10.0.0.3,10.42.0.0/16"`
+  with `restrict`.
+- `/etc/ssh/sshd_config.d/rollhouse-sftp.conf`: `Match User rollhouse-backup` → chroot,
+  `ForceCommand internal-sftp`, no passwords or forwarding.
+
+**UGOS may delete that drop-in when SSH settings change in its UI.** If that happens, the
+`litestream` container logs SFTP errors and backups stop; the live database is unaffected. Restore
+the file and run `systemctl reload ssh`.
+
+### Rotating the key
+
+Generate a new ed25519 key and put the public half in `authorized_keys`. Then re-seal it for both
+namespaces:
+
+```sh
+kubectl create secret generic rollhouse-litestream -n <namespace> \
+  --from-file=id_ed25519=<key> --dry-run=client -o yaml \
+  | kubeseal --kubeconfig /etc/rancher/k3s/k3s.yaml \
+      --controller-namespace kube-system --controller-name sealed-secrets-controller \
+      --format yaml > manifests/overlays/<env>/litestream-sealedsecret.yaml
+```
 
 ## License
 
