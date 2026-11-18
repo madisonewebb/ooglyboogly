@@ -7,6 +7,7 @@ export interface Config {
   gitSha: string;
   version: string;
   webDist: string;
+  dataDir: string;
 }
 
 declare const __APP_VERSION__: string | undefined;
@@ -33,5 +34,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     gitSha: env['GIT_SHA'] ?? 'dev',
     version: readVersion(),
     webDist: env['WEB_DIST'] ?? fileURLToPath(new URL('../../web/dist', import.meta.url)),
+    dataDir: env['DATA_DIR'] ?? fileURLToPath(new URL('../../../data', import.meta.url)),
   };
 }
