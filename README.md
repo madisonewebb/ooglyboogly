@@ -47,6 +47,8 @@ Fair dice: ESLint bans `Math.random` in `apps/server` and `packages/rules`.
 - Feature branches open PRs into `develop`. `main` only receives merges from `develop`.
 - Conventional commits (`feat:`, `fix:`, `ci:`, `chore:` …). release-please on `main` opens the
   release PR, bumps the version and writes `CHANGELOG.md`.
+- After a release lands on `main`, `back-merge.yml` opens a `back-merge/main-<sha>` → `develop`
+  PR so the branches don't drift. Merge it with a merge commit, not squash.
 - Dependabot opens weekly PRs (npm, GitHub Actions, Docker) against `develop`.
 
 ## Deployment (GitOps)
