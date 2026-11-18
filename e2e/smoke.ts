@@ -71,6 +71,7 @@ try {
   console.log('websocket ok: ping/pong through the hello room');
   process.exit(0);
 } catch (err) {
-  console.error(`smoke test failed: ${err instanceof Error ? err.message : String(err)}`);
+  // Colyseus SDK errors can have an empty message, so print the whole thing.
+  console.error('smoke test failed:', err);
   process.exit(1);
 }
