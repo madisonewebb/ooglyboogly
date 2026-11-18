@@ -15,9 +15,7 @@ resources:
 # (argocd/applications/rollhouse*.yaml) overrides it via
 # spec.source.kustomize.images, and CI commits the new SHA there.
 
-# TODO(litestream): add the Litestream sidecar and restore init container.
-# Decision (2026-11-17): SFTP replica to castillo-nas. Needs, before it can land:
-#   - the Sealed Secrets controller running (home-lab PR, milestone 1)
-#   - SSH on the NAS, a dedicated user, its private key as a SealedSecret,
-#     and the NAS host key pinned (known_hosts) in config
-# Use Litestream >= 0.5.2.
+configMapGenerator:
+  - name: rollhouse-litestream
+    files:
+      - litestream.yml

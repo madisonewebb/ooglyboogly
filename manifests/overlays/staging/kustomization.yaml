@@ -5,6 +5,7 @@ namespace: rollhouse-staging
 
 resources:
   - ../../base
+  - litestream-sealedsecret.yaml
 
 configMapGenerator:
   - name: rollhouse-config

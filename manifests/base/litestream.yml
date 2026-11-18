@@ -1,0 +1,20 @@
+# Litestream: replicate the SQLite database to castillo-nas over SFTP.
+# The NAS side (user, chroot, sshd drop-in) is described in the README.
+# ${LITESTREAM_REPLICA_PATH} comes from each overlay's config.env.
+dbs:
+  - path: /data/rollhouse.db
+    replica:
+      type: sftp
+      host: 10.0.0.28:22
+      user: rollhouse-backup
+      key-path: /etc/litestream-ssh/id_ed25519
+      # Pinned NAS host key (/etc/ssh/ssh_host_ecdsa_key.pub); public, not a secret.
+      # ECDSA, not ed25519: Litestream's Go SSH client negotiates ECDSA first
+      # and can't be told otherwise, so an ed25519 pin always mismatches.
+      host-key: ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCbSiGl0AFqXw6PwQGVbidPfssLolufJGpmD6xdgHkqX1bYfpk/K0c/fnbM4MLo1wSgYbTOFS2GOyr3jqcJ+ZFI=
+      path: ${LITESTREAM_REPLICA_PATH}
+
+# Keep 14 days of point-in-time restore.
+snapshot:
+  interval: 24h
+  retention: 336h
