@@ -30,6 +30,8 @@ export interface Tokens {
   die: string;
   /** Pips. */
   pip: string;
+  /** Shadows under raised things (decoration only). */
+  shadow: string;
 }
 
 export const THEMES: Record<ThemeName, Tokens> = {
@@ -47,6 +49,7 @@ export const THEMES: Record<ThemeName, Tokens> = {
     onFill: '#3A1E40',
     die: '#FF4F9A',
     pip: '#FFFFFF',
+    shadow: '#3A1E40',
   },
   // Midnight Plum
   dark: {
@@ -62,6 +65,45 @@ export const THEMES: Record<ThemeName, Tokens> = {
     onFill: '#22122A',
     die: '#FF4F9A',
     pip: '#FFFFFF',
+    shadow: '#07020A',
+  },
+};
+
+/** The 3D tray's materials: decoration only, never behind text. */
+export interface SceneTokens {
+  /** The felt the dice land on. */
+  felt: string;
+  /** The glossy rim around the felt. */
+  rim: string;
+  /** The held-dice shelf and its five seats. */
+  shelf: string;
+  seat: string;
+  /** Inside the candy cup. */
+  cupInside: string;
+  /** Deep jelly: the color light picks up passing through a die. */
+  dieDeep: string;
+  /** How bright the studio light is. */
+  light: number;
+}
+
+export const SCENE: Record<ThemeName, SceneTokens> = {
+  light: {
+    felt: '#DCC9F4',
+    rim: '#EBDDFB',
+    shelf: '#FFD25E',
+    seat: '#F6C64F',
+    cupInside: '#5B2C52',
+    dieDeep: '#C8105E',
+    light: 1,
+  },
+  dark: {
+    felt: '#3C2450',
+    rim: '#6E5287',
+    shelf: '#E2B24A',
+    seat: '#CFA03F',
+    cupInside: '#2A1230',
+    dieDeep: '#B00A52',
+    light: 0.95,
   },
 };
 

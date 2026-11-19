@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   activePlayers,
@@ -15,10 +15,13 @@ import {
   UPPER_BONUS_THRESHOLD,
 } from '@rollhouse/rules';
 import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE, MSG_UNDO } from '@rollhouse/shared';
+import { Avatar } from '../Avatar';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { flavorOf, flavorVars } from '../flavor';
-import { BOX_LABELS } from '../labels';
-import { playPop, unlockAudio } from '../sound';
+import { CheckIcon, DieGlyph, UndoIcon } from '../icons';
+import { BOX_LABELS, BOX_POINTS } from '../labels';
+import { playBonus, playPop, playTurn, unlockAudio } from '../sound';
+import { DURATION, EASE_OUT, SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
 import type { Table } from '../useTable';
 import { PAD_PANEL_ID, padTabId, PadTabs } from './PadTabs';
@@ -99,6 +102,31 @@ function useScorePulses(
   return pulses;
 }
 
+/** Plays a triad when one of your cards newly earns its upper bonus. */
+function useBonusChime(game: GameState, seat: number | null) {
+  const earned =
+    seat === null
+      ? 0
+      : game.players[seat]!.cards.filter(
+          (c, i) => cardTotal(c, i, false).upper >= UPPER_BONUS_THRESHOLD,
+        ).length;
+  const prev = useRef(earned);
+  useEffect(() => {
+    if (earned > prev.current) playBonus();
+    prev.current = earned;
+  }, [earned]);
+}
+
+/** Keys don't steal from text fields, and Space/Enter stay with a focused control. */
+function isTyping(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  return !!el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
+}
+function onControl(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  return !!el?.closest?.('button, a, [role="tab"]');
+}
+
 export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const { theme } = usePrefs();
   const active = activePlayers(game);
@@ -115,8 +143,16 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     if (up !== null) setViewed(up);
   }, [up]);
 
+  // Your turn coming round gets a soft chime.
+  const wasUp = useRef(up);
+  useEffect(() => {
+    if (up !== null && up === seat && wasUp.current !== up) playTurn();
+    wasUp.current = up;
+  }, [up, seat]);
+
   // In Everyone at once, a score on someone else's pad pulses their tab.
   const pulses = useScorePulses(game, seat, viewed, !turns);
+  useBonusChime(game, seat);
 
   const trayPlayer = trayPlayerOf(game, seat, viewed);
   const tray = game.players[trayPlayer]!;
@@ -176,12 +212,20 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     }
     return `Still playing: ${still.join(', ')}`;
   })();
+  const yours = (turns && up === seat) || (!turns && canAct);
 
   const holdable = myTray && dice !== null && rollsLeft > 0 && !rolling;
   const allHeld = turn.held.every(Boolean);
   const toggle = holdable
     ? (i: number) => table.send(MSG_HOLD, { die: i, held: !turn.held[i] })
     : null;
+  const canRoll = myTray && rollsLeft > 0 && !allHeld && !rolling;
+  const rollNow = () => {
+    if (!canRoll) return;
+    unlockAudio();
+    setPick(null);
+    table.send(MSG_ROLL);
+  };
 
   const write = () => {
     if (!pick) return;
@@ -191,11 +235,47 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     setConfirming(false);
   };
 
+  // Keyboard play: Space rolls, 1 to 5 hold dice, Enter writes in, Escape lets go.
+  const keys = useRef({ rollNow, toggle, write, pick });
+  keys.current = { rollNow, toggle, write, pick };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      const k = keys.current;
+      if ((e.key === ' ' || e.key === 'r' || e.key === 'R') && !onControl(e.target)) {
+        e.preventDefault();
+        k.rollNow();
+      } else if (/^[1-5]$/.test(e.key) && k.toggle) {
+        k.toggle(Number(e.key) - 1);
+      } else if (e.key === 'Enter' && k.pick && !onControl(e.target)) {
+        e.preventDefault();
+        k.write();
+      } else if (e.key === 'Escape' && k.pick) {
+        setPick(null);
+        setConfirming(false);
+      }
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, []);
+
   const last = seat === null ? null : game.players[seat]!.lastScore;
   const multi = player.cards.length > 1;
   const viewedFlavor = lobby.seats[viewed]?.flavor;
+  const trayFlavor = lobby.seats[trayPlayer]?.flavor;
+  const trayUser = lobby.seats[trayPlayer]?.user;
   // Your go, but you're looking at someone else's pad: say so, with a way back.
   const lookingAway = !mine && seat !== null && canAct && (!turns || up === seat);
+  const where = (p: { card: number; box: Box }) =>
+    `${BOX_LABELS[p.box].long}${multi ? ` on card ${p.card + 1}` : ''}`;
+
+  const hint = holdable
+    ? turn.held.some(Boolean)
+      ? 'Held dice wait on the shelf. Click one to put it back.'
+      : 'Click dice to hold them, then roll the rest.'
+    : myTray && dice && !rolling && rollsLeft === 0
+      ? 'Pick a box on your pad.'
+      : '';
 
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
@@ -205,9 +285,43 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
 
       <div className="table-layout">
         <section className="tray-col" aria-label="Dice">
-          <p className={`status${up === seat && turns ? ' yours' : ''}`} role="status">
-            {status}
-          </p>
+          <div
+            className={`turn-banner${yours ? ' yours' : ''}`}
+            style={flavorVars(trayFlavor, theme)}
+          >
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={trayPlayer}
+                className="turn-face"
+                initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0, transition: SPRING.pop }}
+                exit={{ opacity: 0, scale: 0.6, transition: { duration: DURATION.fast } }}
+              >
+                {trayUser && <Avatar user={trayUser} cdnBase={cdnBase} flavor={trayFlavor} />}
+              </motion.span>
+            </AnimatePresence>
+            <p className="status" role="status">
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.span
+                  key={status}
+                  className="status-text"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0, transition: SPRING.snappy }}
+                  exit={{ opacity: 0, y: -10, transition: { duration: DURATION.fast } }}
+                >
+                  {status}
+                </motion.span>
+              </AnimatePresence>
+            </p>
+            {dice !== null || turn.rolls > 0 || yours ? (
+              <span className="roll-dots" aria-hidden="true" title={`${rollsLeft} rolls left`}>
+                {Array.from({ length: ROLLS_PER_TURN }, (_, i) => (
+                  <span key={i} className={i < rollsLeft ? 'on' : ''} />
+                ))}
+              </span>
+            ) : null}
+          </div>
+
           <DiceTray
             values={dice ?? [null, null, null, null, null]}
             held={turn.held}
@@ -215,58 +329,84 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             rolling={rolling}
             onToggle={toggle}
             onSettled={onSettled}
-            candy={flavorOf(lobby.seats[trayPlayer]?.flavor).candy}
+            candy={flavorOf(trayFlavor).candy}
           />
-          <p className="hint quiet">
-            {holdable && !turn.held.some(Boolean)
-              ? 'Tap dice to hold them'
-              : holdable
-                ? 'Held dice sit on the shelf'
-                : ' '}
-          </p>
-          {myTray && (
-            <button
-              type="button"
-              className="primary big roll"
-              disabled={rollsLeft === 0 || allHeld || rolling}
-              onClick={() => {
-                unlockAudio();
-                table.send(MSG_ROLL);
-              }}
-            >
-              {rollsLeft === 0 ? 'No rolls left' : `Roll (${rollsLeft} left)`}
-            </button>
-          )}
 
-          {pick && (
-            <div className="write-bar" role="group" aria-label="Write it in">
-              {confirming ? (
-                <>
-                  <p>
-                    Put 0 in {BOX_LABELS[pick.box].long}
-                    {multi ? ` on card ${pick.card + 1}` : ''}?
-                  </p>
-                  <button type="button" className="primary" onClick={write}>
-                    Yes, put 0
+          <div className="tray-actions">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {myTray && pick && confirming ? (
+                <motion.div
+                  key="confirm"
+                  className="confirm-zero"
+                  role="group"
+                  aria-label="Write a zero?"
+                  {...ACTION}
+                >
+                  <p>Put 0 in {where(pick)}?</p>
+                  <div className="confirm-buttons">
+                    <button type="button" className="candy" onClick={write}>
+                      Yes, put 0
+                    </button>
+                    <button type="button" onClick={() => setConfirming(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </motion.div>
+              ) : myTray && pick ? (
+                <motion.div key="write" className="action-row" {...ACTION}>
+                  <button type="button" className="candy big write" onClick={write}>
+                    <CheckIcon /> Write it in: {pick.value} in {where(pick)}
                   </button>
-                  <button type="button" onClick={() => setConfirming(false)}>
-                    Cancel
+                  {rollsLeft > 0 && !allHeld && (
+                    <button
+                      type="button"
+                      className="roll-again"
+                      aria-label={`Roll (${rollsLeft} left)`}
+                      onClick={rollNow}
+                    >
+                      Roll again
+                    </button>
+                  )}
+                </motion.div>
+              ) : myTray ? (
+                <motion.div key="roll" className="action-row" {...ACTION}>
+                  <button
+                    type="button"
+                    className={`candy big roll${rolling ? ' busy' : ''}`}
+                    aria-label={
+                      rollsLeft === 0 && !rolling ? 'No rolls left' : `Roll (${rollsLeft} left)`
+                    }
+                    aria-keyshortcuts="Space"
+                    disabled={!canRoll}
+                    onClick={rollNow}
+                  >
+                    {rolling
+                      ? 'Rolling…'
+                      : rollsLeft === 0
+                        ? 'No rolls left'
+                        : turn.rolls === 0
+                          ? 'Roll'
+                          : 'Roll again'}
+                    {canRoll && <kbd aria-hidden="true">Space</kbd>}
                   </button>
-                </>
-              ) : (
-                <button type="button" className="primary big" onClick={write}>
-                  Write it in: {pick.value} in {BOX_LABELS[pick.box].long}
-                </button>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+            <p className="hint quiet">{hint || ' '}</p>
+            <AnimatePresence initial={false}>
+              {last && (
+                <motion.button
+                  key={`${last.card}:${last.box}`}
+                  type="button"
+                  className="undo"
+                  onClick={() => table.send(MSG_UNDO)}
+                  {...ACTION}
+                >
+                  <UndoIcon /> Undo {where(last)}
+                </motion.button>
               )}
-            </div>
-          )}
-
-          {last && (
-            <button type="button" className="undo" onClick={() => table.send(MSG_UNDO)}>
-              Undo {BOX_LABELS[last.box].long}
-              {multi ? ` on card ${last.card + 1}` : ''}
-            </button>
-          )}
+            </AnimatePresence>
+          </div>
         </section>
 
         <section
@@ -286,14 +426,16 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
           />
           <div id={PAD_PANEL_ID} role="tabpanel" aria-labelledby={padTabId(viewed)}>
             <h2 className="pad-title">{mine ? 'Your pad' : `${name(viewed)}'s pad`}</h2>
-            {lookingAway && (
-              <div className="look-only" role="note">
-                <p>You can only write on your own pad.</p>
-                <button type="button" onClick={() => setViewed(seat)}>
-                  Back to your pad
-                </button>
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {lookingAway && (
+                <motion.div className="look-only" role="note" {...ACTION}>
+                  <p>You can only write on your own pad.</p>
+                  <button type="button" onClick={() => setViewed(seat)}>
+                    Back to your pad
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="pad-sheet">
               <table className="pad">
                 <thead>
@@ -330,10 +472,26 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                                 }
                               >
                                 {earned ? (
-                                  <span className="bonus-tag">+{UPPER_BONUS}</span>
+                                  <motion.span
+                                    className="bonus-tag"
+                                    initial={{ scale: 0.4, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    transition={SPRING.pop}
+                                  >
+                                    +{UPPER_BONUS}
+                                  </motion.span>
                                 ) : (
                                   <span className="upper-progress" aria-hidden="true">
-                                    {upper} / {UPPER_BONUS_THRESHOLD}
+                                    <span className="meter">
+                                      <span
+                                        style={{
+                                          width: `${Math.min(100, (upper / UPPER_BONUS_THRESHOLD) * 100)}%`,
+                                        }}
+                                      />
+                                    </span>
+                                    <span className="count">
+                                      {upper}/{UPPER_BONUS_THRESHOLD}
+                                    </span>
                                   </span>
                                 )}
                               </td>
@@ -342,7 +500,17 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                         </tr>
                       )}
                       <tr className={row === UPPER_COUNT ? 'lower-start' : ''}>
-                        <th scope="row">{BOX_LABELS[box].short}</th>
+                        <th scope="row">
+                          <span className="box-label">
+                            {row < UPPER_COUNT && <DieGlyph n={row + 1} />}
+                            {BOX_LABELS[box].short}
+                            {BOX_POINTS[box] !== undefined && (
+                              <span className="box-points" aria-hidden="true">
+                                {BOX_POINTS[box]}
+                              </span>
+                            )}
+                          </span>
+                        </th>
                         {player.cards.map((card, c) => {
                           const filled = card.boxes[box];
                           const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
@@ -353,9 +521,9 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                                 {isNew && <span className="pop-ring" aria-hidden="true" />}
                                 <motion.span
                                   className="score"
-                                  initial={isNew ? { scale: 1.9, opacity: 0 } : false}
-                                  animate={{ scale: 1, opacity: 1 }}
-                                  transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                                  initial={isNew ? { scale: 2, opacity: 0, rotate: -10 } : false}
+                                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                  transition={SPRING.pop}
                                 >
                                   {filled}
                                 </motion.span>
@@ -366,24 +534,28 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                           if (!option) return <td key={c} aria-label={`${label}: open`} />;
                           const chosen = pick?.card === c && pick.box === box;
                           const bonus = option.allowed && options![c]!.bonus;
+                          const scores = option.allowed && option.value > 0;
                           return (
                             <td key={c}>
                               <button
                                 type="button"
                                 className={[
                                   'preview',
-                                  option.allowed && option.value > 0 ? 'scores' : '',
+                                  scores ? 'scores' : 'zero',
                                   chosen ? 'chosen' : '',
                                 ].join(' ')}
+                                style={{ ['--i' as string]: row + c }}
                                 disabled={!option.allowed}
                                 aria-pressed={chosen}
-                                aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
+                                aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}${chosen ? '. Press again to write it in' : ''}`}
                                 onClick={() => {
+                                  if (chosen) return write();
                                   setConfirming(false);
                                   setPick({ card: c, box, value: option.value });
                                 }}
                               >
                                 {bonus && <span className="bonus-tag">+100</span>}
+                                {chosen && <CheckIcon />}
                                 {option.value}
                               </button>
                             </td>
@@ -418,3 +590,10 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     </main>
   );
 }
+
+/** Action buttons swap in place: a quick rise and fade, so the next thing to do is ready at once. */
+const ACTION = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.16, ease: EASE_OUT } },
+  exit: { opacity: 0, y: -6, transition: { duration: DURATION.fast, ease: EASE_OUT } },
+};

@@ -1,8 +1,19 @@
 import { randomUUID } from 'node:crypto';
 import { type BrowserContextOptions, expect, type Page, test } from '@playwright/test';
 
-/** Signs in as a guest at a shared table and waits for the lobby. */
+/**
+ * Signs in as a guest at a shared table and waits for the lobby. Fast rolls is
+ * on, as a player can set it: a whole game is 26 animated rolls, and this
+ * still plays every one of them, at half length.
+ */
 async function sitDown(page: Page, table: string, name: string) {
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem('rollhouse:prefs', JSON.stringify({ fastRolls: true }));
+    } catch {
+      // about:blank has no storage; the real page sets it.
+    }
+  });
   await page.goto(`/?table=${table}`);
   await page.getByLabel('Your name').fill(name);
   await page.getByRole('button', { name: 'Sit down' }).click();
@@ -36,7 +47,8 @@ async function playTurn(page: Page, endsGame = false) {
 
 for (const style of ['Take turns', 'Everyone at once'] as const) {
   test(`two players finish a 1-card game (${style})`, async ({ page, browser }, info) => {
-    test.setTimeout(120_000);
+    // 26 animated rolls and two browsers drawing them.
+    test.setTimeout(180_000);
     const table = `e2e-${randomUUID()}`;
     const other = await browser.newContext(info.project.use as BrowserContextOptions);
     const mom = await other.newPage();
