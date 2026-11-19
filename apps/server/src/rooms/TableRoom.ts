@@ -13,14 +13,18 @@ import {
   tryMove,
 } from '@rollhouse/rules';
 import {
+  assignFlavor,
   DEFAULT_SETTINGS,
   type ErrorCode,
+  type FlavorId,
+  isFlavor,
   type ErrorMessage,
   type JoinOptions,
   type Lobby,
   type LobbySettings,
   type MoveMessage,
   MSG_ERROR,
+  MSG_FLAVOR,
   MSG_HOLD,
   MSG_LOBBY,
   MSG_MOVE,
@@ -52,6 +56,8 @@ export const RECONNECT_SECONDS = 30;
 interface Member {
   user: SessionUser;
   sessions: Set<string>;
+  /** Seats only; spectators keep the first free one, unused. */
+  flavor: FlavorId;
 }
 
 const isObject = (m: unknown): m is Record<string, unknown> =>
@@ -139,7 +145,7 @@ export function createTableRoom(cfg: TableConfig) {
       return user;
     }
 
-    override onJoin(client: Client) {
+    override onJoin(client: Client, options?: Partial<JoinOptions>) {
       const user = client.auth as SessionUser;
       this.emptyTimer?.clear();
       this.emptyTimer = null;
@@ -147,13 +153,18 @@ export function createTableRoom(cfg: TableConfig) {
       let member = this.seats.find((s) => s.user.id === user.id);
       if (!member) {
         if (!this.setup && this.seats.length < MAX_PLAYERS) {
-          member = { user, sessions: new Set() };
+          const flavor = assignFlavor(
+            this.seats.map((s) => s.flavor),
+            isFlavor(options?.flavor) ? options.flavor : null,
+            isFlavor(options?.backup) ? options.backup : null,
+          );
+          member = { user, sessions: new Set(), flavor };
           this.seats.push(member);
           if (!this.hostId) this.hostId = user.id;
         } else {
           member = this.spectators.find((s) => s.user.id === user.id);
           if (!member) {
-            member = { user, sessions: new Set() };
+            member = { user, sessions: new Set(), flavor: assignFlavor([]) };
             this.spectators.push(member);
           }
         }
@@ -201,6 +212,19 @@ export function createTableRoom(cfg: TableConfig) {
         const next = mergeSettings(this.settings, intent);
         if (!next) return this.sendError(client, 'BAD_INTENT', 'those settings are not valid');
         this.settings = next;
+        this.broadcastLobby();
+      },
+
+      [MSG_FLAVOR]: (client: Client, intent: unknown) => {
+        if (this.setup) return this.sendError(client, 'STARTED', 'the game has started');
+        const userId = (client.auth as SessionUser).id;
+        const member = this.seats.find((s) => s.user.id === userId);
+        if (!member) return this.sendError(client, 'NOT_SEATED', 'you are watching this game');
+        if (!isObject(intent) || !isFlavor(intent['flavor']) || !isFlavor(intent['backup'])) {
+          return this.sendError(client, 'BAD_INTENT', 'pick one of the flavors');
+        }
+        const taken = this.seats.filter((s) => s !== member).map((s) => s.flavor);
+        member.flavor = assignFlavor(taken, intent['flavor'], intent['backup']);
         this.broadcastLobby();
       },
 
@@ -266,7 +290,11 @@ export function createTableRoom(cfg: TableConfig) {
 
     lobby(): Lobby {
       return {
-        seats: this.seats.map((s) => ({ user: s.user, connected: s.sessions.size > 0 })),
+        seats: this.seats.map((s) => ({
+          user: s.user,
+          connected: s.sessions.size > 0,
+          flavor: s.flavor,
+        })),
         hostId: this.hostId,
         settings: this.settings,
         started: this.setup !== null,
@@ -333,7 +361,10 @@ export function createTableRoom(cfg: TableConfig) {
       if (!result.ok) return this.sendError(client, result.error.code, result.error.message);
       this.game = result.state;
       this.moves.push(move);
-      this.broadcast(MSG_MOVE, { index: this.moves.length - 1, move } satisfies MoveMessage);
+      const message: MoveMessage = { index: this.moves.length - 1, move };
+      // Which recorded tumble to play. Drawn after the dice, and only for looks.
+      if (move.type === 'roll') message.tumble = randomInt(0, 2 ** 30);
+      this.broadcast(MSG_MOVE, message);
     }
 
     private armEmptyTimer() {

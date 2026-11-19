@@ -49,6 +49,11 @@ tasks:
     cmds:
       - pnpm -r build
 
+  tumbles:
+    desc: Re-record the dice tumble paths with Rapier (writes apps/web/src/dice/tumbles.bin)
+    cmds:
+      - node apps/web/scripts/record-tumbles.ts
+
   e2e:
     desc: Playwright against the production build (run task build first)
     dir: e2e
