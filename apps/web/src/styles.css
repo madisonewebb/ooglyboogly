@@ -420,8 +420,8 @@ input:not([type]) {
   }
 
   .pad-col {
-    /* Roughly the window less the chrome, over 15 rows; previews track it. */
-    --row: clamp(1.75rem, calc((100dvh - 14rem) / 15), 2.65rem);
+    /* Roughly the window less the chrome, over 16 rows; previews track it. */
+    --row: clamp(1.75rem, calc((100dvh - 14rem) / 16), 2.65rem);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -439,12 +439,17 @@ input:not([type]) {
   .pad-sheet {
     flex: 1;
     min-height: 0;
-    /* 15 rows at full size. */
-    max-height: calc(15 * 2.65rem);
+    /* 16 rows at full size. */
+    max-height: calc(16 * 2.65rem);
   }
 
   .pad {
     height: 100%;
+  }
+
+  .pad-col .pad th,
+  .pad-col .pad td {
+    padding-block: 0.05rem;
   }
 }
 
@@ -928,9 +933,16 @@ input:not([type]) {
   font-weight: 800;
 }
 
+.upper-row th,
 .bonus-row th {
   font-size: 1.0625rem;
   color: var(--quiet);
+}
+
+/* Ones to Sixes so far against the bonus line, until it turns into the +35 tag. */
+.upper-progress {
+  color: var(--quiet);
+  font-weight: 700;
 }
 
 .bonus-boxes {
@@ -986,6 +998,11 @@ input:not([type]) {
   margin-left: auto;
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
+}
+
+.bonus-note {
+  margin: 0.4rem 0 0;
+  font-weight: 700;
 }
 
 .card-totals {
