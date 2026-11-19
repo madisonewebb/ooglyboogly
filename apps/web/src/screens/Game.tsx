@@ -8,6 +8,7 @@ import {
   cardOptions,
   type GameState,
   isPlayerDone,
+  MAX_YATZY_BONUSES,
   ROLLS_PER_TURN,
 } from '@rollhouse/rules';
 import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE, MSG_UNDO } from '@rollhouse/shared';
@@ -111,13 +112,14 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     setConfirming(false);
   }, [myTurnKey]);
 
-  /** options[card][box], only when the viewer is choosing where to write their own roll. */
+  /** Per card: each open box's option, and whether this roll earns a Yatzy bonus there. */
   const options = useMemo(() => {
     if (!mine || !canAct || !player.turn.dice || rolling) return null;
     const d = player.turn.dice;
-    return player.cards.map(
-      (c) => new Map<Box, BoxOption>(cardOptions(c, d).options.map((o) => [o.box, o])),
-    );
+    return player.cards.map((c) => {
+      const o = cardOptions(c, d);
+      return { boxes: new Map<Box, BoxOption>(o.options.map((x) => [x.box, x])), bonus: o.bonus };
+    });
   }, [mine, canAct, player, rolling]);
 
   const fresh = useNewlyFilled(game, viewed);
@@ -280,7 +282,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                     const filled = card.boxes[box];
                     const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
                     if (filled !== undefined) {
-                      const stars = box === 'yatzy' && card.yatzyBonuses > 0;
                       const isNew = fresh.has(`${c}:${box}`);
                       return (
                         <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
@@ -293,31 +294,31 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                           >
                             {filled}
                           </motion.span>
-                          {stars && (
-                            <span className="stars" aria-label={`${card.yatzyBonuses} bonus`}>
-                              {' '}
-                              {'★'.repeat(card.yatzyBonuses)}
-                            </span>
-                          )}
                         </td>
                       );
                     }
-                    const option = options?.[c]?.get(box);
+                    const option = options?.[c]?.boxes.get(box);
                     if (!option) return <td key={c} aria-label={`${label}: open`} />;
                     const chosen = pick?.card === c && pick.box === box;
+                    const bonus = option.allowed && options![c]!.bonus;
                     return (
                       <td key={c}>
                         <button
                           type="button"
-                          className={`preview${chosen ? ' chosen' : ''}`}
+                          className={[
+                            'preview',
+                            option.allowed && option.value > 0 ? 'scores' : '',
+                            chosen ? 'chosen' : '',
+                          ].join(' ')}
                           disabled={!option.allowed}
                           aria-pressed={chosen}
-                          aria-label={`${label}, ${option.value} points`}
+                          aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
                           onClick={() => {
                             setConfirming(false);
                             setPick({ card: c, box, value: option.value });
                           }}
                         >
+                          {bonus && <span className="bonus-tag">+100</span>}
                           {option.value}
                         </button>
                       </td>
@@ -325,6 +326,23 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                   })}
                 </tr>
               ))}
+              <tr className="bonus-row">
+                <th scope="row">Yatzy bonus</th>
+                {player.cards.map((card, c) => (
+                  <td
+                    key={c}
+                    aria-label={`Card ${c + 1} Yatzy bonus: ${card.yatzyBonuses} of ${MAX_YATZY_BONUSES}`}
+                  >
+                    <span className="bonus-boxes" aria-hidden="true">
+                      {Array.from({ length: MAX_YATZY_BONUSES }, (_, i) => (
+                        <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
+                          {i < card.yatzyBonuses ? '✓' : ''}
+                        </span>
+                      ))}
+                    </span>
+                  </td>
+                ))}
+              </tr>
             </tbody>
           </table>
         </section>
