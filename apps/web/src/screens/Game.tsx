@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, type HTMLMotionProps, motion, useIsPresent } from 'motion/react';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   activePlayers,
@@ -335,12 +335,11 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
           <div className="tray-actions">
             <AnimatePresence mode="popLayout" initial={false}>
               {myTray && pick && confirming ? (
-                <motion.div
+                <Swap
                   key="confirm"
                   className="confirm-zero"
                   role="group"
                   aria-label="Write a zero?"
-                  {...ACTION}
                 >
                   <p>Put 0 in {where(pick)}?</p>
                   <div className="confirm-buttons">
@@ -351,9 +350,9 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                       Cancel
                     </button>
                   </div>
-                </motion.div>
+                </Swap>
               ) : myTray && pick ? (
-                <motion.div key="write" className="action-row" {...ACTION}>
+                <Swap key="write" className="action-row">
                   <button type="button" className="candy big write" onClick={write}>
                     <CheckIcon /> Write it in: {pick.value} in {where(pick)}
                   </button>
@@ -367,9 +366,9 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                       Roll again
                     </button>
                   )}
-                </motion.div>
+                </Swap>
               ) : myTray ? (
-                <motion.div key="roll" className="action-row" {...ACTION}>
+                <Swap key="roll" className="action-row">
                   <button
                     type="button"
                     className={`candy big roll${rolling ? ' busy' : ''}`}
@@ -389,21 +388,17 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                           : 'Roll again'}
                     {canRoll && <kbd aria-hidden="true">Space</kbd>}
                   </button>
-                </motion.div>
+                </Swap>
               ) : null}
             </AnimatePresence>
             <p className="hint quiet">{hint || ' '}</p>
             <AnimatePresence initial={false}>
               {last && (
-                <motion.button
-                  key={`${last.card}:${last.box}`}
-                  type="button"
-                  className="undo"
-                  onClick={() => table.send(MSG_UNDO)}
-                  {...ACTION}
-                >
-                  <UndoIcon /> Undo {where(last)}
-                </motion.button>
+                <Swap key={`${last.card}:${last.box}`}>
+                  <button type="button" className="undo" onClick={() => table.send(MSG_UNDO)}>
+                    <UndoIcon /> Undo {where(last)}
+                  </button>
+                </Swap>
               )}
             </AnimatePresence>
           </div>
@@ -428,12 +423,12 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             <h2 className="pad-title">{mine ? 'Your pad' : `${name(viewed)}'s pad`}</h2>
             <AnimatePresence initial={false}>
               {lookingAway && (
-                <motion.div className="look-only" role="note" {...ACTION}>
+                <Swap className="look-only" role="note">
                   <p>You can only write on your own pad.</p>
                   <button type="button" onClick={() => setViewed(seat)}>
                     Back to your pad
                   </button>
-                </motion.div>
+                </Swap>
               )}
             </AnimatePresence>
             <div className="pad-sheet">
@@ -597,3 +592,15 @@ const ACTION = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.16, ease: EASE_OUT } },
   exit: { opacity: 0, y: -6, transition: { duration: DURATION.fast, ease: EASE_OUT } },
 };
+
+/**
+ * One of those actions. While it animates out, the one replacing it is already
+ * there, so the old one stops taking clicks and leaves the accessibility tree
+ * at once: there's never a second Roll button to press or to hear.
+ */
+function Swap(props: HTMLMotionProps<'div'>) {
+  const present = useIsPresent();
+  return (
+    <motion.div {...ACTION} {...props} {...(present ? {} : { inert: true, 'aria-hidden': true })} />
+  );
+}
