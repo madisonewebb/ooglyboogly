@@ -679,10 +679,12 @@ input:not([type]) {
 .pad-tabs {
   display: flex;
   gap: 0.4rem;
-  overflow-x: auto;
+  /* Scrolls sideways at a big table, never up and down. */
+  overflow: auto hidden;
   margin: -0.4rem -0.5rem 0;
   padding: 0.4rem 0.5rem 0;
-  border-bottom: 2px solid var(--rule);
+  /* The rule is drawn inside the row so the chosen tab can cover it without overflowing. */
+  box-shadow: inset 0 -2px 0 var(--rule);
 }
 
 .pad-tab {
@@ -692,7 +694,6 @@ input:not([type]) {
   gap: 0.6rem;
   flex: none;
   min-height: 3.4rem;
-  margin-bottom: -2px;
   padding: 0.3rem 1rem 0.3rem 0.45rem;
   border: 2px solid transparent;
   border-bottom: 0;
@@ -712,9 +713,7 @@ input:not([type]) {
 .pad-tab[aria-selected='true'] {
   border-color: var(--candy);
   background: var(--pad);
-  box-shadow:
-    inset 0 0.3rem 0 var(--candy),
-    0 2px 0 var(--pad);
+  box-shadow: inset 0 0.3rem 0 var(--candy);
   font-weight: 800;
 }
 
