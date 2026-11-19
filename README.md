@@ -115,7 +115,7 @@ The name and domain are each set in one place:
 ## Discord
 
 Each environment has its own Discord app, owned by a Developer Team: **Rollhouse** (prod) and
-**Rollhouse Staging**. Until the Activity is released, only team members can launch it, so family
+**Rollhouse Dev** (staging). Until the Activity is released, only team members can launch it, so family
 players join the team as read-only members (Discord requires 2FA for that).
 
 Per app, in the [Developer Portal](https://discord.com/developers/applications):
