@@ -327,9 +327,9 @@ describe('table room', () => {
 
 describe('mergeSettings', () => {
   it('accepts valid fields and rejects anything else', () => {
-    expect(mergeSettings(DEFAULT_SETTINGS, { multipliers: false })).toEqual({
+    expect(mergeSettings(DEFAULT_SETTINGS, { multipliers: true })).toEqual({
       ...DEFAULT_SETTINGS,
-      multipliers: false,
+      multipliers: true,
     });
     for (const bad of [
       null,
