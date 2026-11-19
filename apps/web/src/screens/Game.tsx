@@ -1,15 +1,18 @@
 import { motion } from 'motion/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   activePlayers,
   BOXES,
   type Box,
   type BoxOption,
   cardOptions,
+  cardTotal,
   type GameState,
   isPlayerDone,
   MAX_YATZY_BONUSES,
   ROLLS_PER_TURN,
+  UPPER_BONUS,
+  UPPER_BONUS_THRESHOLD,
 } from '@rollhouse/rules';
 import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE, MSG_UNDO } from '@rollhouse/shared';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
@@ -310,55 +313,84 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 </thead>
                 <tbody>
                   {BOXES.map((box, row) => (
-                    <tr key={box} className={row === UPPER_COUNT ? 'lower-start' : ''}>
-                      <th scope="row">{BOX_LABELS[box].short}</th>
-                      {player.cards.map((card, c) => {
-                        const filled = card.boxes[box];
-                        const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
-                        if (filled !== undefined) {
-                          const isNew = fresh.has(`${c}:${box}`);
-                          return (
-                            <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
-                              {isNew && <span className="pop-ring" aria-hidden="true" />}
-                              <motion.span
-                                className="score"
-                                initial={isNew ? { scale: 1.9, opacity: 0 } : false}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                    <Fragment key={box}>
+                      {row === UPPER_COUNT && (
+                        <tr className="upper-row">
+                          <th scope="row">Upper bonus</th>
+                          {player.cards.map((card, c) => {
+                            const upper = cardTotal(card, c, false).upper;
+                            const earned = upper >= UPPER_BONUS_THRESHOLD;
+                            return (
+                              <td
+                                key={c}
+                                aria-label={
+                                  earned
+                                    ? `Card ${c + 1} upper bonus: earned, ${UPPER_BONUS} points`
+                                    : `Card ${c + 1} upper bonus: ${upper} of ${UPPER_BONUS_THRESHOLD}`
+                                }
                               >
-                                {filled}
-                              </motion.span>
+                                {earned ? (
+                                  <span className="bonus-tag">+{UPPER_BONUS}</span>
+                                ) : (
+                                  <span className="upper-progress" aria-hidden="true">
+                                    {upper} / {UPPER_BONUS_THRESHOLD}
+                                  </span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
+                      <tr className={row === UPPER_COUNT ? 'lower-start' : ''}>
+                        <th scope="row">{BOX_LABELS[box].short}</th>
+                        {player.cards.map((card, c) => {
+                          const filled = card.boxes[box];
+                          const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
+                          if (filled !== undefined) {
+                            const isNew = fresh.has(`${c}:${box}`);
+                            return (
+                              <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
+                                {isNew && <span className="pop-ring" aria-hidden="true" />}
+                                <motion.span
+                                  className="score"
+                                  initial={isNew ? { scale: 1.9, opacity: 0 } : false}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                                >
+                                  {filled}
+                                </motion.span>
+                              </td>
+                            );
+                          }
+                          const option = options?.[c]?.boxes.get(box);
+                          if (!option) return <td key={c} aria-label={`${label}: open`} />;
+                          const chosen = pick?.card === c && pick.box === box;
+                          const bonus = option.allowed && options![c]!.bonus;
+                          return (
+                            <td key={c}>
+                              <button
+                                type="button"
+                                className={[
+                                  'preview',
+                                  option.allowed && option.value > 0 ? 'scores' : '',
+                                  chosen ? 'chosen' : '',
+                                ].join(' ')}
+                                disabled={!option.allowed}
+                                aria-pressed={chosen}
+                                aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
+                                onClick={() => {
+                                  setConfirming(false);
+                                  setPick({ card: c, box, value: option.value });
+                                }}
+                              >
+                                {bonus && <span className="bonus-tag">+100</span>}
+                                {option.value}
+                              </button>
                             </td>
                           );
-                        }
-                        const option = options?.[c]?.boxes.get(box);
-                        if (!option) return <td key={c} aria-label={`${label}: open`} />;
-                        const chosen = pick?.card === c && pick.box === box;
-                        const bonus = option.allowed && options![c]!.bonus;
-                        return (
-                          <td key={c}>
-                            <button
-                              type="button"
-                              className={[
-                                'preview',
-                                option.allowed && option.value > 0 ? 'scores' : '',
-                                chosen ? 'chosen' : '',
-                              ].join(' ')}
-                              disabled={!option.allowed}
-                              aria-pressed={chosen}
-                              aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
-                              onClick={() => {
-                                setConfirming(false);
-                                setPick({ card: c, box, value: option.value });
-                              }}
-                            >
-                              {bonus && <span className="bonus-tag">+100</span>}
-                              {option.value}
-                            </button>
-                          </td>
-                        );
-                      })}
-                    </tr>
+                        })}
+                      </tr>
+                    </Fragment>
                   ))}
                   <tr className="bonus-row">
                     <th scope="row">Yatzy bonus</th>
