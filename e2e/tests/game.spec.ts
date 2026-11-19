@@ -12,7 +12,7 @@ async function sitDown(page: Page, table: string, name: string) {
 /** Rolls once and writes the dice in the first box the rules allow. */
 async function playTurn(page: Page, endsGame = false) {
   // Your own pad: in Take turns the pad follows whoever is up, so pick it first.
-  await page.getByRole('button', { name: 'You', exact: true }).click();
+  await page.getByRole('tab', { name: 'You', exact: true }).click();
   const filled = page.getByRole('region', { name: /score pad/ }).locator('td.filled');
   const before = await filled.count();
   await page.getByRole('button', { name: /^Roll \(/ }).click();
@@ -29,7 +29,7 @@ async function playTurn(page: Page, endsGame = false) {
   // The last score of the game swaps the pad for the results.
   if (endsGame) await expect(page.getByTestId('winner')).toBeVisible();
   else {
-    await page.getByRole('button', { name: 'You', exact: true }).click();
+    await page.getByRole('tab', { name: 'You', exact: true }).click();
     await expect(filled).toHaveCount(before + 1);
   }
 }
@@ -59,9 +59,33 @@ for (const style of ['Take turns', 'Everyone at once'] as const) {
     await page.getByRole('button', { name: 'Start game' }).click();
     await expect(mom.getByRole('table')).toBeVisible();
 
+    // One tab per player on the pad; the pad says whose it is.
+    const tabs = page.getByRole('tablist', { name: 'Score pads' });
+    await expect(tabs.getByRole('tab')).toHaveCount(2);
+    await expect(page.getByRole('tab', { name: 'You', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(page.getByRole('heading', { name: 'Your pad' })).toBeVisible();
+
+    // Arrow keys move between pads. On your go, someone else's pad is look-only.
+    await page.getByRole('tab', { name: 'You', exact: true }).focus();
+    await page.keyboard.press('ArrowRight');
+    const momTab = page.getByRole('tab', { name: 'Mom', exact: true });
+    await expect(momTab).toBeFocused();
+    await expect(momTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tabpanel', { name: 'Mom' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: "Mom's pad" })).toBeVisible();
+    await expect(page.getByText('You can only write on your own pad.')).toBeVisible();
+    await page.getByRole('button', { name: 'Back to your pad' }).click();
+    await expect(page.getByRole('heading', { name: 'Your pad' })).toBeVisible();
+
     if (style === 'Take turns') {
       // A player can't roll out of turn.
       await expect(mom.getByRole('button', { name: /^Roll \(/ })).toHaveCount(0);
+      // Mom isn't up, so looking at Madi's pad is just looking.
+      await mom.getByRole('tab', { name: 'Madi', exact: true }).click();
+      await expect(mom.getByText('You can only write on your own pad.')).toHaveCount(0);
       for (let turn = 0; turn < 13; turn++) {
         await playTurn(page);
         await playTurn(mom, turn === 12);
