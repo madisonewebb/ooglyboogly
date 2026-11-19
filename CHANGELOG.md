@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/madisonewebb/rollhouse/compare/v0.3.0...v0.4.0) (2026-11-19)
+
+
+### Features
+
+* start new tables with multipliers off ([#30](https://github.com/madisonewebb/rollhouse/issues/30)) ([faca9ba](https://github.com/madisonewebb/rollhouse/commit/faca9ba17ca7bb6d6b93419f48d89626c85a9dad))
+* **web:** drop the backup flavor picker from the lobby ([#29](https://github.com/madisonewebb/rollhouse/issues/29)) ([fd49c42](https://github.com/madisonewebb/rollhouse/commit/fd49c42b86c7d587e9d19b504f48939c42546574))
+
 ## [0.3.0](https://github.com/madisonewebb/rollhouse/compare/v0.2.0...v0.3.0) (2026-11-19)
 
 
