@@ -705,10 +705,6 @@ input:not([type]) {
   color: var(--ink);
 }
 
-.pad .stars {
-  color: var(--ink);
-}
-
 .pop-ring {
   position: absolute;
   right: 0.8rem;
@@ -737,6 +733,8 @@ input:not([type]) {
 /* Previews read as previews by shape: deep mauve in a dashed outline. */
 .preview {
   width: 100%;
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
   text-align: right;
   min-height: 2.3rem;
@@ -751,6 +749,50 @@ input:not([type]) {
 
 .preview:disabled {
   border-color: transparent;
+}
+
+/* Boxes this roll would score points in stand out; zeros stay quiet. */
+.preview.scores {
+  border-style: solid;
+  border-color: var(--mint);
+  background: var(--mint);
+  color: var(--on-fill);
+}
+
+.bonus-tag {
+  margin-right: auto;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--butter);
+  color: var(--on-fill);
+  font-size: 1.0625rem;
+  font-weight: 800;
+}
+
+.bonus-row th {
+  font-size: 1.0625rem;
+  color: var(--quiet);
+}
+
+.bonus-boxes {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
+.bonus-boxes span {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 2px solid var(--rule);
+  border-radius: 0.45rem;
+  font-weight: 800;
+}
+
+.bonus-boxes span.earned {
+  border-color: var(--mint);
+  background: var(--mint);
+  color: var(--on-fill);
 }
 
 .preview.chosen {
