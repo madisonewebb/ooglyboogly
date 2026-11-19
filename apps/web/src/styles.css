@@ -1,35 +1,393 @@
-/* Placeholder palette from the plan (Strawberry Milk / Midnight Plum). Full themes land in M4. */
+/* Plain M3 UI on the placeholder palette (Strawberry Milk / Midnight Plum). M4 makes it gorgeous. */
 :root {
   --bg: #ffeef3;
+  --panel: #ffffff;
   --text: #3a1e40;
-  --quiet: #806386;
-  color-scheme: light dark;
+  --quiet: #735779;
+  --accent: #c2417a;
+  --accent-text: #ffffff;
+  --line: #e6c9d6;
+  --lit: #ffd8e6;
+  --error: #a3123a;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #22122a;
+    --panel: #321d3c;
     --text: #fbeff5;
-    --quiet: #a891b3;
+    --quiet: #b9a3c3;
+    --accent: #f07fb0;
+    --accent-text: #22122a;
+    --line: #533a5e;
+    --lit: #5a2c4f;
+    --error: #ff8fae;
+    color-scheme: dark;
   }
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, sans-serif;
+  /* Never smaller than 17px anywhere. */
   font-size: 1.0625rem;
+  line-height: 1.4;
 }
 
-.placeholder {
+h1 {
+  font-size: 1.75rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+  min-height: 48px;
+  min-width: 48px;
+  border-radius: 12px;
+}
+
+button {
+  border: 2px solid var(--line);
+  background: var(--panel);
+  padding: 0 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+button.big {
+  width: 100%;
+  min-height: 56px;
+}
+
+input {
+  border: 2px solid var(--line);
+  background: var(--panel);
+  padding: 0 0.75rem;
+}
+
+.screen {
+  max-width: 40rem;
+  margin: 0 auto;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.centered {
+  min-height: 100dvh;
+  justify-content: center;
   text-align: center;
 }
 
-.placeholder p {
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.quiet {
   color: var(--quiet);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.row + .row {
+  margin-top: 0.5rem;
+}
+
+.banner {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: var(--lit);
+  text-align: center;
+}
+
+.banner.error {
+  color: var(--error);
+}
+
+.guest {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+/* Avatars */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.avatar-initial {
+  display: inline-grid;
+  place-items: center;
+  background: var(--lit);
+  font-weight: 700;
+}
+
+/* Lobby */
+.seats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.seats li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.away {
+  opacity: 0.55;
+}
+
+.badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  color: var(--quiet);
+}
+
+.choice {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.choice legend {
+  padding: 0;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.waiting {
+  text-align: center;
+  color: var(--quiet);
+}
+
+/* Game */
+.players {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  border-radius: 999px;
+}
+
+.player.lit {
+  background: var(--lit);
+  border-color: var(--accent);
+}
+
+.player.viewing {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.status {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.tray {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dice,
+.shelf {
+  display: flex;
+  gap: 0.5rem;
+  min-height: 64px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.shelf {
+  border-top: 2px dashed var(--line);
+  padding-top: 0.5rem;
+}
+
+.die {
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.die:disabled {
+  opacity: 1;
+}
+
+.die.held {
+  border-color: var(--accent);
+  background: var(--lit);
+}
+
+.pad-wrap {
+  overflow-x: auto;
+}
+
+.pad {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  border-radius: 12px;
+}
+
+.pad th,
+.pad td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.15rem 0.4rem;
+  text-align: center;
+  height: 52px;
+}
+
+.pad tbody th {
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pad tr.lower-start > * {
+  border-top: 3px double var(--line);
+}
+
+.pad .filled {
+  font-weight: 700;
+}
+
+.pad .stars {
+  color: var(--accent);
+}
+
+.preview {
+  width: 100%;
+  border-style: dashed;
+  color: var(--quiet);
+  background: transparent;
+}
+
+.preview.chosen {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--lit);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.write-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 16px;
+}
+
+.write-bar p {
+  margin: 0;
+  flex-basis: 100%;
+  font-weight: 600;
+}
+
+/* Results */
+.standings {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.standings .total {
+  margin-left: auto;
+  font-size: 1.4rem;
+}
+
+.card-totals {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.card-totals th {
+  text-align: left;
+  font-weight: 500;
+}
+
+.card-totals td {
+  text-align: right;
 }
