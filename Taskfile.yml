@@ -59,7 +59,7 @@ tasks:
     desc: Install Playwright browsers (CI adds --with-deps)
     dir: e2e
     cmds:
-      - pnpm exec playwright install {{.CLI_ARGS}} chromium webkit
+      - pnpm exec playwright install {{.CLI_ARGS}} chromium
 
   smoke:
     desc: Post-deploy smoke test (needs BASE_URL and EXPECTED_SHA)

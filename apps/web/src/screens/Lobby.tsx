@@ -8,7 +8,6 @@ import {
 } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import type { Table } from '../useTable';
-import { DeviceCheck } from './DeviceCheck';
 
 interface Props {
   lobby: LobbyState;
@@ -126,8 +125,6 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
       ) : (
         <p className="waiting">Waiting for {host?.user.name ?? 'the host'} to start…</p>
       )}
-
-      <DeviceCheck />
     </main>
   );
 }
