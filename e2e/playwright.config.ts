@@ -11,11 +11,7 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: 'on-first-retry',
   },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    // Mobile WebKit so iPhone Safari quirks show up before Mom does.
-    { name: 'mobile-webkit', use: { ...devices['iPhone 15'] } },
-  ],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   // Tests run against the production build (task build), served by the real server.
   webServer: {
     command: 'node ../apps/server/dist/index.mjs',

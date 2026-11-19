@@ -31,7 +31,6 @@ for (const style of ['Take turns', 'Everyone at once'] as const) {
   test(`two players finish a 1-card game (${style})`, async ({ page, browser }, info) => {
     test.setTimeout(120_000);
     const table = `e2e-${randomUUID()}`;
-    // Same device as this project (desktop Chrome or iPhone WebKit).
     const other = await browser.newContext(info.project.use as BrowserContextOptions);
     const mom = await other.newPage();
 
@@ -72,11 +71,4 @@ test('a player who reloads keeps their seat', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Roll (2 left)' })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('button', { name: 'Roll (2 left)' })).toBeVisible();
-});
-
-test('the device check reports what it finds', async ({ page }) => {
-  await sitDown(page, `e2e-${randomUUID()}`, 'Madi');
-  await page.getByText('Device check').click();
-  await page.getByRole('button', { name: 'Test vibration' }).click();
-  await expect(page.getByTestId('vibration-result')).not.toHaveText('not tried');
 });

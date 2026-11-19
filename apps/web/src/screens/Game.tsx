@@ -13,7 +13,6 @@ import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE, MSG_UNDO } from '@rollhouse/
 import { Avatar } from '../Avatar';
 import { BOX_LABELS } from '../labels';
 import type { Table } from '../useTable';
-import { DeviceCheck } from './DeviceCheck';
 
 interface Props {
   game: GameState;
@@ -267,8 +266,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
           {player.cards.length > 1 ? ` on card ${last.card + 1}` : ''}
         </button>
       )}
-
-      <DeviceCheck />
     </main>
   );
 }

@@ -28,7 +28,7 @@ same table.
 | `task typecheck` | `tsc` across all packages                               |
 | `task test`      | Vitest, with coverage on the rules engine               |
 | `task build`     | Production build of client and server                   |
-| `task e2e`       | Playwright (Chromium + mobile WebKit) against the build |
+| `task e2e`       | Playwright (Chromium) against the build                 |
 | `task smoke`     | Post-deploy check: `/health` SHA, then a game WebSocket |
 | `task manifests` | Render the kustomize overlays                           |
 
