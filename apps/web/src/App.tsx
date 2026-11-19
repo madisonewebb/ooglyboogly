@@ -1,6 +1,8 @@
-import { type FormEvent, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { type AppConfig, BRAND_NAME } from '@rollhouse/shared';
 import { type Auth, getConfig, guestSignIn } from './api';
+import { Brand } from './Brand';
 import { Corner } from './Corner';
 import { discordSignIn, inDiscord } from './discord';
 import { Game } from './screens/Game';
@@ -8,6 +10,7 @@ import { Lobby } from './screens/Lobby';
 import { Results } from './screens/Results';
 import { errorText } from './errors';
 import { store } from './storage';
+import { DURATION, EASE_OUT, SCREEN } from './theme/motion';
 import { useTable } from './useTable';
 
 type Boot =
@@ -76,14 +79,14 @@ function Boot() {
     case 'outside':
       return (
         <Centered>
-          <h1 className="wordmark">{BRAND_NAME}</h1>
+          <Brand />
           <p>Open {BRAND_NAME} from a Discord call: start an Activity and pick it.</p>
         </Centered>
       );
     case 'failed':
       return (
         <Centered>
-          <h1 className="wordmark">{BRAND_NAME}</h1>
+          <Brand tagline={false} />
           <p>Sign-in didn&apos;t work: {boot.message}</p>
           <button type="button" onClick={() => location.reload()}>
             Try again
@@ -97,9 +100,24 @@ function Boot() {
   }
 }
 
-function Centered({ children }: { children: React.ReactNode }) {
+function Centered({ children }: { children: ReactNode }) {
   return <main className="screen centered">{children}</main>;
 }
+
+/** A whole screen arriving: lobby, game or results. */
+function Screen({ children }: { children: ReactNode }) {
+  return (
+    <motion.div className="screen-frame" {...SCREEN}>
+      {children}
+    </motion.div>
+  );
+}
+
+const BANNER = {
+  initial: { opacity: 0, y: -24 },
+  animate: { opacity: 1, y: 0, transition: { duration: DURATION.base, ease: EASE_OUT } },
+  exit: { opacity: 0, y: -24, transition: { duration: DURATION.fast, ease: EASE_OUT } },
+};
 
 function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
   const [name, setName] = useState('');
@@ -116,8 +134,8 @@ function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
   };
   return (
     <Centered>
-      <h1 className="wordmark">{BRAND_NAME}</h1>
-      <form onSubmit={(e) => void submit(e)} className="guest">
+      <Brand />
+      <form onSubmit={(e) => void submit(e)} className="guest panel">
         <label htmlFor="guest-name">Your name</label>
         <input
           id="guest-name"
@@ -126,7 +144,7 @@ function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
           autoComplete="nickname"
           onChange={(e) => setName(e.target.value)}
         />
-        <button type="submit" className="primary big">
+        <button type="submit" className="candy big">
           Sit down
         </button>
         {error && <p role="alert">{error}</p>}
@@ -139,43 +157,55 @@ function TableScreen({ auth }: { auth: Auth }) {
   const table = useTable(auth);
   const { lobby, game, seat, connection, error } = table;
 
+  const screen = !lobby ? 'joining' : !game ? 'lobby' : game.finished ? 'results' : 'game';
+
   return (
     <>
-      {connection === 'reconnecting' && <p className="banner">Reconnecting…</p>}
-      {connection === 'lost' && (
-        <p className="banner">
-          Lost the connection.{' '}
-          <button type="button" onClick={table.rejoin}>
-            Rejoin
-          </button>
-        </p>
-      )}
-      {error && (
-        <p className="banner error" role="alert">
-          {error.message}{' '}
-          <button type="button" onClick={table.clearError}>
-            OK
-          </button>
-        </p>
-      )}
-      {!lobby ? (
-        <Centered>
-          {connection === 'lost' ? (
-            <>
-              <p>Could not reach the table.</p>
-              {table.lostReason && <p className="quiet">{table.lostReason}</p>}
-            </>
+      <AnimatePresence>
+        {connection === 'reconnecting' && (
+          <motion.p key="re" className="banner" {...BANNER}>
+            Reconnecting…
+          </motion.p>
+        )}
+        {connection === 'lost' && (
+          <motion.p key="lost" className="banner" {...BANNER}>
+            Lost the connection.{' '}
+            <button type="button" onClick={table.rejoin}>
+              Rejoin
+            </button>
+          </motion.p>
+        )}
+        {error && (
+          <motion.p key="err" className="banner error" role="alert" {...BANNER}>
+            {error.message}{' '}
+            <button type="button" onClick={table.clearError}>
+              OK
+            </button>
+          </motion.p>
+        )}
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        <Screen key={screen}>
+          {!lobby ? (
+            <Centered>
+              {connection === 'lost' ? (
+                <>
+                  <p>Could not reach the table.</p>
+                  {table.lostReason && <p className="quiet">{table.lostReason}</p>}
+                </>
+              ) : (
+                <p className="joining">Joining the table…</p>
+              )}
+            </Centered>
+          ) : !game ? (
+            <Lobby lobby={lobby} table={table} userId={auth.user.id} cdnBase={auth.cdnBase} />
+          ) : game.finished ? (
+            <Results game={game} lobby={lobby} cdnBase={auth.cdnBase} />
           ) : (
-            'Joining the table…'
+            <Game game={game} lobby={lobby} table={table} seat={seat} cdnBase={auth.cdnBase} />
           )}
-        </Centered>
-      ) : !game ? (
-        <Lobby lobby={lobby} table={table} userId={auth.user.id} cdnBase={auth.cdnBase} />
-      ) : game.finished ? (
-        <Results game={game} lobby={lobby} cdnBase={auth.cdnBase} />
-      ) : (
-        <Game game={game} lobby={lobby} table={table} seat={seat} cdnBase={auth.cdnBase} />
-      )}
+        </Screen>
+      </AnimatePresence>
     </>
   );
 }

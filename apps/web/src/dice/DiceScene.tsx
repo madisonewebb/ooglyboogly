@@ -3,15 +3,21 @@
  * lazily, so the rest of the app paints before three.js arrives.
  *
  * Poses come from timeline.ts each frame and are written straight onto the
- * meshes, so a roll never re-renders React.
+ * meshes, so a roll never re-renders React. The look: jelly dice with candy
+ * pearl pips under a soft studio light, on felt inside a glossy rim, with the
+ * butter shelf behind and the candy cup in the roller's flavor.
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { Tokens } from '../theme/palette';
+import type { SceneTokens, Tokens } from '../theme/palette';
+import { dieGeometry, jellyMaterial, pearlMaterial, pipGeometry } from './dieModel';
+import { fitCamera, FOV } from './framing';
+import { renderQuality } from './webgl';
 import {
+  celebrationFor,
   cupAt,
   type HopPlan,
   hopEnd,
@@ -21,8 +27,7 @@ import {
   restPose,
   timing,
 } from './timeline';
-import { CAMERA_POS, frameExtent, LOOK_AT } from './framing';
-import { AXES, FACE_AXIS, SHELF_Y, SHELF_Z, SLOT_X, TRAY, TRAY_Z } from './tumbleFormat';
+import { CUP, SHELF_Y, SHELF_Z, SLOT_X, TRAY, TRAY_Z } from './tumbleFormat';
 
 export interface SlotRect {
   /** Centre, as a fraction of the canvas width and height. */
@@ -38,176 +43,348 @@ export interface SceneProps {
   roll: RollPlan | null;
   hops: readonly HopPlan[];
   colors: Tokens;
-  /** Screen positions of each column's tray and shelf spots, for the tap targets. */
+  scene: SceneTokens;
+  /** The roller's candy shade, for the cup and the sprinkles. */
+  candy: string;
+  /** The die under the pointer, which lifts a little. */
+  hover: number | null;
+  /** Screen positions of each column's tray and shelf spots, for the click targets. */
   onSlots(slots: { tray: SlotRect[]; shelf: SlotRect[] }): void;
 }
 
-const CAMERA = new THREE.Vector3(...CAMERA_POS);
-const TARGET = new THREE.Vector3(...LOOK_AT);
+function canvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  draw(c.getContext('2d')!);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
 
-/** Pip spots in a face's own (u, v) plane, a quarter of a die apart. */
-const PIPS: Record<number, [number, number][]> = {
-  1: [[0, 0]],
-  2: [
-    [-1, -1],
-    [1, 1],
-  ],
-  3: [
-    [-1, -1],
-    [0, 0],
-    [1, 1],
-  ],
-  4: [
-    [-1, -1],
-    [-1, 1],
-    [1, -1],
-    [1, 1],
-  ],
-  5: [
-    [-1, -1],
-    [-1, 1],
-    [0, 0],
-    [1, -1],
-    [1, 1],
-  ],
-  6: [
-    [-1, -1],
-    [-1, 0],
-    [-1, 1],
-    [1, -1],
-    [1, 0],
-    [1, 1],
-  ],
-};
+/** Seeded noise, so the felt looks the same on every screen. */
+function noise(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return s / 2147483647;
+  };
+}
 
-function pipGeometry(): THREE.BufferGeometry {
-  const parts: THREE.BufferGeometry[] = [];
-  for (let v = 1; v <= 6; v++) {
-    const n = new THREE.Vector3(...AXES[FACE_AXIS[v]!]!);
-    const u = Math.abs(n.y) > 0.5 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
-    const w = new THREE.Vector3().crossVectors(n, u);
-    const face = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-    for (const [a, b] of PIPS[v]!) {
-      const g = new THREE.CircleGeometry(0.085, 20);
-      g.applyQuaternion(face);
-      const p = n
-        .clone()
-        .multiplyScalar(0.503)
-        .addScaledVector(u, a * 0.25)
-        .addScaledVector(w, b * 0.25);
-      g.translate(p.x, p.y, p.z);
-      parts.push(g);
+/** Felt: the base color with a fine nap and darker edges where the rim shades it. */
+function feltTexture(color: string, w: number, h: number) {
+  return canvasTexture(1024, Math.round((1024 * h) / w), (g) => {
+    const { width, height } = g.canvas;
+    g.fillStyle = color;
+    g.fillRect(0, 0, width, height);
+    const rand = noise(11);
+    for (let i = 0; i < 14000; i++) {
+      const light = rand() > 0.5;
+      g.fillStyle = light ? 'rgba(255,255,255,0.05)' : 'rgba(40,10,50,0.05)';
+      g.fillRect(rand() * width, rand() * height, 1 + rand() * 2, 1 + rand() * 2);
     }
-  }
-  return mergeGeometries(parts)!;
+    const e = height * 0.12;
+    const shade = (x0: number, y0: number, x1: number, y1: number, rect: number[]) => {
+      const grad = g.createLinearGradient(x0, y0, x1, y1);
+      grad.addColorStop(0, 'rgba(40,10,50,0.22)');
+      grad.addColorStop(1, 'rgba(40,10,50,0)');
+      g.fillStyle = grad;
+      g.fillRect(rect[0]!, rect[1]!, rect[2]!, rect[3]!);
+    };
+    shade(0, 0, 0, e, [0, 0, width, e]);
+    shade(0, height, 0, height - e, [0, height - e, width, e]);
+    shade(0, 0, e, 0, [0, 0, e, height]);
+    shade(width, 0, width - e, 0, [width - e, 0, e, height]);
+  });
+}
+
+function bumpTexture() {
+  const t = canvasTexture(128, 128, (g) => {
+    const rand = noise(5);
+    const img = g.createImageData(128, 128);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const n = 110 + rand() * 60;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = n;
+      img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  });
+  t.colorSpace = THREE.NoColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(12, 6);
+  return t;
+}
+
+/** The cup's paper: candy and white stripes all the way round. */
+function stripeTexture(candy: string) {
+  const t = canvasTexture(512, 8, (g) => {
+    for (let i = 0; i < 16; i++) {
+      g.fillStyle = i % 2 === 0 ? candy : '#FFF7FB';
+      g.fillRect((i * 512) / 16, 0, 512 / 16, 8);
+    }
+  });
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
 }
 
 function shadowTexture(): THREE.Texture {
-  const c = document.createElement('canvas');
-  c.width = c.height = 64;
-  const g = c.getContext('2d')!;
-  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  grad.addColorStop(0, 'rgba(58,30,64,0.35)');
-  grad.addColorStop(1, 'rgba(58,30,64,0)');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 64, 64);
-  return new THREE.CanvasTexture(c);
+  return canvasTexture(64, 64, (g) => {
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(40,10,50,0.5)');
+    grad.addColorStop(0.6, 'rgba(40,10,50,0.18)');
+    grad.addColorStop(1, 'rgba(40,10,50,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+  });
 }
 
-const RIM = 0.38;
-const RIM_H = 0.42;
+/**
+ * A glossy surface: clear-coated where there's a GPU, plain standard where
+ * there isn't (the physical material takes seconds to compile in software).
+ */
+function Gloss({
+  ref,
+  clearcoat = 1,
+  clearcoatRoughness = 0.15,
+  ...rest
+}: {
+  ref?: (material: THREE.Material | null) => void;
+  color?: THREE.ColorRepresentation;
+  map?: THREE.Texture;
+  roughness: number;
+  clearcoat?: number;
+  clearcoatRoughness?: number;
+  side?: THREE.Side;
+}) {
+  return renderQuality() === 'high' ? (
+    <meshPhysicalMaterial
+      {...(ref ? { ref } : {})}
+      clearcoat={clearcoat}
+      clearcoatRoughness={clearcoatRoughness}
+      {...rest}
+    />
+  ) : (
+    <meshStandardMaterial {...(ref ? { ref } : {})} {...rest} />
+  );
+}
+
+const RIM = 0.4;
+const RIM_H = 0.5;
+const SHELF_D = 1.7;
 const roundedCache = new Map<string, THREE.BufferGeometry>();
 /** A rounded block, cached by size. */
-function rounded(w: number, h: number, d: number): THREE.BufferGeometry {
-  const key = `${w}:${h}:${d}`;
+function rounded(w: number, h: number, d: number, r = 0.45): THREE.BufferGeometry {
+  const key = `${w}:${h}:${d}:${r}`;
   let g = roundedCache.get(key);
   if (!g) {
-    g = new RoundedBoxGeometry(w, h, d, 3, Math.min(w, h, d) * 0.45);
+    g = new RoundedBoxGeometry(w, h, d, 4, Math.min(w, h, d) * r);
     roundedCache.set(key, g);
   }
   return g;
 }
 
-function Camera({ onSlots }: Pick<SceneProps, 'onSlots'>) {
-  const { camera, size } = useThree();
+/** A soft studio: a generated room for reflections, so the gloss has something to catch. */
+function Studio({ intensity }: { intensity: number }) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const env = pmrem.fromScene(room, 0.04).texture;
+    scene.environment = env;
+    scene.environmentIntensity = 0.38 * intensity;
+    room.dispose();
+    pmrem.dispose();
+    return () => {
+      scene.environment = null;
+      env.dispose();
+    };
+  }, [gl, scene, intensity]);
+  return null;
+}
+
+function Rig({ onSlots, roll }: Pick<SceneProps, 'onSlots' | 'roll'>) {
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const size = useThree((s) => s.size);
+  const invalidate = useThree((s) => s.invalidate);
+  const home = useRef(new THREE.Vector3());
+
   useLayoutEffect(() => {
-    const cam = camera as THREE.OrthographicCamera;
-    cam.position.copy(CAMERA);
-    cam.lookAt(TARGET);
-    cam.updateMatrixWorld();
-    // Fit the whole FRAME box, padding whichever side the canvas has spare.
-    // Camera-space offsets: frameExtent measures from the camera position.
-    const e = frameExtent();
-    let w = e.maxX - e.minX;
-    let h = e.maxY - e.minY;
     const aspect = size.width / Math.max(1, size.height);
-    if (w / h < aspect) w = h * aspect;
-    else h = w / aspect;
-    const cx = (e.minX + e.maxX) / 2;
-    const cy = (e.minY + e.maxY) / 2;
-    Object.assign(cam, {
-      left: cx - w / 2,
-      right: cx + w / 2,
-      top: cy + h / 2,
-      bottom: cy - h / 2,
-      zoom: 1,
-    });
-    cam.updateProjectionMatrix();
+    const fit = fitCamera(aspect);
+    camera.fov = FOV;
+    camera.aspect = aspect;
+    camera.near = 1;
+    camera.far = 80;
+    camera.position.set(...fit.position);
+    camera.lookAt(...fit.target);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld();
+    home.current.copy(camera.position);
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
     const project = (x: number, y: number, z: number): SlotRect => {
-      const p = new THREE.Vector3(x, y, z).project(cam);
-      return { x: (p.x + 1) / 2, y: (1 - p.y) / 2, size: 1.15 / w };
+      const c = new THREE.Vector3(x, y, z);
+      const p = c.clone().project(camera);
+      const a = c.clone().addScaledVector(right, -0.5).project(camera);
+      const b = c.clone().addScaledVector(right, 0.5).project(camera);
+      return { x: (p.x + 1) / 2, y: (1 - p.y) / 2, size: (Math.abs(b.x - a.x) / 2) * 1.2 };
     };
     onSlots({
       tray: SLOT_X.map((x) => project(x, 0.5, TRAY_Z)),
       shelf: SLOT_X.map((x) => project(x, SHELF_Y + 0.5, SHELF_Z)),
     });
-  }, [camera, size, onSlots]);
+    invalidate();
+  }, [camera, size, onSlots, invalidate]);
+
+  // A Yatzy lands with a little thump of the camera.
+  useFrame(() => {
+    if (!roll || roll.reduced || celebrationFor(roll.values) !== 'yatzy') {
+      if (!camera.position.equals(home.current)) camera.position.copy(home.current);
+      return;
+    }
+    const t = timing(roll);
+    const landing = t.celebrate + (t.done - t.celebrate) * 0.9;
+    const u = (performance.now() - landing) / 260;
+    if (u > 0 && u < 1) {
+      const k = (1 - u) * 0.07;
+      camera.position.set(
+        home.current.x + Math.sin(u * 47) * k,
+        home.current.y + Math.sin(u * 61) * k,
+        home.current.z,
+      );
+      invalidate();
+    } else if (!camera.position.equals(home.current)) {
+      camera.position.copy(home.current);
+    }
+  });
   return null;
 }
 
-function Dice({ values, held, roll, hops, colors }: Omit<SceneProps, 'onSlots'>) {
+/** A soft shadow under the whole tray, so it sits on the page. */
+function groundTexture() {
+  // The tray covers the middle 70%; the shadow fades out well before the edges.
+  return canvasTexture(512, 512, (g) => {
+    const { width, height } = g.canvas;
+    g.filter = 'blur(22px)';
+    g.fillStyle = 'rgba(40,10,50,0.42)';
+    g.beginPath();
+    g.roundRect(width * 0.17, height * 0.2, width * 0.66, height * 0.66, 30);
+    g.fill();
+  });
+}
+
+function Tray({ scene }: { scene: SceneTokens }) {
+  const hx = (TRAY.maxX - TRAY.minX) / 2;
+  const hz = (TRAY.maxZ - TRAY.minZ) / 2;
+  const cz = (TRAY.minZ + TRAY.maxZ) / 2;
+  const felt = useMemo(() => feltTexture(scene.felt, hx * 2, hz * 2), [scene.felt, hx, hz]);
+  const bump = useMemo(bumpTexture, []);
+  const ground = useMemo(groundTexture, []);
+  useEffect(() => () => felt.dispose(), [felt]);
+  const outerW = hx * 2 + RIM * 2;
+  const back = SHELF_Z - SHELF_D / 2;
+  const front = TRAY.maxZ + RIM;
+  return (
+    <>
+      <mesh position={[0, -0.44, (back + front) / 2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[outerW / 0.7, (front - back) / 0.7]} />
+        <meshBasicMaterial map={ground} transparent depthWrite={false} />
+      </mesh>
+      {/* The tray's body: the felt sits in it, the rim and shelf on top. */}
+      <mesh
+        position={[0, -0.23, (back + front) / 2]}
+        geometry={rounded(outerW, 0.42, front - back, 0.35)}
+        receiveShadow
+      >
+        <Gloss color={scene.rim} roughness={0.4} clearcoat={0.6} />
+      </mesh>
+      <mesh position={[0, 0, cz]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[hx * 2, hz * 2]} />
+        <meshStandardMaterial map={felt} bumpMap={bump} bumpScale={0.8} roughness={0.96} />
+      </mesh>
+      {[
+        [0, cz + hz + RIM / 2, outerW, RIM],
+        [0, cz - hz - RIM / 2, outerW, RIM],
+        [-hx - RIM / 2, cz, RIM, hz * 2 + RIM * 2],
+        [hx + RIM / 2, cz, RIM, hz * 2 + RIM * 2],
+      ].map(([x, z, w, d], i) => (
+        <mesh
+          key={i}
+          position={[x!, RIM_H / 2 - 0.05, z!]}
+          geometry={rounded(w!, RIM_H, d!)}
+          castShadow
+          receiveShadow
+        >
+          <Gloss color={scene.rim} roughness={0.28} clearcoatRoughness={0.12} />
+        </mesh>
+      ))}
+      {/* The butter shelf for held dice, with a seat for each column. */}
+      <mesh
+        position={[0, SHELF_Y / 2 - 0.02, SHELF_Z]}
+        geometry={rounded(outerW, SHELF_Y + 0.04, SHELF_D, 0.3)}
+        castShadow
+        receiveShadow
+      >
+        <Gloss color={scene.shelf} roughness={0.3} clearcoat={0.9} />
+      </mesh>
+      {SLOT_X.map((x) => (
+        <mesh
+          key={x}
+          position={[x, SHELF_Y + 0.004, SHELF_Z]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          receiveShadow
+        >
+          <circleGeometry args={[0.6, 48]} />
+          <meshStandardMaterial color={scene.seat} roughness={0.6} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+const LIFT = 0.16;
+
+function Dice({
+  values,
+  held,
+  roll,
+  hops,
+  colors,
+  scene,
+  hover,
+}: Omit<SceneProps, 'onSlots' | 'candy'>) {
   const invalidate = useThree((s) => s.invalidate);
-  const body = useMemo(() => new RoundedBoxGeometry(1, 1, 1, 4, 0.16), []);
+  const body = useMemo(dieGeometry, []);
   const pips = useMemo(pipGeometry, []);
-  const shadow = useMemo(shadowTexture, []);
+  const blob = useMemo(shadowTexture, []);
   const outer = useRef<(THREE.Group | null)[]>([]);
   const spin = useRef<(THREE.Group | null)[]>([]);
-  const shadows = useRef<(THREE.Mesh | null)[]>([]);
-  const cup = useRef<THREE.Group>(null);
-  const cupMat = useRef<THREE.MeshPhysicalMaterial>(null);
+  const blobs = useRef<(THREE.Mesh | null)[]>([]);
+  const lift = useRef([0, 0, 0, 0, 0]);
   const materials = useMemo(
     () =>
-      [0, 1, 2, 3, 4].map(
-        () =>
-          new THREE.MeshPhysicalMaterial({
-            color: colors.die,
-            roughness: 0.22,
-            clearcoat: 1,
-            clearcoatRoughness: 0.08,
-            sheen: 0.6,
-            sheenColor: new THREE.Color('#FFD1E6'),
-            emissive: new THREE.Color(colors.die),
-            emissiveIntensity: 0.12,
-            transparent: true,
-            opacity: 0.93,
-          }),
+      [0, 1, 2, 3, 4].map(() =>
+        jellyMaterial(colors.die, scene.dieDeep, renderQuality() === 'high'),
       ),
-    [colors.die],
+    [colors.die, scene.dieDeep],
   );
-  const pipMat = useMemo(() => new THREE.MeshBasicMaterial({ color: colors.pip }), [colors.pip]);
+  const pipMat = useMemo(() => pearlMaterial(colors.pip, renderQuality() === 'high'), [colors.pip]);
+  useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
 
   // Any change to what's shown needs a fresh frame.
-  useEffect(() => invalidate(), [values, held, roll, hops, colors, invalidate]);
+  useEffect(() => invalidate(), [values, held, roll, hops, colors, hover, invalidate]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const now = performance.now();
     let animating = false;
     const t = roll ? timing(roll) : null;
     for (let i = 0; i < 5; i++) {
       const hop = hops.find((h) => h.die === i && now < hopEnd(h) + 200);
+      const rolling = !!(roll && t && now < t.done + 50);
       let pose;
-      if (roll && t && now < t.done + 50) {
-        pose = poseAt(roll, i, now);
+      if (rolling) {
+        pose = poseAt(roll!, i, now);
         animating = true;
       } else if (hop) {
         pose = hopPose(hop, now);
@@ -215,136 +392,286 @@ function Dice({ values, held, roll, hops, colors }: Omit<SceneProps, 'onSlots'>)
       } else {
         pose = restPose(i, values[i] ?? null, held[i] ?? false);
       }
+      // The die under the pointer rises to meet it.
+      const want = hover === i && !rolling && !hop ? 1 : 0;
+      const l = lift.current[i]!;
+      const next = l + (want - l) * (1 - Math.exp(-delta * 16));
+      lift.current[i] = Math.abs(want - next) < 0.002 ? want : next;
+      if (lift.current[i] !== want) animating = true;
       const o = outer.current[i];
       const s = spin.current[i];
       if (!o || !s) continue;
       o.visible = pose.visible;
-      o.position.set(...pose.pos);
+      o.position.set(pose.pos[0], pose.pos[1] + lift.current[i]! * LIFT, pose.pos[2]);
       o.scale.set(...pose.squash);
       s.quaternion.set(...pose.quat);
-      materials[i]!.opacity = 0.93 * pose.opacity;
-      const sh = shadows.current[i];
-      if (sh) {
-        const floor = held[i] && !(roll && roll.free.includes(i)) ? SHELF_Y + 0.01 : 0.01;
-        const lift = Math.max(0, pose.pos[1] - floor - 0.5);
-        sh.visible = pose.visible;
-        sh.position.set(pose.pos[0], floor, pose.pos[2]);
-        const k = 1 / (1 + lift * 0.6);
-        sh.scale.setScalar(1.7 * k);
-        (sh.material as THREE.MeshBasicMaterial).opacity = pose.opacity * k;
+      const m = materials[i]!;
+      const fading = pose.opacity < 0.999;
+      if (m.transparent !== fading) {
+        m.transparent = fading;
+        m.needsUpdate = true;
       }
-    }
-    const c = cupAt(roll, now);
-    if (cup.current && cupMat.current) {
-      cup.current.visible = c.visible && c.opacity > 0.01;
-      cup.current.position.set(...c.pos);
-      cup.current.rotation.z = c.tip;
-      cupMat.current.opacity = 0.75 * c.opacity;
+      m.opacity = pose.opacity;
+      m.emissiveIntensity = 0.05 + lift.current[i]! * 0.18;
+      const b = blobs.current[i];
+      if (b) {
+        const onShelf = held[i] && !(roll && rolling && roll.free.includes(i));
+        const floor = onShelf ? SHELF_Y + 0.012 : 0.012;
+        const height = Math.max(0, pose.pos[1] + lift.current[i]! * LIFT - floor - 0.5);
+        b.visible = pose.visible && pose.squash[1] > 0.85;
+        b.position.set(pose.pos[0], floor, pose.pos[2]);
+        const k = 1 / (1 + height * 0.8);
+        b.scale.setScalar(1.55 * k);
+        (b.material as THREE.MeshBasicMaterial).opacity = 0.55 * pose.opacity * k;
+      }
     }
     if (animating) invalidate();
   });
 
-  const hx = (TRAY.maxX - TRAY.minX) / 2;
-  const hz = (TRAY.maxZ - TRAY.minZ) / 2;
-  const cz = (TRAY.minZ + TRAY.maxZ) / 2;
-
   return (
     <>
-      {/* The tray: a pad-colored floor inside a soft rounded rim on all four sides. */}
-      <mesh position={[0, -0.05, cz]}>
-        <boxGeometry args={[hx * 2 + 0.2, 0.1, hz * 2 + 0.2]} />
-        <meshBasicMaterial color={colors.pad} />
-      </mesh>
-      {[
-        [0, cz + hz + RIM / 2, hx * 2 + RIM * 2, RIM],
-        [0, cz - hz - RIM / 2, hx * 2 + RIM * 2, RIM],
-        [-hx - RIM / 2, cz, RIM, hz * 2 + RIM * 2],
-        [hx + RIM / 2, cz, RIM, hz * 2 + RIM * 2],
-      ].map(([x, z, w, d], i) => (
-        <mesh key={i} position={[x!, RIM_H / 2, z!]} geometry={rounded(w!, RIM_H, d!)}>
-          <meshLambertMaterial color={colors.rule} emissive={colors.rule} emissiveIntensity={0.3} />
-        </mesh>
-      ))}
-      {/* The butter-yellow shelf for held dice, behind the tray. */}
-      <mesh
-        position={[0, SHELF_Y / 2, SHELF_Z]}
-        geometry={rounded(hx * 2 + RIM * 2, SHELF_Y, 1.45)}
-      >
-        <meshLambertMaterial
-          color={colors.butter}
-          emissive={colors.butter}
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-
       {[0, 1, 2, 3, 4].map((i) => (
         <mesh
           key={`s${i}`}
-          ref={(m) => void (shadows.current[i] = m)}
+          ref={(m) => void (blobs.current[i] = m)}
           rotation={[-Math.PI / 2, 0, 0]}
-          renderOrder={-1}
+          renderOrder={1}
         >
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial map={shadow} transparent depthWrite={false} />
+          <meshBasicMaterial map={blob} transparent depthWrite={false} />
         </mesh>
       ))}
-
       {[0, 1, 2, 3, 4].map((i) => (
         <group key={i} ref={(g) => void (outer.current[i] = g)}>
           <group ref={(g) => void (spin.current[i] = g)}>
-            <mesh geometry={body} material={materials[i]!} />
+            <mesh geometry={body} material={materials[i]!} castShadow />
             <mesh geometry={pips} material={pipMat} />
           </group>
         </group>
       ))}
-
-      <group ref={cup}>
-        <mesh>
-          <cylinderGeometry args={[1.05, 0.8, 1.7, 32, 1, true]} />
-          <meshPhysicalMaterial
-            ref={cupMat}
-            color={colors.accent}
-            roughness={0.3}
-            clearcoat={1}
-            side={THREE.DoubleSide}
-            transparent
-            opacity={0.75}
-          />
-        </mesh>
-        {/* A rolled rim and a base, so it reads as a candy cup. */}
-        <mesh position={[0, 0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[1.05, 0.11, 12, 40]} />
-          <meshLambertMaterial
-            color={colors.accent}
-            emissive={colors.accent}
-            emissiveIntensity={0.3}
-          />
-        </mesh>
-        <mesh position={[0, -0.85, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.8, 32]} />
-          <meshLambertMaterial color={colors.accent} side={THREE.DoubleSide} />
-        </mesh>
-      </group>
     </>
   );
 }
 
+function Cup({ roll, candy, scene }: Pick<SceneProps, 'roll' | 'candy' | 'scene'>) {
+  const group = useRef<THREE.Group>(null);
+  const invalidate = useThree((s) => s.invalidate);
+  const shell = useMemo(() => {
+    const h = CUP.height / 2;
+    const profile = [
+      new THREE.Vector2(0.001, -h),
+      new THREE.Vector2(CUP.radiusBottom - 0.06, -h),
+      new THREE.Vector2(CUP.radiusBottom, -h + 0.06),
+      new THREE.Vector2(CUP.radiusTop, h),
+    ];
+    return new THREE.LatheGeometry(profile, 56);
+  }, []);
+  const stripes = useMemo(() => stripeTexture(candy), [candy]);
+  useEffect(() => () => stripes.dispose(), [stripes]);
+  const materials = useRef<THREE.Material[]>([]);
+  const inside = useMemo(
+    () => new THREE.Color(candy).lerp(new THREE.Color(scene.cupInside), 0.55),
+    [candy, scene.cupInside],
+  );
+
+  useFrame(() => {
+    const now = performance.now();
+    const c = cupAt(roll, now);
+    const g = group.current;
+    if (!g) return;
+    g.visible = c.visible;
+    g.position.set(...c.pos);
+    g.rotation.z = c.tip;
+    g.scale.setScalar(c.scale);
+    // Opaque unless fading, so the jelly dice can see the cup behind them.
+    const fading = c.opacity < 0.999;
+    for (const m of materials.current) {
+      if (m.transparent !== fading) {
+        m.transparent = fading;
+        m.needsUpdate = true;
+      }
+      m.opacity = c.opacity;
+    }
+    if (c.visible) invalidate();
+  });
+
+  const keep = (m: THREE.Material | null) => {
+    if (m && !materials.current.includes(m)) materials.current.push(m);
+  };
+  return (
+    <group ref={group} visible={false}>
+      <mesh geometry={shell} castShadow>
+        <Gloss
+          ref={keep}
+          map={stripes}
+          roughness={0.38}
+          clearcoat={0.7}
+          clearcoatRoughness={0.2}
+          side={THREE.FrontSide}
+        />
+      </mesh>
+      <mesh geometry={shell}>
+        <meshStandardMaterial ref={keep} color={inside} roughness={0.7} side={THREE.BackSide} />
+      </mesh>
+      <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[CUP.radiusTop, 0.09, 14, 56]} />
+        <Gloss ref={keep} color="#FFF7FB" roughness={0.25} />
+      </mesh>
+    </group>
+  );
+}
+
+const SPRINKLES = 110;
+
+/** A Yatzy: a burst of candy sprinkles that bounce on the felt. */
+function Sprinkles({ roll, candy, colors }: Pick<SceneProps, 'roll' | 'candy' | 'colors'>) {
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const invalidate = useThree((s) => s.invalidate);
+  const geometry = useMemo(() => new THREE.CapsuleGeometry(0.045, 0.2, 4, 8), []);
+  const sim = useRef<{
+    plan: RollPlan | null;
+    last: number;
+    p: Float32Array;
+    v: Float32Array;
+    r: Float32Array;
+    w: Float32Array;
+  }>({
+    plan: null,
+    last: 0,
+    p: new Float32Array(SPRINKLES * 3),
+    v: new Float32Array(SPRINKLES * 3),
+    r: new Float32Array(SPRINKLES * 3),
+    w: new Float32Array(SPRINKLES * 3),
+  });
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  useEffect(() => {
+    const m = mesh.current;
+    if (!m) return;
+    const palette = [candy, colors.butter, '#FFFFFF', colors.mint, candy];
+    const c = new THREE.Color();
+    for (let i = 0; i < SPRINKLES; i++) m.setColorAt(i, c.set(palette[i % palette.length]!));
+    if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  }, [candy, colors.butter, colors.mint]);
+
+  useFrame(() => {
+    const m = mesh.current;
+    if (!m) return;
+    const s = sim.current;
+    const now = performance.now();
+    const on = !!roll && !roll.reduced && celebrationFor(roll.values) === 'yatzy';
+    const t = on ? timing(roll!) : null;
+    const burst = t ? t.celebrate + (t.done - t.celebrate) * 0.5 : 0;
+    if (!t || now < burst || now > burst + 1700) {
+      m.visible = false;
+      return;
+    }
+    if (s.plan !== roll) {
+      s.plan = roll;
+      s.last = burst;
+      const rand = noise(7 + Math.round(roll!.start));
+      for (let i = 0; i < SPRINKLES; i++) {
+        const a = rand() * Math.PI * 2;
+        const up = 5 + rand() * 7;
+        const out = 2 + rand() * 4.5;
+        s.p.set(
+          [(rand() - 0.5) * 4, 1.6 + rand() * 0.6, TRAY_Z - 0.4 + (rand() - 0.5) * 1.2],
+          i * 3,
+        );
+        s.v.set([Math.cos(a) * out, up, Math.sin(a) * out * 0.6], i * 3);
+        s.r.set([rand() * 6, rand() * 6, rand() * 6], i * 3);
+        s.w.set([(rand() - 0.5) * 18, (rand() - 0.5) * 18, (rand() - 0.5) * 18], i * 3);
+      }
+    }
+    const dt = Math.min(1 / 30, Math.max(0, (now - s.last) / 1000));
+    s.last = now;
+    const age = (now - burst) / 1700;
+    for (let i = 0; i < SPRINKLES; i++) {
+      const j = i * 3;
+      s.v[j + 1] = s.v[j + 1]! - 26 * dt;
+      for (let a = 0; a < 3; a++) s.p[j + a] = s.p[j + a]! + s.v[j + a]! * dt;
+      if (s.p[j + 1]! < 0.05) {
+        s.p[j + 1] = 0.05;
+        s.v[j + 1] = Math.abs(s.v[j + 1]!) * 0.32;
+        s.v[j] = s.v[j]! * 0.6;
+        s.v[j + 2] = s.v[j + 2]! * 0.6;
+        for (let a = 0; a < 3; a++) s.w[j + a] = s.w[j + a]! * 0.5;
+      }
+      // Keep them on the felt.
+      const x = s.p[j]!;
+      if (x < TRAY.minX + 0.1 || x > TRAY.maxX - 0.1) s.v[j] = -s.v[j]! * 0.5;
+      const z = s.p[j + 2]!;
+      if (z < TRAY.minZ + 0.1 || z > TRAY.maxZ - 0.1) s.v[j + 2] = -s.v[j + 2]! * 0.5;
+      for (let a = 0; a < 3; a++) s.r[j + a] = s.r[j + a]! + s.w[j + a]! * dt;
+      dummy.position.set(s.p[j]!, s.p[j + 1]!, s.p[j + 2]!);
+      dummy.rotation.set(s.r[j]!, s.r[j + 1]!, s.r[j + 2]!);
+      dummy.scale.setScalar(age > 0.75 ? Math.max(0, 1 - (age - 0.75) / 0.25) : 1);
+      dummy.updateMatrix();
+      m.setMatrixAt(i, dummy.matrix);
+    }
+    m.instanceMatrix.needsUpdate = true;
+    m.visible = true;
+    invalidate();
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[geometry, undefined, SPRINKLES]} visible={false} castShadow>
+      <Gloss roughness={0.35} clearcoat={0.8} />
+    </instancedMesh>
+  );
+}
+
 export default function DiceScene(props: SceneProps) {
+  const { scene } = props;
+  const rich = renderQuality() === 'high';
   return (
     <Canvas
-      orthographic
       frameloop="demand"
-      flat
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true }}
-      camera={{ near: 0.1, far: 50, manual: true }}
+      shadows={rich ? 'percentage' : false}
+      dpr={rich ? [1, 2] : 1}
+      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      camera={{ fov: FOV, near: 1, far: 80, manual: true }}
+      onCreated={({ gl }) => {
+        gl.toneMapping = THREE.NeutralToneMapping;
+        gl.toneMappingExposure = 1;
+      }}
       aria-hidden="true"
     >
-      <Camera onSlots={props.onSlots} />
-      <ambientLight intensity={1.1} />
-      <directionalLight position={[-3, 8, 5]} intensity={1.6} />
-      <directionalLight position={[4, 3, 6]} intensity={0.5} />
-      <Dice {...props} />
+      <Rig onSlots={props.onSlots} roll={props.roll} />
+      {rich ? (
+        <Studio intensity={scene.light} />
+      ) : (
+        <hemisphereLight args={['#FFFFFF', scene.felt, 0.9 * scene.light]} />
+      )}
+      <ambientLight intensity={0.12 * scene.light} />
+      <directionalLight
+        position={[-4.5, 11, 6.5]}
+        intensity={2.7 * scene.light}
+        castShadow={rich}
+        shadow-mapSize={[2048, 2048]}
+        shadow-radius={5}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.02}
+        shadow-camera-left={-7}
+        shadow-camera-right={7}
+        shadow-camera-top={7}
+        shadow-camera-bottom={-7}
+        shadow-camera-near={1}
+        shadow-camera-far={30}
+      />
+      <directionalLight position={[6, 5, 8]} intensity={0.35 * scene.light} />
+      <Tray scene={scene} />
+      <Dice
+        values={props.values}
+        held={props.held}
+        roll={props.roll}
+        hops={props.hops}
+        colors={props.colors}
+        scene={scene}
+        hover={props.hover}
+      />
+      <Cup roll={props.roll} candy={props.candy} scene={scene} />
+      <Sprinkles roll={props.roll} candy={props.candy} colors={props.colors} />
     </Canvas>
   );
 }

@@ -1,12 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { THEMES } from '../theme/palette';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { SCENE, THEMES } from '../theme/palette';
 import { usePrefs } from '../theme/prefs';
-import { playCelebrate, playClack, playRattle } from '../sound';
+import { playCelebrate, playHop, playImpact, playRattle, playSettle } from '../sound';
 import type { SceneProps, SlotRect } from './DiceScene';
 import { STAGE_ASPECT } from './framing';
 import { loadTumbles, tumblesNow } from './loadTumbles';
-import { celebrationFor, type HopPlan, landTimes, type RollPlan, timing } from './timeline';
-import { PATHS_PER_COUNT } from './tumbleFormat';
+import { celebrationFor, type HopPlan, type RollPlan, rollSounds, timing } from './timeline';
+import { CUP, PATHS_PER_COUNT } from './tumbleFormat';
+import { hasWebGL } from './webgl';
 
 const DiceScene = lazy(() => import('./DiceScene'));
 
@@ -24,24 +25,12 @@ interface Props {
   held: readonly boolean[];
   /** The latest roll of the player shown, or null. */
   roll: RollEvent | null;
-  /** Tap a die to hold or release it; null when the viewer can't. */
+  /** Click a die to hold or release it; null when the viewer can't. */
   onToggle: ((die: number) => void) | null;
   onSettled(index: number): void;
-  /** Sprinkle color: the roller's candy shade. */
+  /** The roller's candy shade: the cup and the sprinkles. */
   candy: string;
   rolling: boolean;
-}
-
-let webgl: boolean | null = null;
-function hasWebGL(): boolean {
-  if (webgl === null) {
-    try {
-      webgl = !!document.createElement('canvas').getContext('webgl2');
-    } catch {
-      webgl = false;
-    }
-  }
-  return webgl;
 }
 
 const PIP_SPOTS: Record<number, number[]> = {
@@ -54,7 +43,7 @@ const PIP_SPOTS: Record<number, number[]> = {
 };
 
 /** A flat jelly die, for screens without WebGL and while the 3D scene loads. */
-function FlatFace({ value }: { value: number | null }) {
+export function FlatFace({ value }: { value: number | null }) {
   return (
     <span className="flat-die" aria-hidden="true">
       {value !== null &&
@@ -65,35 +54,8 @@ function FlatFace({ value }: { value: number | null }) {
   );
 }
 
-function Sprinkles({ color, id }: { color: string; id: number }) {
-  const bits = useMemo(
-    () =>
-      Array.from({ length: 36 }, (_, i) => ({
-        angle: (i / 36) * Math.PI * 2 + ((id * 7 + i * 13) % 10) / 20,
-        dist: 90 + ((i * 37 + id) % 70),
-        rot: (i * 47) % 360,
-        delay: (i % 6) * 18,
-      })),
-    [id],
-  );
-  return (
-    <div className="sprinkles" aria-hidden="true">
-      {bits.map((b, i) => (
-        <span
-          key={i}
-          style={{
-            background: i % 3 === 0 ? 'var(--butter)' : color,
-            ['--dx' as string]: `${Math.cos(b.angle) * b.dist}px`,
-            ['--dy' as string]: `${Math.sin(b.angle) * b.dist}px`,
-            ['--rot' as string]: `${b.rot}deg`,
-            animationDelay: `${b.delay}ms`,
-          }}
-        />
-      ))}
-      <strong className="celebrate-word">Yatzy!</strong>
-    </div>
-  );
-}
+/** Pan from -1 to 1 by where something is across the tray. */
+const panOf = (x: number) => x / 5;
 
 export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolling }: Props) {
   const { prefs, theme, reducedMotion } = usePrefs();
@@ -102,6 +64,7 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
   const [hops, setHops] = useState<HopPlan[]>([]);
   const [slots, setSlots] = useState<{ tray: SlotRect[]; shelf: SlotRect[] } | null>(null);
   const [party, setParty] = useState<number | null>(null);
+  const [hover, setHover] = useState<number | null>(null);
   const timers = useRef<number[]>([]);
   const lastRoll = useRef<number>(roll?.index ?? -1);
   const prevHeld = useRef(held);
@@ -132,27 +95,33 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
       free,
       held,
       hadDice: !roll.first,
-      path: tumbles?.[free.length - 1]?.[roll.tumble % PATHS_PER_COUNT] ?? [],
+      path: reduced ? null : (tumbles?.[free.length - 1]?.[roll.tumble % PATHS_PER_COUNT] ?? null),
+      mirror: Math.floor(roll.tumble / PATHS_PER_COUNT) % 2 === 1,
       speed,
       reduced,
     };
     setPlan(next);
     setHops([]);
+    setHover(null);
     const t = timing(next);
     const at = (ms: number, fn: () => void) =>
       timers.current.push(window.setTimeout(fn, Math.max(0, ms - next.start)));
-    if (!reduced) {
-      playRattle(t.shakeEnd - next.start);
-      landTimes(next).forEach((ms, i) => playClack(ms - next.start, 1 - i * 0.08));
-      t.settled.forEach((ms) => playClack(ms - next.start, 0.35));
+    if (!next.reduced) {
+      playRattle(t.shakeStart - next.start, t.shakeEnd - t.shakeStart, free.length, panOf(CUP.x));
+      let step = 0;
+      for (const s of rollSounds(next)) {
+        const delay = s.at - next.start;
+        if (s.kind === 'pop') playSettle(delay, step++, panOf(s.x));
+        else playImpact(delay, s.kind, s.strength, panOf(s.x));
+      }
     }
     const kind = celebrationFor(next.values);
     if (kind === 'yatzy') {
-      at(t.end, () => {
+      at(t.celebrate, () => {
         playCelebrate();
         setParty(roll.index);
       });
-      at(t.end + 1400, () => setParty(null));
+      at(t.celebrate + 1500, () => setParty(null));
     }
     at(t.end, () => onSettled(roll.index));
     at(t.done + 100, () => setPlan(null));
@@ -177,25 +146,33 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
         reduced: reducedMotion || !three,
       })),
     ]);
-    if (!reducedMotion && three) playClack(250 * speed, 0.3);
+    if (!reducedMotion && three) playHop(260 * speed, held[changed[0]!]!);
   }, [held]);
 
-  /** Tap the tray to skip ahead. */
+  /** Click the tray to skip ahead. */
   const skip = () => {
     if (!plan || !rolling) return;
     setPlan(null);
     finish(lastRoll.current);
   };
 
-  const colors = THEMES[theme];
-  const sceneProps: SceneProps = { values, held, roll: plan, hops, colors, onSlots: setSlots };
-  // Flat dice only without WebGL; while the 3D scene loads, the stage keeps its shape.
-  const flat = !three;
-  const loading = three && !slots;
+  const sceneProps: SceneProps = {
+    values,
+    held,
+    roll: plan,
+    hops,
+    colors: THEMES[theme],
+    scene: SCENE[theme],
+    candy,
+    hover,
+    onSlots: setSlots,
+  };
+  // Flat dice without WebGL, and while the 3D scene loads.
+  const flat = !three || !slots;
 
   return (
     <div
-      className={`dice-stage${flat ? ' flat' : ''}${loading ? ' loading' : ''}`}
+      className={`dice-stage${flat ? ' flat' : ''}`}
       data-testid="dice-tray"
       onClick={skip}
       style={{ ['--candy' as string]: candy, ['--stage-aspect' as string]: STAGE_ASPECT }}
@@ -218,6 +195,7 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
                 ? `Die ${i + 1}, rolling`
                 : `Die ${i + 1}: ${value}`;
           const spot = slots?.[isHeld ? 'shelf' : 'tray'][i];
+          const disabled = !onToggle || value === null || rolling;
           return (
             <button
               key={i}
@@ -225,9 +203,13 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
               className={`die${isHeld ? ' held' : ''}`}
               aria-label={isHeld ? `${label}, held` : label}
               aria-pressed={isHeld}
-              disabled={!onToggle || value === null || rolling}
+              aria-keyshortcuts={String(i + 1)}
+              disabled={disabled}
+              onPointerEnter={() => !disabled && setHover(i)}
+              onPointerLeave={() => setHover((h) => (h === i ? null : h))}
               onClick={(e) => {
                 e.stopPropagation();
+                setHover(null);
                 onToggle?.(i);
               }}
               style={
@@ -245,7 +227,11 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
           );
         })}
       </div>
-      {party !== null && <Sprinkles color={candy} id={party} />}
+      {party !== null && (
+        <div className="celebrate" aria-hidden="true">
+          <strong className="celebrate-word">Yatzy!</strong>
+        </div>
+      )}
     </div>
   );
 }

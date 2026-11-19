@@ -21,6 +21,10 @@ Locally there's no Discord: open <http://localhost:5173/?table=test> in two brow
 with a name (`GUEST_LOGIN=true`, never set in staging or prod). The same `?table=` puts you at the
 same table.
 
+The dice lab, <http://localhost:5173/?lab>, plays any roll on its own without a server: type the
+values (`6,6,6,6,6` for a Yatzy), click dice to hold them, and roll as often as you like. It only
+exists on the dev server, or in a build made with `VITE_LAB=1`.
+
 | Task             | Does                                                    |
 | ---------------- | ------------------------------------------------------- |
 | `task lint`      | ESLint and Prettier check                               |
@@ -32,6 +36,9 @@ same table.
 | `task smoke`     | Post-deploy check: `/health` SHA, then a game WebSocket |
 | `task manifests` | Render the kustomize overlays                           |
 | `task tumbles`   | Re-record the dice tumbles with Rapier (deterministic)  |
+
+`task tumbles` prints how many attempts it kept, how long the dice take to settle and where they
+land; `TUNE='{"gravity":-90}' task tumbles` tries other physics settings.
 
 ## Layout
 

@@ -16,3 +16,11 @@ export const BOX_LABELS: Record<Box, { short: string; long: string }> = {
   yatzy: { short: 'Yatzy', long: 'Yatzy' },
   chance: { short: 'Chance', long: 'Chance' },
 };
+
+/** Boxes worth a fixed score, shown beside the label so nobody has to remember. */
+export const BOX_POINTS: Partial<Record<Box, number>> = {
+  fullHouse: 25,
+  smallStraight: 30,
+  largeStraight: 40,
+  yatzy: 50,
+};
