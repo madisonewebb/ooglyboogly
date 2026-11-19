@@ -12,13 +12,13 @@ import {
   ROLLS_PER_TURN,
 } from '@rollhouse/rules';
 import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE, MSG_UNDO } from '@rollhouse/shared';
-import { Avatar } from '../Avatar';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { flavorOf, flavorVars } from '../flavor';
 import { BOX_LABELS } from '../labels';
 import { playPop, unlockAudio } from '../sound';
 import { usePrefs } from '../theme/prefs';
 import type { Table } from '../useTable';
+import { PAD_PANEL_ID, padTabId, PadTabs } from './PadTabs';
 
 interface Props {
   game: GameState;
@@ -65,6 +65,37 @@ function useNewlyFilled(game: GameState, player: number): Set<string> {
   return fresh;
 }
 
+/** Per player, a counter bumped each time they score while you're not looking at their pad. */
+function useScorePulses(
+  game: GameState,
+  seat: number | null,
+  viewed: number,
+  on: boolean,
+): Record<number, number> {
+  const counts = game.players.map((p) =>
+    p.cards.reduce((n, c) => n + BOXES.filter((b) => c.boxes[b] !== undefined).length, 0),
+  );
+  const key = counts.join(',');
+  const prev = useRef<number[] | null>(null);
+  const [pulses, setPulses] = useState<Record<number, number>>({});
+  useEffect(() => {
+    const before = prev.current;
+    const now = key.split(',').map(Number);
+    prev.current = now;
+    if (!on || !before) return;
+    const scored = now.flatMap((n, i) =>
+      n > (before[i] ?? n) && i !== seat && i !== viewed ? [i] : [],
+    );
+    if (scored.length === 0) return;
+    setPulses((p) => {
+      const next = { ...p };
+      for (const i of scored) next[i] = (next[i] ?? 0) + 1;
+      return next;
+    });
+  }, [key, on, seat, viewed]);
+  return pulses;
+}
+
 export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const { theme } = usePrefs();
   const active = activePlayers(game);
@@ -76,9 +107,13 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const up = turns ? game.setup.turnOrder[game.pointer]! : null;
 
   // In Take turns, the pad follows whoever is up, so everyone watches scores land.
+  // It only moves when the turn changes, so a tab you pick stays put until then.
   useEffect(() => {
     if (up !== null) setViewed(up);
   }, [up]);
+
+  // In Everyone at once, a score on someone else's pad pulses their tab.
+  const pulses = useScorePulses(game, seat, viewed, !turns);
 
   const trayPlayer = trayPlayerOf(game, seat, viewed);
   const tray = game.players[trayPlayer]!;
@@ -156,31 +191,13 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const last = seat === null ? null : game.players[seat]!.lastScore;
   const multi = player.cards.length > 1;
   const viewedFlavor = lobby.seats[viewed]?.flavor;
+  // Your go, but you're looking at someone else's pad: say so, with a way back.
+  const lookingAway = !mine && seat !== null && canAct && (!turns || up === seat);
 
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
       <header className="topbar">
         <span className="wordmark small">Rollhouse</span>
-        <nav className="players" aria-label="Players">
-          {lobby.seats.map((s, i) => (
-            <button
-              key={s.user.id}
-              type="button"
-              className={[
-                'player',
-                active.includes(i) && (turns ? i === up : true) ? 'lit' : '',
-                s.connected ? '' : 'away',
-                i === viewed ? 'viewing' : '',
-              ].join(' ')}
-              style={flavorVars(s.flavor, theme)}
-              aria-pressed={i === viewed}
-              onClick={() => setViewed(i)}
-            >
-              <Avatar user={s.user} cdnBase={cdnBase} flavor={s.flavor} />
-              <span>{i === seat ? 'You' : s.user.name}</span>
-            </button>
-          ))}
-        </nav>
       </header>
 
       <div className="table-layout">
@@ -254,97 +271,114 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
           aria-label={`${name(viewed)}'s score pad`}
           style={flavorVars(viewedFlavor, theme)}
         >
-          <h2 className="pad-title">
-            <Avatar user={lobby.seats[viewed]!.user} cdnBase={cdnBase} flavor={viewedFlavor} />
-            {mine ? 'Your pad' : `${name(viewed)}'s pad`}
-          </h2>
-          <table className="pad">
-            <thead>
-              <tr>
-                <th scope="col" className="box-col">
-                  <span className="sr-only">Box</span>
-                </th>
-                {player.cards.map((_, c) => (
-                  <th key={c} scope="col">
-                    Card {c + 1}
-                    {game.setup.multipliers && multi ? (
-                      <span className="mult"> ×{c + 1}</span>
-                    ) : null}
+          <PadTabs
+            lobby={lobby}
+            cdnBase={cdnBase}
+            seat={seat}
+            viewed={viewed}
+            onView={setViewed}
+            up={up}
+            done={(s) => isPlayerDone(game, s)}
+            pulses={pulses}
+          />
+          <div id={PAD_PANEL_ID} role="tabpanel" aria-labelledby={padTabId(viewed)}>
+            <h2 className="pad-title">{mine ? 'Your pad' : `${name(viewed)}'s pad`}</h2>
+            {lookingAway && (
+              <div className="look-only" role="note">
+                <p>You can only write on your own pad.</p>
+                <button type="button" onClick={() => setViewed(seat)}>
+                  Back to your pad
+                </button>
+              </div>
+            )}
+            <table className="pad">
+              <thead>
+                <tr>
+                  <th scope="col" className="box-col">
+                    <span className="sr-only">Box</span>
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {BOXES.map((box, row) => (
-                <tr key={box} className={row === UPPER_COUNT ? 'lower-start' : ''}>
-                  <th scope="row">{BOX_LABELS[box].short}</th>
-                  {player.cards.map((card, c) => {
-                    const filled = card.boxes[box];
-                    const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
-                    if (filled !== undefined) {
-                      const isNew = fresh.has(`${c}:${box}`);
+                  {player.cards.map((_, c) => (
+                    <th key={c} scope="col">
+                      Card {c + 1}
+                      {game.setup.multipliers && multi ? (
+                        <span className="mult"> ×{c + 1}</span>
+                      ) : null}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {BOXES.map((box, row) => (
+                  <tr key={box} className={row === UPPER_COUNT ? 'lower-start' : ''}>
+                    <th scope="row">{BOX_LABELS[box].short}</th>
+                    {player.cards.map((card, c) => {
+                      const filled = card.boxes[box];
+                      const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
+                      if (filled !== undefined) {
+                        const isNew = fresh.has(`${c}:${box}`);
+                        return (
+                          <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
+                            {isNew && <span className="pop-ring" aria-hidden="true" />}
+                            <motion.span
+                              className="score"
+                              initial={isNew ? { scale: 1.9, opacity: 0 } : false}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                            >
+                              {filled}
+                            </motion.span>
+                          </td>
+                        );
+                      }
+                      const option = options?.[c]?.boxes.get(box);
+                      if (!option) return <td key={c} aria-label={`${label}: open`} />;
+                      const chosen = pick?.card === c && pick.box === box;
+                      const bonus = option.allowed && options![c]!.bonus;
                       return (
-                        <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
-                          {isNew && <span className="pop-ring" aria-hidden="true" />}
-                          <motion.span
-                            className="score"
-                            initial={isNew ? { scale: 1.9, opacity: 0 } : false}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                        <td key={c}>
+                          <button
+                            type="button"
+                            className={[
+                              'preview',
+                              option.allowed && option.value > 0 ? 'scores' : '',
+                              chosen ? 'chosen' : '',
+                            ].join(' ')}
+                            disabled={!option.allowed}
+                            aria-pressed={chosen}
+                            aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
+                            onClick={() => {
+                              setConfirming(false);
+                              setPick({ card: c, box, value: option.value });
+                            }}
                           >
-                            {filled}
-                          </motion.span>
+                            {bonus && <span className="bonus-tag">+100</span>}
+                            {option.value}
+                          </button>
                         </td>
                       );
-                    }
-                    const option = options?.[c]?.boxes.get(box);
-                    if (!option) return <td key={c} aria-label={`${label}: open`} />;
-                    const chosen = pick?.card === c && pick.box === box;
-                    const bonus = option.allowed && options![c]!.bonus;
-                    return (
-                      <td key={c}>
-                        <button
-                          type="button"
-                          className={[
-                            'preview',
-                            option.allowed && option.value > 0 ? 'scores' : '',
-                            chosen ? 'chosen' : '',
-                          ].join(' ')}
-                          disabled={!option.allowed}
-                          aria-pressed={chosen}
-                          aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
-                          onClick={() => {
-                            setConfirming(false);
-                            setPick({ card: c, box, value: option.value });
-                          }}
-                        >
-                          {bonus && <span className="bonus-tag">+100</span>}
-                          {option.value}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              <tr className="bonus-row">
-                <th scope="row">Yatzy bonus</th>
-                {player.cards.map((card, c) => (
-                  <td
-                    key={c}
-                    aria-label={`Card ${c + 1} Yatzy bonus: ${card.yatzyBonuses} of ${MAX_YATZY_BONUSES}`}
-                  >
-                    <span className="bonus-boxes" aria-hidden="true">
-                      {Array.from({ length: MAX_YATZY_BONUSES }, (_, i) => (
-                        <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
-                          {i < card.yatzyBonuses ? '✓' : ''}
-                        </span>
-                      ))}
-                    </span>
-                  </td>
+                    })}
+                  </tr>
                 ))}
-              </tr>
-            </tbody>
-          </table>
+                <tr className="bonus-row">
+                  <th scope="row">Yatzy bonus</th>
+                  {player.cards.map((card, c) => (
+                    <td
+                      key={c}
+                      aria-label={`Card ${c + 1} Yatzy bonus: ${card.yatzyBonuses} of ${MAX_YATZY_BONUSES}`}
+                    >
+                      <span className="bonus-boxes" aria-hidden="true">
+                        {Array.from({ length: MAX_YATZY_BONUSES }, (_, i) => (
+                          <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
+                            {i < card.yatzyBonuses ? '✓' : ''}
+                          </span>
+                        ))}
+                      </span>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </main>
