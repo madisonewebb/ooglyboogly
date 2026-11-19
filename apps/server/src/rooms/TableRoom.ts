@@ -156,7 +156,6 @@ export function createTableRoom(cfg: TableConfig) {
           const flavor = assignFlavor(
             this.seats.map((s) => s.flavor),
             isFlavor(options?.flavor) ? options.flavor : null,
-            isFlavor(options?.backup) ? options.backup : null,
           );
           member = { user, sessions: new Set(), flavor };
           this.seats.push(member);
@@ -220,11 +219,13 @@ export function createTableRoom(cfg: TableConfig) {
         const userId = (client.auth as SessionUser).id;
         const member = this.seats.find((s) => s.user.id === userId);
         if (!member) return this.sendError(client, 'NOT_SEATED', 'you are watching this game');
-        if (!isObject(intent) || !isFlavor(intent['flavor']) || !isFlavor(intent['backup'])) {
+        if (!isObject(intent) || !isFlavor(intent['flavor'])) {
           return this.sendError(client, 'BAD_INTENT', 'pick one of the flavors');
         }
-        const taken = this.seats.filter((s) => s !== member).map((s) => s.flavor);
-        member.flavor = assignFlavor(taken, intent['flavor'], intent['backup']);
+        const flavor = intent['flavor'];
+        // The picker greys out other players' flavors, so a taken one only arrives on a
+        // race; keep the current flavor and resend the lobby so the client catches up.
+        if (!this.seats.some((s) => s !== member && s.flavor === flavor)) member.flavor = flavor;
         this.broadcastLobby();
       },
 

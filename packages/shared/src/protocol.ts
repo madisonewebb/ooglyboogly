@@ -68,9 +68,8 @@ export interface JoinOptions {
   /** discordSdk.instanceId, or any shared string outside Discord. */
   instanceId: string;
   session: string;
-  /** The flavor this device remembers picking, and the backup. */
+  /** The flavor this device remembers picking. */
   flavor?: FlavorId;
-  backup?: FlavorId;
 }
 
 export const MIN_NAME_LENGTH = 1;
@@ -89,7 +88,7 @@ export interface LobbySettings {
 export const DEFAULT_SETTINGS: LobbySettings = {
   cardsPerPlayer: 3,
   playStyle: 'turns',
-  multipliers: true,
+  multipliers: false,
   turnOrder: 'fixed',
 };
 
@@ -126,10 +125,9 @@ export interface HoldIntent {
   die: number;
   held: boolean;
 }
-/** Before the start. A taken pick falls back to the backup, then any free flavor. */
+/** Before the start. Picking a flavor someone else has leaves yours as it was. */
 export interface FlavorIntent {
   flavor: FlavorId;
-  backup: FlavorId;
 }
 export interface ScoreIntent {
   card: number;

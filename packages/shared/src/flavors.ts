@@ -15,14 +15,10 @@ export const isFlavor = (v: unknown): v is FlavorId =>
   (FLAVOR_IDS as readonly unknown[]).includes(v);
 
 /**
- * A player's flavor at a table: their pick if it's free, then their backup,
- * then the first flavor nobody has. A table seats at most 8, so one is always free.
+ * A player's flavor when they sit down: their remembered pick if it's free, otherwise
+ * the first flavor nobody has. A table seats at most 8, so one is always free.
  */
-export function assignFlavor(
-  taken: readonly FlavorId[],
-  pick?: FlavorId | null,
-  backup?: FlavorId | null,
-): FlavorId {
-  for (const f of [pick, backup]) if (f && !taken.includes(f)) return f;
+export function assignFlavor(taken: readonly FlavorId[], pick?: FlavorId | null): FlavorId {
+  if (pick && !taken.includes(pick)) return pick;
   return FLAVOR_IDS.find((f) => !taken.includes(f)) ?? FLAVOR_IDS[0];
 }
