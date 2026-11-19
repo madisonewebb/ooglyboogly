@@ -7,6 +7,7 @@ import {
   type Lobby,
   type MoveMessage,
   MSG_ERROR,
+  MSG_FLAVOR,
   MSG_HOLD,
   MSG_LOBBY,
   MSG_MOVE,
@@ -44,6 +45,8 @@ class Player {
   lobby: Lobby | null = null;
   moves: Move[] = [];
   errors: ErrorMessage[] = [];
+  /** The tumble seed of each roll message, in order. */
+  tumbles: (number | undefined)[] = [];
   constructor(
     readonly user: SessionUser,
     readonly room: Room,
@@ -57,6 +60,7 @@ class Player {
     room.onMessage(MSG_MOVE, (m: MoveMessage) => {
       expect(m.index).toBe(this.moves.length);
       this.moves.push(m.move);
+      if (m.move.type === 'roll') this.tumbles.push(m.tumble);
     });
     room.onMessage(MSG_ERROR, (e: ErrorMessage) => this.errors.push(e));
   }
@@ -85,11 +89,17 @@ class Player {
   }
 }
 
-async function join(name: string, instanceId = 'inst-1', id = `u-${name}`): Promise<Player> {
+async function join(
+  name: string,
+  instanceId = 'inst-1',
+  id = `u-${name}`,
+  extra: object = {},
+): Promise<Player> {
   const user: SessionUser = { id, name, avatar: null };
   const room = await new Client(t!.baseUrl).joinOrCreate(TABLE_ROOM, {
     instanceId,
     session: signSession(user, TEST_SECRET),
+    ...extra,
   });
   const p = new Player(user, room);
   await until(() => p.snapshot !== null, `${name}'s snapshot`);
@@ -187,6 +197,10 @@ describe('table room', () => {
     // b saw the same log.
     await until(() => b.moves.length === a.moves.length, 'b catches up');
     expect(b.moves).toEqual(a.moves);
+    // Every roll carries a tumble seed, the same for everyone watching.
+    expect(a.tumbles).toHaveLength(2);
+    for (const seed of a.tumbles) expect(Number.isInteger(seed)).toBe(true);
+    expect(b.tumbles).toEqual(a.tumbles);
     expect(await a.expectError(MSG_HOLD, { die: 7, held: true })).toBe('BAD_DIE');
     expect(await a.expectError(MSG_SCORE, { card: 0, box: 'nope' })).toBe('BAD_INTENT');
   });
@@ -217,6 +231,36 @@ describe('table room', () => {
     expect(back.moves).toEqual(a.moves);
     await until(() => a.lobby!.seats[1]!.connected, 'Mom shown back');
     await playTurn(back);
+  });
+
+  it('gives each seat its own flavor, honoring the pick and then the backup', async () => {
+    t = await startTestServer();
+    const a = await join('Madi', 'inst-1', 'u-Madi', { flavor: 'grape', backup: 'lemon' });
+    const b = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'grape', backup: 'lemon' });
+    const c = await join('Mema', 'inst-1', 'u-Mema', { flavor: 'grape', backup: 'lemon' });
+    const d = await join('Kid', 'inst-1', 'u-Kid', { flavor: 'mud' });
+    await until(() => a.lobby!.seats.length === 4, 'four seats');
+    expect(a.lobby!.seats.map((s) => s.flavor)).toEqual([
+      'grape',
+      'lemon',
+      'raspberry',
+      'blueberry',
+    ]);
+
+    // Changing flavor: a taken pick falls back the same way.
+    c.room.send(MSG_FLAVOR, { flavor: 'cocoa', backup: 'grape' });
+    await until(() => a.lobby!.seats[2]!.flavor === 'cocoa', 'cocoa');
+    d.room.send(MSG_FLAVOR, { flavor: 'grape', backup: 'cocoa' });
+    await until(() => a.lobby!.seats[3]!.flavor === 'raspberry', 'first free');
+    expect(await d.expectError(MSG_FLAVOR, { flavor: 'mud', backup: 'grape' })).toBe('BAD_INTENT');
+
+    // A dropped seat frees its flavor; whoever sits next gets the first free one.
+    await b.room.leave();
+    const b2 = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'cocoa', backup: 'grape' });
+    expect(b2.lobby!.seats.find((s) => s.user.id === 'u-Mom')!.flavor).toBe('blueberry');
+    // After the start, flavors are locked.
+    await startGame(a, [b2, c, d], {});
+    expect(await a.expectError(MSG_FLAVOR, { flavor: 'cocoa', backup: 'lemon' })).toBe('STARTED');
   });
 
   it('seats late arrivals as spectators who cannot act', async () => {

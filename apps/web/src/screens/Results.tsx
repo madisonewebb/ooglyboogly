@@ -18,14 +18,14 @@ export function Results({ game, lobby, cdnBase }: Props) {
 
   return (
     <main className="screen results">
-      <h1 data-testid="winner">
+      <h1 className="wordmark" data-testid="winner">
         {winners.length === 1 ? `${winners[0]} wins!` : `A tie: ${winners.join(' and ')}!`}
       </h1>
       <ol className="standings">
         {rows.map(({ seat, totals }) => (
           <li key={seat.user.id} className="panel">
             <div className="row">
-              <Avatar user={seat.user} cdnBase={cdnBase} />
+              <Avatar user={seat.user} cdnBase={cdnBase} flavor={seat.flavor} />
               <strong>{seat.user.name}</strong>
               <strong className="total">{totals.total}</strong>
             </div>

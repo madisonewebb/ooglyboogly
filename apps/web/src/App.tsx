@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { type AppConfig, BRAND_NAME } from '@rollhouse/shared';
 import { type Auth, getConfig, guestSignIn } from './api';
+import { Corner } from './Corner';
 import { discordSignIn, inDiscord } from './discord';
 import { Game } from './screens/Game';
 import { Lobby } from './screens/Lobby';
@@ -32,6 +33,15 @@ function guestAuth(session: string, user: Auth['user']): Auth {
 }
 
 export function App() {
+  return (
+    <>
+      <Corner />
+      <Boot />
+    </>
+  );
+}
+
+function Boot() {
   const [boot, setBoot] = useState<Boot>({ stage: 'loading' });
 
   useEffect(() => {
@@ -66,14 +76,14 @@ export function App() {
     case 'outside':
       return (
         <Centered>
-          <h1>{BRAND_NAME}</h1>
+          <h1 className="wordmark">{BRAND_NAME}</h1>
           <p>Open {BRAND_NAME} from a Discord call: start an Activity and pick it.</p>
         </Centered>
       );
     case 'failed':
       return (
         <Centered>
-          <h1>{BRAND_NAME}</h1>
+          <h1 className="wordmark">{BRAND_NAME}</h1>
           <p>Sign-in didn&apos;t work: {boot.message}</p>
           <button type="button" onClick={() => location.reload()}>
             Try again
@@ -106,7 +116,7 @@ function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
   };
   return (
     <Centered>
-      <h1>{BRAND_NAME}</h1>
+      <h1 className="wordmark">{BRAND_NAME}</h1>
       <form onSubmit={(e) => void submit(e)} className="guest">
         <label htmlFor="guest-name">Your name</label>
         <input
