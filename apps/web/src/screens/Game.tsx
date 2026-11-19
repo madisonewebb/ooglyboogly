@@ -291,93 +291,95 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 </button>
               </div>
             )}
-            <table className="pad">
-              <thead>
-                <tr>
-                  <th scope="col" className="box-col">
-                    <span className="sr-only">Box</span>
-                  </th>
-                  {player.cards.map((_, c) => (
-                    <th key={c} scope="col">
-                      Card {c + 1}
-                      {game.setup.multipliers && multi ? (
-                        <span className="mult"> ×{c + 1}</span>
-                      ) : null}
+            <div className="pad-sheet">
+              <table className="pad">
+                <thead>
+                  <tr>
+                    <th scope="col" className="box-col">
+                      <span className="sr-only">Box</span>
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {BOXES.map((box, row) => (
-                  <tr key={box} className={row === UPPER_COUNT ? 'lower-start' : ''}>
-                    <th scope="row">{BOX_LABELS[box].short}</th>
-                    {player.cards.map((card, c) => {
-                      const filled = card.boxes[box];
-                      const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
-                      if (filled !== undefined) {
-                        const isNew = fresh.has(`${c}:${box}`);
+                    {player.cards.map((_, c) => (
+                      <th key={c} scope="col">
+                        Card {c + 1}
+                        {game.setup.multipliers && multi ? (
+                          <span className="mult"> ×{c + 1}</span>
+                        ) : null}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {BOXES.map((box, row) => (
+                    <tr key={box} className={row === UPPER_COUNT ? 'lower-start' : ''}>
+                      <th scope="row">{BOX_LABELS[box].short}</th>
+                      {player.cards.map((card, c) => {
+                        const filled = card.boxes[box];
+                        const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
+                        if (filled !== undefined) {
+                          const isNew = fresh.has(`${c}:${box}`);
+                          return (
+                            <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
+                              {isNew && <span className="pop-ring" aria-hidden="true" />}
+                              <motion.span
+                                className="score"
+                                initial={isNew ? { scale: 1.9, opacity: 0 } : false}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                              >
+                                {filled}
+                              </motion.span>
+                            </td>
+                          );
+                        }
+                        const option = options?.[c]?.boxes.get(box);
+                        if (!option) return <td key={c} aria-label={`${label}: open`} />;
+                        const chosen = pick?.card === c && pick.box === box;
+                        const bonus = option.allowed && options![c]!.bonus;
                         return (
-                          <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
-                            {isNew && <span className="pop-ring" aria-hidden="true" />}
-                            <motion.span
-                              className="score"
-                              initial={isNew ? { scale: 1.9, opacity: 0 } : false}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                          <td key={c}>
+                            <button
+                              type="button"
+                              className={[
+                                'preview',
+                                option.allowed && option.value > 0 ? 'scores' : '',
+                                chosen ? 'chosen' : '',
+                              ].join(' ')}
+                              disabled={!option.allowed}
+                              aria-pressed={chosen}
+                              aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
+                              onClick={() => {
+                                setConfirming(false);
+                                setPick({ card: c, box, value: option.value });
+                              }}
                             >
-                              {filled}
-                            </motion.span>
+                              {bonus && <span className="bonus-tag">+100</span>}
+                              {option.value}
+                            </button>
                           </td>
                         );
-                      }
-                      const option = options?.[c]?.boxes.get(box);
-                      if (!option) return <td key={c} aria-label={`${label}: open`} />;
-                      const chosen = pick?.card === c && pick.box === box;
-                      const bonus = option.allowed && options![c]!.bonus;
-                      return (
-                        <td key={c}>
-                          <button
-                            type="button"
-                            className={[
-                              'preview',
-                              option.allowed && option.value > 0 ? 'scores' : '',
-                              chosen ? 'chosen' : '',
-                            ].join(' ')}
-                            disabled={!option.allowed}
-                            aria-pressed={chosen}
-                            aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}`}
-                            onClick={() => {
-                              setConfirming(false);
-                              setPick({ card: c, box, value: option.value });
-                            }}
-                          >
-                            {bonus && <span className="bonus-tag">+100</span>}
-                            {option.value}
-                          </button>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-                <tr className="bonus-row">
-                  <th scope="row">Yatzy bonus</th>
-                  {player.cards.map((card, c) => (
-                    <td
-                      key={c}
-                      aria-label={`Card ${c + 1} Yatzy bonus: ${card.yatzyBonuses} of ${MAX_YATZY_BONUSES}`}
-                    >
-                      <span className="bonus-boxes" aria-hidden="true">
-                        {Array.from({ length: MAX_YATZY_BONUSES }, (_, i) => (
-                          <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
-                            {i < card.yatzyBonuses ? '✓' : ''}
-                          </span>
-                        ))}
-                      </span>
-                    </td>
+                      })}
+                    </tr>
                   ))}
-                </tr>
-              </tbody>
-            </table>
+                  <tr className="bonus-row">
+                    <th scope="row">Yatzy bonus</th>
+                    {player.cards.map((card, c) => (
+                      <td
+                        key={c}
+                        aria-label={`Card ${c + 1} Yatzy bonus: ${card.yatzyBonuses} of ${MAX_YATZY_BONUSES}`}
+                      >
+                        <span className="bonus-boxes" aria-hidden="true">
+                          {Array.from({ length: MAX_YATZY_BONUSES }, (_, i) => (
+                            <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
+                              {i < card.yatzyBonuses ? '✓' : ''}
+                            </span>
+                          ))}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       </div>
