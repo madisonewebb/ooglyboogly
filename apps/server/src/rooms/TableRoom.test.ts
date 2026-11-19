@@ -233,11 +233,11 @@ describe('table room', () => {
     await playTurn(back);
   });
 
-  it('gives each seat its own flavor, honoring the pick and then the backup', async () => {
+  it('gives each seat its own flavor, honoring the pick when it is free', async () => {
     t = await startTestServer();
-    const a = await join('Madi', 'inst-1', 'u-Madi', { flavor: 'grape', backup: 'lemon' });
-    const b = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'grape', backup: 'lemon' });
-    const c = await join('Mema', 'inst-1', 'u-Mema', { flavor: 'grape', backup: 'lemon' });
+    const a = await join('Madi', 'inst-1', 'u-Madi', { flavor: 'grape' });
+    const b = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'lemon' });
+    const c = await join('Mema', 'inst-1', 'u-Mema', { flavor: 'grape' });
     const d = await join('Kid', 'inst-1', 'u-Kid', { flavor: 'mud' });
     await until(() => a.lobby!.seats.length === 4, 'four seats');
     expect(a.lobby!.seats.map((s) => s.flavor)).toEqual([
@@ -247,20 +247,22 @@ describe('table room', () => {
       'blueberry',
     ]);
 
-    // Changing flavor: a taken pick falls back the same way.
-    c.room.send(MSG_FLAVOR, { flavor: 'cocoa', backup: 'grape' });
+    // Changing flavor: a free pick applies; a taken one leaves the flavor as it was.
+    c.room.send(MSG_FLAVOR, { flavor: 'cocoa' });
     await until(() => a.lobby!.seats[2]!.flavor === 'cocoa', 'cocoa');
-    d.room.send(MSG_FLAVOR, { flavor: 'grape', backup: 'cocoa' });
-    await until(() => a.lobby!.seats[3]!.flavor === 'raspberry', 'first free');
-    expect(await d.expectError(MSG_FLAVOR, { flavor: 'mud', backup: 'grape' })).toBe('BAD_INTENT');
+    d.room.send(MSG_FLAVOR, { flavor: 'grape' });
+    d.room.send(MSG_FLAVOR, { flavor: 'tangerine' });
+    await until(() => a.lobby!.seats[3]!.flavor === 'tangerine', 'tangerine');
+    expect(a.lobby!.seats.map((s) => s.flavor)).toEqual(['grape', 'lemon', 'cocoa', 'tangerine']);
+    expect(await d.expectError(MSG_FLAVOR, { flavor: 'mud' })).toBe('BAD_INTENT');
 
-    // A dropped seat frees its flavor; whoever sits next gets the first free one.
+    // A dropped seat frees its flavor; a rejoin whose pick is taken gets the first free one.
     await b.room.leave();
-    const b2 = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'cocoa', backup: 'grape' });
-    expect(b2.lobby!.seats.find((s) => s.user.id === 'u-Mom')!.flavor).toBe('blueberry');
+    const b2 = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'cocoa' });
+    expect(b2.lobby!.seats.find((s) => s.user.id === 'u-Mom')!.flavor).toBe('raspberry');
     // After the start, flavors are locked.
     await startGame(a, [b2, c, d], {});
-    expect(await a.expectError(MSG_FLAVOR, { flavor: 'cocoa', backup: 'lemon' })).toBe('STARTED');
+    expect(await a.expectError(MSG_FLAVOR, { flavor: 'lemon' })).toBe('STARTED');
   });
 
   it('seats late arrivals as spectators who cannot act', async () => {

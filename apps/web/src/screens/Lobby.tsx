@@ -11,7 +11,7 @@ import {
 } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import { flavorVars } from '../flavor';
-import { loadFlavor, saveFlavor } from '../flavorPrefs';
+import { saveFlavor } from '../flavorPrefs';
 import { FLAVORS } from '../theme/palette';
 import { usePrefs } from '../theme/prefs';
 import type { Table } from '../useTable';
@@ -91,10 +91,9 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
   const takenBy = new Map(
     lobby.seats.filter((seat) => seat !== me).map((seat) => [seat.flavor, seat.user.name] as const),
   );
-  const backup = loadFlavor().backup ?? FLAVOR_IDS.find((f) => f !== me?.flavor)!;
-  const pickFlavor = (flavor: FlavorId, nextBackup: FlavorId) => {
-    saveFlavor(flavor, nextBackup);
-    table.send(MSG_FLAVOR, { flavor, backup: nextBackup });
+  const pickFlavor = (flavor: FlavorId) => {
+    saveFlavor(flavor);
+    table.send(MSG_FLAVOR, { flavor });
   };
   const isHost = lobby.hostId === userId;
   const host = lobby.seats.find((s) => s.user.id === lobby.hostId);
@@ -130,18 +129,7 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
         <section className="panel">
           <h2>Your flavor</h2>
           <p className="quiet">Your color for chips and the numbers on your pad.</p>
-          <FlavorPicker
-            label="Flavor"
-            value={me.flavor}
-            takenBy={takenBy}
-            onChange={(f) => pickFlavor(f, backup === f ? me.flavor : backup)}
-          />
-          <FlavorPicker
-            label="Backup, if someone else has your flavor"
-            value={backup}
-            takenBy={new Map([[me.flavor, 'you']])}
-            onChange={(b) => pickFlavor(me.flavor, b)}
-          />
+          <FlavorPicker label="Flavor" value={me.flavor} takenBy={takenBy} onChange={pickFlavor} />
         </section>
       )}
 

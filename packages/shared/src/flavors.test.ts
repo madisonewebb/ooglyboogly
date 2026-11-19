@@ -3,13 +3,10 @@ import { assignFlavor, FLAVOR_IDS, isFlavor } from './flavors';
 
 describe('assignFlavor', () => {
   it('gives the pick when it is free', () => {
-    expect(assignFlavor(['raspberry'], 'grape', 'lemon')).toBe('grape');
+    expect(assignFlavor(['raspberry'], 'grape')).toBe('grape');
   });
-  it('falls back to the backup when the pick is taken', () => {
-    expect(assignFlavor(['grape'], 'grape', 'lemon')).toBe('lemon');
-  });
-  it('falls back to the first free flavor when both are taken', () => {
-    expect(assignFlavor(['grape', 'lemon', 'raspberry'], 'grape', 'lemon')).toBe('blueberry');
+  it('falls back to the first free flavor when the pick is taken', () => {
+    expect(assignFlavor(['grape', 'raspberry'], 'grape')).toBe('blueberry');
   });
   it('picks the first free flavor with no preference', () => {
     expect(assignFlavor([])).toBe('raspberry');
