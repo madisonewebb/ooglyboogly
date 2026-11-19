@@ -129,19 +129,11 @@ Per app, in the [Developer Portal](https://discord.com/developers/applications):
 
 The client ID is public and lives in `manifests/overlays/<env>/config.env` (`DISCORD_CLIENT_ID`).
 The client secret is sealed into `manifests/overlays/<env>/app-sealedsecret.yaml` next to
-`SESSION_SECRET`. To set or rotate it, run this from the repo root (it reads the secret without
-echoing it, so it never lands in your shell history or on disk):
+`SESSION_SECRET`. To set or rotate it, run this from the repo root. It asks for the secret without
+echoing it, so it never lands in your shell history or on disk:
 
 ```sh
-ENV=staging NS=rollhouse-staging   # or ENV=prod NS=rollhouse
-read -rsp 'Client secret: ' S; echo
-printf 'DISCORD_CLIENT_SECRET=%s\n' "$S" \
-  | kubectl create secret generic rollhouse-app -n $NS --from-env-file=/dev/stdin \
-      --dry-run=client -o yaml \
-  | kubeseal --kubeconfig /etc/rancher/k3s/k3s.yaml \
-      --controller-namespace kube-system --controller-name sealed-secrets-controller \
-      --format yaml --merge-into manifests/overlays/$ENV/app-sealedsecret.yaml
-unset S
+scripts/seal-discord-secret.sh staging   # or prod
 ```
 
 ## Secrets
