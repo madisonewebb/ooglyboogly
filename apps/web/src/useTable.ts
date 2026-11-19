@@ -39,6 +39,15 @@ function endpoint(): string {
   return import.meta.env.DEV ? `${location.protocol}//${location.hostname}:8080` : location.origin;
 }
 
+/**
+ * A Colyseus client that uses URLs exactly as built. On discordsays.com the
+ * SDK otherwise rewrites every URL to /.proxy/colyseus/..., which assumes a
+ * /colyseus URL mapping. Ours maps / to the server, so everything is same-origin.
+ */
+export function tableClient(base: string): Client {
+  return new Client(base, { urlBuilder: (url) => url.href });
+}
+
 /** A client built for another version reloads once to pick up the new build. */
 function reloadIfStale(serverVersion: string) {
   if (serverVersion === __APP_VERSION__) return;
@@ -69,7 +78,7 @@ export function useTable(auth: Auth): Table {
       reportError(where, message);
     };
     const options: JoinOptions = { instanceId: auth.instanceId, session: auth.session };
-    new Client(endpoint())
+    tableClient(endpoint())
       .joinOrCreate(TABLE_ROOM, options)
       .then((room) => {
         if (cancelled) return void room.leave();
