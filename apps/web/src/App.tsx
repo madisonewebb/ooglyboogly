@@ -5,6 +5,7 @@ import { discordSignIn, inDiscord } from './discord';
 import { Game } from './screens/Game';
 import { Lobby } from './screens/Lobby';
 import { Results } from './screens/Results';
+import { errorText } from './errors';
 import { store } from './storage';
 import { useTable } from './useTable';
 
@@ -52,7 +53,7 @@ export function App() {
       go({ stage: 'guest', config });
     })().catch((err: unknown) => {
       console.error('sign-in failed', err);
-      go({ stage: 'failed', message: err instanceof Error ? err.message : String(err) });
+      go({ stage: 'failed', message: errorText(err) });
     });
     return () => {
       cancelled = true;
@@ -100,7 +101,7 @@ function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
       store.set(GUEST_KEY, JSON.stringify({ session, user }));
       onAuth(guestAuth(session, user));
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(errorText(err));
     }
   };
   return (

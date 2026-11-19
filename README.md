@@ -116,14 +116,16 @@ The name and domain are each set in one place:
 
 Each environment has its own Discord app, owned by a Developer Team: **Rollhouse** (prod) and
 **Rollhouse Dev** (staging). Until the Activity is released, only team members can launch it, so family
-players join the team as read-only members (Discord requires 2FA for that).
+players join the team as read-only members (Discord requires 2FA for that). Every player also
+needs **Developer Mode** on (User Settings → Advanced) to see the unreleased Activity in the App
+Launcher.
 
 Per app, in the [Developer Portal](https://discord.com/developers/applications):
 
 - **Installation:** User Install and Guild Install.
 - **OAuth2 → Redirects:** `https://127.0.0.1` (a placeholder; Activities don't redirect).
 - **Activities → Settings:** Enable Activities.
-- **Activities → URL Mappings:** `/discord-cdn` → `cdn.discordapp.com` (avatars), then `/` → the
+- **Activities → URL Mappings** (required before Activities can be enabled): `/discord-cdn` → `cdn.discordapp.com` (avatars), then `/` → the
   environment's host (`rollhouse-staging.castillocurios.com` or `rollhouse.castillocurios.com`).
   Everything else (page, `/api`, the game WebSocket) is same-origin under `/`.
 
