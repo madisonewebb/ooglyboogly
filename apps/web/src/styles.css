@@ -402,6 +402,52 @@ input:not([type]) {
   }
 }
 
+/*
+ * On a laptop the whole pad fits the window, so you never scroll to see a box:
+ * the game fills the window height and the pad's rows share whatever is left.
+ * Rows stop growing at their full size and shrink to --row before anything scrolls.
+ */
+@media (min-width: 52.01rem) {
+  .screen.game {
+    box-sizing: border-box;
+    height: 100dvh;
+    padding-bottom: 0.75rem;
+  }
+
+  .table-layout {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .pad-col {
+    /* Roughly the window less the chrome, over 15 rows; previews track it. */
+    --row: clamp(1.75rem, calc((100dvh - 14rem) / 15), 2.65rem);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .pad-col > [role='tabpanel'] {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pad-sheet {
+    flex: 1;
+    min-height: 0;
+    /* 15 rows at full size. */
+    max-height: calc(15 * 2.65rem);
+  }
+
+  .pad {
+    height: 100%;
+  }
+}
+
 .tray-col {
   position: sticky;
   top: 0.75rem;
@@ -626,17 +672,19 @@ input:not([type]) {
 }
 
 .pad-title {
-  margin: 0.75rem 0 0.4rem;
+  margin: 0.5rem 0 0.25rem;
 }
 
 /* One tab per player across the top of the sheet; the chosen one wears their candy. */
 .pad-tabs {
   display: flex;
   gap: 0.4rem;
-  overflow-x: auto;
+  /* Scrolls sideways at a big table, never up and down. */
+  overflow: auto hidden;
   margin: -0.4rem -0.5rem 0;
   padding: 0.4rem 0.5rem 0;
-  border-bottom: 2px solid var(--rule);
+  /* The rule is drawn inside the row so the chosen tab can cover it without overflowing. */
+  box-shadow: inset 0 -2px 0 var(--rule);
 }
 
 .pad-tab {
@@ -646,7 +694,6 @@ input:not([type]) {
   gap: 0.6rem;
   flex: none;
   min-height: 3.4rem;
-  margin-bottom: -2px;
   padding: 0.3rem 1rem 0.3rem 0.45rem;
   border: 2px solid transparent;
   border-bottom: 0;
@@ -666,9 +713,7 @@ input:not([type]) {
 .pad-tab[aria-selected='true'] {
   border-color: var(--candy);
   background: var(--pad);
-  box-shadow:
-    inset 0 0.3rem 0 var(--candy),
-    0 2px 0 var(--pad);
+  box-shadow: inset 0 0.3rem 0 var(--candy);
   font-weight: 800;
 }
 
@@ -773,7 +818,8 @@ input:not([type]) {
 
 .pad th,
 .pad td {
-  height: 2.65rem;
+  /* A minimum: on a laptop the rows stretch to fill the sheet. */
+  height: var(--row, 2.65rem);
   padding: 0.15rem 0.5rem;
   border-bottom: 1px solid var(--rule);
 }
@@ -850,7 +896,8 @@ input:not([type]) {
   justify-content: center;
   gap: 0.5rem;
   text-align: center;
-  min-height: 2.3rem;
+  min-height: calc(var(--row, 2.65rem) - 0.35rem);
+  line-height: 1.1;
   border: 2px dashed var(--quiet);
   border-radius: 0.7rem;
   background: transparent;
