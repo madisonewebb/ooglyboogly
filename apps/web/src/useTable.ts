@@ -13,13 +13,16 @@ import {
   type Snapshot,
   TABLE_ROOM,
 } from '@rollhouse/shared';
-import type { Auth } from './api';
+import { type Auth, reportError } from './api';
+import { errorText } from './errors';
 import { store } from './storage';
 
 export type Connection = 'connecting' | 'open' | 'reconnecting' | 'lost';
 
 export interface Table {
   connection: Connection;
+  /** Why the connection was lost, for the error screen. */
+  lostReason: string | null;
   snapshot: Snapshot | null;
   lobby: Lobby | null;
   game: GameState | null;
@@ -52,11 +55,19 @@ export function useTable(auth: Auth): Table {
   const [moves, setMoves] = useState<Move[]>([]);
   const [error, setError] = useState<ErrorMessage | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [lostReason, setLostReason] = useState<string | null>(null);
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setConnection('connecting');
+    setLostReason(null);
+    const lose = (where: string, message: string) => {
+      if (cancelled) return;
+      setConnection('lost');
+      setLostReason(message);
+      reportError(where, message);
+    };
     const options: JoinOptions = { instanceId: auth.instanceId, session: auth.session };
     new Client(endpoint())
       .joinOrCreate(TABLE_ROOM, options)
@@ -78,13 +89,13 @@ export function useTable(auth: Auth): Table {
         room.onMessage(MSG_ERROR, (e: ErrorMessage) => setError(e));
         room.onDrop(() => setConnection('reconnecting'));
         room.onReconnect(() => setConnection('open'));
-        room.onLeave(() => {
-          if (!cancelled) setConnection('lost');
+        room.onLeave((code, reason) => {
+          lose('table left', `closed with code ${code}${reason ? `: ${reason}` : ''}`);
         });
       })
       .catch((err: unknown) => {
         console.error('could not join the table', err);
-        if (!cancelled) setConnection('lost');
+        lose('table join', errorText(err));
       });
     return () => {
       cancelled = true;
@@ -109,6 +120,7 @@ export function useTable(auth: Auth): Table {
 
   return {
     connection,
+    lostReason,
     snapshot,
     lobby,
     game,

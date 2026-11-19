@@ -5,6 +5,7 @@ import { WebSocketTransport } from '@colyseus/ws-transport';
 import express from 'express';
 import { BRAND_NAME, HELLO_ROOM, type HealthResponse, TABLE_ROOM } from '@rollhouse/shared';
 import { type FetchFn, mountAuth } from './auth';
+import { mountClientLog } from './clientLog';
 import type { Config } from './config';
 import { HelloRoom } from './rooms/HelloRoom';
 import {
@@ -36,11 +37,22 @@ export function createGameServer(config: Config, deps: ServerDeps = {}): Server 
       });
 
       mountAuth(app, config, deps.fetch);
+      mountClientLog(app);
 
       if (existsSync(config.webDist)) {
-        app.use(express.static(config.webDist, { index: 'index.html', maxAge: '1h' }));
+        // Hashed assets can be cached; index.html must not be, or a deploy
+        // stays invisible until the cache runs out.
+        app.use(
+          express.static(config.webDist, {
+            index: 'index.html',
+            maxAge: '1h',
+            setHeaders: (res, file) => {
+              if (file.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+            },
+          }),
+        );
         app.get('/{*splat}', (_req, res) => {
-          res.sendFile(path.join(config.webDist, 'index.html'));
+          res.set('Cache-Control', 'no-cache').sendFile(path.join(config.webDist, 'index.html'));
         });
       } else {
         app.get('/', (_req, res) => {

@@ -35,3 +35,12 @@ export interface Auth {
   /** Set inside Discord. */
   discord: boolean;
 }
+
+/** Sends an error to the server log; inside Discord there's no console to read. */
+export function reportError(where: string, message: string): void {
+  void fetch('/api/client-log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ where, message }),
+  }).catch(() => {});
+}
