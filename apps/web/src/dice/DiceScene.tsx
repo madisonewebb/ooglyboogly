@@ -21,6 +21,7 @@ import {
   restPose,
   timing,
 } from './timeline';
+import { CAMERA_POS, frameExtent, LOOK_AT } from './framing';
 import { AXES, FACE_AXIS, SHELF_Y, SHELF_Z, SLOT_X, TRAY, TRAY_Z } from './tumbleFormat';
 
 export interface SlotRect {
@@ -41,10 +42,8 @@ export interface SceneProps {
   onSlots(slots: { tray: SlotRect[]; shelf: SlotRect[] }): void;
 }
 
-/** Width of the world the camera shows, in die widths. */
-const VIEW_WIDTH = 10.2;
-const CAMERA_POS = new THREE.Vector3(0, 11, 5.2);
-const LOOK_AT = new THREE.Vector3(0, 0, -0.35);
+const CAMERA = new THREE.Vector3(...CAMERA_POS);
+const TARGET = new THREE.Vector3(...LOOK_AT);
 
 /** Pip spots in a face's own (u, v) plane, a quarter of a die apart. */
 const PIPS: Record<number, [number, number][]> = {
@@ -115,18 +114,48 @@ function shadowTexture(): THREE.Texture {
   return new THREE.CanvasTexture(c);
 }
 
+const RIM = 0.38;
+const RIM_H = 0.42;
+const roundedCache = new Map<string, THREE.BufferGeometry>();
+/** A rounded block, cached by size. */
+function rounded(w: number, h: number, d: number): THREE.BufferGeometry {
+  const key = `${w}:${h}:${d}`;
+  let g = roundedCache.get(key);
+  if (!g) {
+    g = new RoundedBoxGeometry(w, h, d, 3, Math.min(w, h, d) * 0.45);
+    roundedCache.set(key, g);
+  }
+  return g;
+}
+
 function Camera({ onSlots }: Pick<SceneProps, 'onSlots'>) {
   const { camera, size } = useThree();
   useLayoutEffect(() => {
     const cam = camera as THREE.OrthographicCamera;
-    cam.position.copy(CAMERA_POS);
-    cam.zoom = size.width / VIEW_WIDTH;
-    cam.lookAt(LOOK_AT);
-    cam.updateProjectionMatrix();
+    cam.position.copy(CAMERA);
+    cam.lookAt(TARGET);
     cam.updateMatrixWorld();
+    // Fit the whole FRAME box, padding whichever side the canvas has spare.
+    // Camera-space offsets: frameExtent measures from the camera position.
+    const e = frameExtent();
+    let w = e.maxX - e.minX;
+    let h = e.maxY - e.minY;
+    const aspect = size.width / Math.max(1, size.height);
+    if (w / h < aspect) w = h * aspect;
+    else h = w / aspect;
+    const cx = (e.minX + e.maxX) / 2;
+    const cy = (e.minY + e.maxY) / 2;
+    Object.assign(cam, {
+      left: cx - w / 2,
+      right: cx + w / 2,
+      top: cy + h / 2,
+      bottom: cy - h / 2,
+      zoom: 1,
+    });
+    cam.updateProjectionMatrix();
     const project = (x: number, y: number, z: number): SlotRect => {
       const p = new THREE.Vector3(x, y, z).project(cam);
-      return { x: (p.x + 1) / 2, y: (1 - p.y) / 2, size: 1.15 / VIEW_WIDTH };
+      return { x: (p.x + 1) / 2, y: (1 - p.y) / 2, size: 1.15 / w };
     };
     onSlots({
       tray: SLOT_X.map((x) => project(x, 0.5, TRAY_Z)),
@@ -221,25 +250,31 @@ function Dice({ values, held, roll, hops, colors }: Omit<SceneProps, 'onSlots'>)
 
   return (
     <>
-      {/* Tray floor and a low rim, in the pad colors. */}
-      <mesh position={[0, -0.05, cz]} receiveShadow>
-        <boxGeometry args={[hx * 2 + 0.4, 0.1, hz * 2 + 0.4]} />
+      {/* The tray: a pad-colored floor inside a soft rounded rim on all four sides. */}
+      <mesh position={[0, -0.05, cz]}>
+        <boxGeometry args={[hx * 2 + 0.2, 0.1, hz * 2 + 0.2]} />
         <meshBasicMaterial color={colors.pad} />
       </mesh>
       {[
-        [0, cz + hz + 0.2, hx * 2 + 0.8, 0.4],
-        [-hx - 0.2, cz, 0.4, hz * 2 + 0.8],
-        [hx + 0.2, cz, 0.4, hz * 2 + 0.8],
+        [0, cz + hz + RIM / 2, hx * 2 + RIM * 2, RIM],
+        [0, cz - hz - RIM / 2, hx * 2 + RIM * 2, RIM],
+        [-hx - RIM / 2, cz, RIM, hz * 2 + RIM * 2],
+        [hx + RIM / 2, cz, RIM, hz * 2 + RIM * 2],
       ].map(([x, z, w, d], i) => (
-        <mesh key={i} position={[x!, 0.15, z!]}>
-          <boxGeometry args={[w!, 0.3, d!]} />
-          <meshBasicMaterial color={colors.rule} />
+        <mesh key={i} position={[x!, RIM_H / 2, z!]} geometry={rounded(w!, RIM_H, d!)}>
+          <meshLambertMaterial color={colors.rule} emissive={colors.rule} emissiveIntensity={0.3} />
         </mesh>
       ))}
-      {/* The butter-yellow shelf for held dice. */}
-      <mesh position={[0, SHELF_Y / 2, SHELF_Z]}>
-        <boxGeometry args={[hx * 2 + 0.8, SHELF_Y, 1.5]} />
-        <meshBasicMaterial color={colors.butter} />
+      {/* The butter-yellow shelf for held dice, behind the tray. */}
+      <mesh
+        position={[0, SHELF_Y / 2, SHELF_Z]}
+        geometry={rounded(hx * 2 + RIM * 2, SHELF_Y, 1.45)}
+      >
+        <meshLambertMaterial
+          color={colors.butter}
+          emissive={colors.butter}
+          emissiveIntensity={0.3}
+        />
       </mesh>
 
       {[0, 1, 2, 3, 4].map((i) => (
@@ -276,6 +311,19 @@ function Dice({ values, held, roll, hops, colors }: Omit<SceneProps, 'onSlots'>)
             opacity={0.75}
           />
         </mesh>
+        {/* A rolled rim and a base, so it reads as a candy cup. */}
+        <mesh position={[0, 0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[1.05, 0.11, 12, 40]} />
+          <meshLambertMaterial
+            color={colors.accent}
+            emissive={colors.accent}
+            emissiveIntensity={0.3}
+          />
+        </mesh>
+        <mesh position={[0, -0.85, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.8, 32]} />
+          <meshLambertMaterial color={colors.accent} side={THREE.DoubleSide} />
+        </mesh>
       </group>
     </>
   );
@@ -289,7 +337,7 @@ export default function DiceScene(props: SceneProps) {
       flat
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      camera={{ near: 0.1, far: 50 }}
+      camera={{ near: 0.1, far: 50, manual: true }}
       aria-hidden="true"
     >
       <Camera onSlots={props.onSlots} />

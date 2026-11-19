@@ -3,6 +3,7 @@ import { THEMES } from '../theme/palette';
 import { usePrefs } from '../theme/prefs';
 import { playCelebrate, playClack, playRattle } from '../sound';
 import type { SceneProps, SlotRect } from './DiceScene';
+import { STAGE_ASPECT } from './framing';
 import { loadTumbles, tumblesNow } from './loadTumbles';
 import { celebrationFor, type HopPlan, landTimes, type RollPlan, timing } from './timeline';
 import { PATHS_PER_COUNT } from './tumbleFormat';
@@ -188,14 +189,16 @@ export function DiceTray({ values, held, roll, onToggle, onSettled, candy, rolli
 
   const colors = THEMES[theme];
   const sceneProps: SceneProps = { values, held, roll: plan, hops, colors, onSlots: setSlots };
-  const flat = !three || !slots;
+  // Flat dice only without WebGL; while the 3D scene loads, the stage keeps its shape.
+  const flat = !three;
+  const loading = three && !slots;
 
   return (
     <div
-      className={`dice-stage${flat ? ' flat' : ''}`}
+      className={`dice-stage${flat ? ' flat' : ''}${loading ? ' loading' : ''}`}
       data-testid="dice-tray"
       onClick={skip}
-      style={{ ['--candy' as string]: candy }}
+      style={{ ['--candy' as string]: candy, ['--stage-aspect' as string]: STAGE_ASPECT }}
     >
       {three && (
         <div className="scene">

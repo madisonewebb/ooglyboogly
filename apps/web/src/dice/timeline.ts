@@ -66,6 +66,9 @@ export interface CupPose {
 
 const BASE = { shake: 240, tumble: 560, stagger: 60, settle: 200, fade: 220, hop: 260 };
 const LAND_SQUISH_MS = 140;
+/** How high a Yatzy jump and a hold hop go. The camera frames room for both. */
+export const JUMP = 1.2;
+export const HOP = 1.0;
 const CELEBRATE_MS = 720;
 const ONE: Vec3 = [1, 1, 1];
 const UP: Vec3 = [0, 1, 0];
@@ -254,7 +257,7 @@ function celebrate(plan: RollPlan, t: Timing, die: number, now: number, pose: Po
   const span = t.done - t.end;
   if (kind === 'yatzy') {
     const u = (now - t.end) / span;
-    const lift = Math.sin(Math.PI * u) * 1.6;
+    const lift = Math.sin(Math.PI * u) * JUMP;
     const spin = fromAxisAngle(UP, u * Math.PI * 2);
     return {
       ...pose,
@@ -315,7 +318,7 @@ export function hopPose(h: HopPlan, now: number): Pose {
   const span = BASE.hop * h.speed;
   const u = h.reduced ? 1 : clamp01((now - h.start) / span);
   const pos = lerp3(from, to, easeOut(u));
-  if (u < 1) pos[1] += Math.sin(Math.PI * u) * 1.3;
+  if (u < 1) pos[1] += Math.sin(Math.PI * u) * HOP;
   const after = now - (h.start + span);
   const bounce =
     after >= 0 && after < 120 * h.speed ? Math.sin((Math.PI * after) / (120 * h.speed)) * 0.15 : 0;

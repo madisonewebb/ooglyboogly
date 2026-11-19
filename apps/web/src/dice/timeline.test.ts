@@ -132,3 +132,13 @@ describe('holding a die', () => {
 it('uses every frame of the recording', () => {
   expect(FRAMES).toBeGreaterThan(10);
 });
+
+describe('camera framing', () => {
+  it('leaves headroom for the hop and the Yatzy jump on the shelf', async () => {
+    const { FRAME, SHELF_Y, DIE_SIZE } = await import('./tumbleFormat');
+    const { HOP, JUMP } = await import('./timeline');
+    const shelfTop = SHELF_Y + DIE_SIZE;
+    expect(FRAME.maxY).toBeGreaterThanOrEqual(shelfTop + JUMP);
+    expect(FRAME.maxY).toBeGreaterThanOrEqual(DIE_SIZE + HOP);
+  });
+});

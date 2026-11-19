@@ -431,10 +431,15 @@ input:not([type]) {
 .dice-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.6;
+  aspect-ratio: var(--stage-aspect, 1.4);
   border-radius: var(--radius);
   background: var(--bg);
   overflow: visible;
+}
+
+/* Tap targets wait for the scene to place them. */
+.dice-stage.loading .die-buttons {
+  visibility: hidden;
 }
 
 .dice-stage .scene {
