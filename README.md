@@ -17,6 +17,10 @@ task setup-hooks   # pre-commit runs `task lint` before each commit
 task dev           # Tilt + docker-compose: server :8080, client :5173, live reload
 ```
 
+Locally there's no Discord: open <http://localhost:5173/?table=test> in two browsers and sit down
+with a name (`GUEST_LOGIN=true`, never set in staging or prod). The same `?table=` puts you at the
+same table.
+
 | Task             | Does                                                    |
 | ---------------- | ------------------------------------------------------- |
 | `task lint`      | ESLint and Prettier check                               |
@@ -106,12 +110,36 @@ The name and domain are each set in one place:
 | Brand name           | `packages/shared/src/brand.ts`                     |
 | Public URL (per env) | `manifests/overlays/<env>/config.env` (`BASE_URL`) |
 | Proxy hosts, DNS     | Nginx Proxy Manager and Namecheap (see above)      |
-| Discord URL mapping  | Discord Developer Portal (milestone 3)             |
+| Discord URL mapping  | Discord Developer Portal (see Discord below)       |
+
+## Discord
+
+Each environment has its own Discord app, owned by a Developer Team: **Rollhouse** (prod) and
+**Rollhouse Dev** (staging). Until the Activity is released, only team members can launch it, so family
+players join the team as read-only members (Discord requires 2FA for that).
+
+Per app, in the [Developer Portal](https://discord.com/developers/applications):
+
+- **Installation:** User Install and Guild Install.
+- **OAuth2 → Redirects:** `https://127.0.0.1` (a placeholder; Activities don't redirect).
+- **Activities → Settings:** Enable Activities.
+- **Activities → URL Mappings:** `/discord-cdn` → `cdn.discordapp.com` (avatars), then `/` → the
+  environment's host (`rollhouse-staging.castillocurios.com` or `rollhouse.castillocurios.com`).
+  Everything else (page, `/api`, the game WebSocket) is same-origin under `/`.
+
+The client ID is public and lives in `manifests/overlays/<env>/config.env` (`DISCORD_CLIENT_ID`).
+The client secret is sealed into `manifests/overlays/<env>/app-sealedsecret.yaml` next to
+`SESSION_SECRET`. To set or rotate it, run this from the repo root. It asks for the secret without
+echoing it, so it never lands in your shell history or on disk:
+
+```sh
+scripts/seal-discord-secret.sh staging   # or prod
+```
 
 ## Secrets
 
 This repo is public. Never commit tokens, kubeconfigs, `.env` files or Discord secrets. Runtime
-secrets will be committed only as Sealed Secrets, which only the cluster can decrypt.
+secrets are committed only as Sealed Secrets, which only the cluster can decrypt.
 
 ## Backups
 

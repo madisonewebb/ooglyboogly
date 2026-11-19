@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 export interface Config {
@@ -8,6 +9,13 @@ export interface Config {
   version: string;
   webDist: string;
   dataDir: string;
+  /** Null when Discord sign-in isn't configured (local dev). */
+  discordClientId: string | null;
+  discordClientSecret: string | null;
+  /** HMAC key for session tokens. */
+  sessionSecret: string;
+  /** Enables POST /api/guest. Never on in staging or prod. */
+  guestLogin: boolean;
 }
 
 declare const __APP_VERSION__: string | undefined;
@@ -35,5 +43,22 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     version: readVersion(),
     webDist: env['WEB_DIST'] ?? fileURLToPath(new URL('../../web/dist', import.meta.url)),
     dataDir: env['DATA_DIR'] ?? fileURLToPath(new URL('../../../data', import.meta.url)),
+    discordClientId: env['DISCORD_CLIENT_ID'] || null,
+    discordClientSecret: env['DISCORD_CLIENT_SECRET'] || null,
+    sessionSecret: sessionSecret(env),
+    guestLogin: env['GUEST_LOGIN'] === 'true',
   };
+}
+
+function sessionSecret(env: NodeJS.ProcessEnv): string {
+  const secret = env['SESSION_SECRET'];
+  if (secret) {
+    if (secret.length < 32) throw new Error('SESSION_SECRET must be at least 32 characters');
+    return secret;
+  }
+  // Discord sign-in in a deployed environment needs a stable key, or every
+  // restart would sign everyone out.
+  if (env['DISCORD_CLIENT_ID'])
+    throw new Error('SESSION_SECRET is required with DISCORD_CLIENT_ID');
+  return randomBytes(32).toString('base64url');
 }
