@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/madisonewebb/rollhouse/compare/v0.4.0...v0.5.0) (2026-11-19)
+
+
+### Features
+
+* **web:** show the upper bonus on the pad and in the results ([#38](https://github.com/madisonewebb/rollhouse/issues/38)) ([5db9041](https://github.com/madisonewebb/rollhouse/commit/5db904196a2e14228f4757b629f583897aeba63a))
+
+
+### Bug Fixes
+
+* **web:** fit the whole score pad in a laptop window ([#34](https://github.com/madisonewebb/rollhouse/issues/34)) ([6ce73e5](https://github.com/madisonewebb/rollhouse/commit/6ce73e55608ed0736b4c774aaa7d3880b225c940))
+* **web:** stop the pad tabs from scrolling up and down ([#35](https://github.com/madisonewebb/rollhouse/issues/35)) ([59a39e6](https://github.com/madisonewebb/rollhouse/commit/59a39e6fb623eeb1529fbecc2e3ad065f9131691))
+
 ## [0.4.0](https://github.com/madisonewebb/rollhouse/compare/v0.3.0...v0.4.0) (2026-11-19)
 
 
