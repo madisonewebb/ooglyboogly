@@ -15,6 +15,12 @@ export const TRAY_Z = 0.9;
 export const SHELF_Z = -2.75;
 export const SHELF_Y = 0.35;
 
+/**
+ * Everything the camera must keep in frame, with headroom above the shelf for
+ * a hop and a Yatzy jump, and above the tray for the cup.
+ */
+export const FRAME = { minX: -5, maxX: 5, minZ: -3.75, maxZ: 3, maxY: 2.7 };
+
 /** Where the cup pours from: the back-left of the tray. */
 export const CUP = { x: -3.1, y: 2.4, z: 0.2 };
 
