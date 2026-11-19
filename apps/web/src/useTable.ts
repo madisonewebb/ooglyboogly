@@ -15,9 +15,17 @@ import {
 } from '@rollhouse/shared';
 import { type Auth, reportError } from './api';
 import { errorText } from './errors';
+import { loadFlavor } from './flavorPrefs';
 import { store } from './storage';
 
 export type Connection = 'connecting' | 'open' | 'reconnecting' | 'lost';
+
+/** The latest roll seen live (not from a snapshot), for the dice animation. */
+export interface LiveRoll {
+  index: number;
+  player: number;
+  tumble: number;
+}
 
 export interface Table {
   connection: Connection;
@@ -29,6 +37,7 @@ export interface Table {
   /** The viewer's seat, or null when watching. */
   seat: number | null;
   error: ErrorMessage | null;
+  lastRoll: LiveRoll | null;
   clearError(): void;
   send(type: string, body?: unknown): void;
   rejoin(): void;
@@ -65,6 +74,7 @@ export function useTable(auth: Auth): Table {
   const [error, setError] = useState<ErrorMessage | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [lostReason, setLostReason] = useState<string | null>(null);
+  const [lastRoll, setLastRoll] = useState<LiveRoll | null>(null);
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
@@ -77,7 +87,11 @@ export function useTable(auth: Auth): Table {
       setLostReason(message);
       reportError(where, message);
     };
-    const options: JoinOptions = { instanceId: auth.instanceId, session: auth.session };
+    const options: JoinOptions = {
+      instanceId: auth.instanceId,
+      session: auth.session,
+      ...loadFlavor(),
+    };
     tableClient(endpoint())
       .joinOrCreate(TABLE_ROOM, options)
       .then((room) => {
@@ -91,10 +105,15 @@ export function useTable(auth: Auth): Table {
           setMoves(s.moves);
         });
         room.onMessage(MSG_LOBBY, (l: Lobby) => setLobby(l));
-        room.onMessage(MSG_MOVE, ({ index, move }: MoveMessage) =>
+        room.onMessage(MSG_MOVE, ({ index, move, tumble }: MoveMessage) => {
           // Ignore anything already in the log (a snapshot can overlap a move).
-          setMoves((prev) => (index === prev.length ? [...prev, move] : prev)),
-        );
+          setMoves((prev) => (index === prev.length ? [...prev, move] : prev));
+          if (move.type === 'roll') {
+            setLastRoll((r) =>
+              r && r.index >= index ? r : { index, player: move.player, tumble: tumble ?? index },
+            );
+          }
+        });
         room.onMessage(MSG_ERROR, (e: ErrorMessage) => setError(e));
         room.onDrop(() => setConnection('reconnecting'));
         room.onReconnect(() => setConnection('open'));
@@ -135,6 +154,7 @@ export function useTable(auth: Auth): Table {
     game,
     seat,
     error,
+    lastRoll,
     clearError: useCallback(() => setError(null), []),
     send,
     rejoin: useCallback(() => setAttempt((n) => n + 1), []),

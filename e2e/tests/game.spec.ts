@@ -11,9 +11,13 @@ async function sitDown(page: Page, table: string, name: string) {
 
 /** Rolls once and writes the dice in the first box the rules allow. */
 async function playTurn(page: Page, endsGame = false) {
-  const filled = page.locator('td.filled');
+  // Your own pad: in Take turns the pad follows whoever is up, so pick it first.
+  await page.getByRole('button', { name: 'You', exact: true }).click();
+  const filled = page.getByRole('region', { name: /score pad/ }).locator('td.filled');
   const before = await filled.count();
   await page.getByRole('button', { name: /^Roll \(/ }).click();
+  // Previews wait for the dice to land.
+  await expect(page.getByRole('button', { name: /^Die 1, rolling/ })).toHaveCount(0);
   const box = page.locator('button.preview:not([disabled])').first();
   const value = await box.textContent();
   await box.click();
@@ -24,7 +28,10 @@ async function playTurn(page: Page, endsGame = false) {
   }
   // The last score of the game swaps the pad for the results.
   if (endsGame) await expect(page.getByTestId('winner')).toBeVisible();
-  else await expect(filled).toHaveCount(before + 1);
+  else {
+    await page.getByRole('button', { name: 'You', exact: true }).click();
+    await expect(filled).toHaveCount(before + 1);
+  }
 }
 
 for (const style of ['Take turns', 'Everyone at once'] as const) {
@@ -36,8 +43,15 @@ for (const style of ['Take turns', 'Everyone at once'] as const) {
 
     await sitDown(page, table, 'Madi');
     await sitDown(mom, table, 'Mom');
-    await expect(page.getByText('Mom')).toBeVisible();
+    await expect(page.getByText('Mom', { exact: true })).toBeVisible();
     await expect(mom.getByText(/Waiting for Madi to start/)).toBeVisible();
+
+    // Flavors are unique at the table: Mom can't take Madi's.
+    await expect(mom.getByRole('button', { name: /^Raspberry \(taken by Madi\)/ })).toBeDisabled();
+    await mom.getByRole('button', { name: 'Grape', exact: true }).first().click();
+    await expect(
+      page.getByRole('button', { name: /^Grape \(taken by Mom\)/ }).first(),
+    ).toBeDisabled();
 
     await page.getByRole('button', { name: '1', exact: true }).click();
     await page.getByRole('button', { name: style }).click();

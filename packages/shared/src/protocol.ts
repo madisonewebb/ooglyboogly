@@ -1,4 +1,5 @@
 import type { Box, GameSetup, Move, PlayStyle, RuleErrorCode } from '@rollhouse/rules';
+import type { FlavorId } from './flavors';
 
 /** Room and message names shared by the server, the web client and the smoke test. */
 export const HELLO_ROOM = 'hello';
@@ -67,6 +68,9 @@ export interface JoinOptions {
   /** discordSdk.instanceId, or any shared string outside Discord. */
   instanceId: string;
   session: string;
+  /** The flavor this device remembers picking, and the backup. */
+  flavor?: FlavorId;
+  backup?: FlavorId;
 }
 
 export const MIN_NAME_LENGTH = 1;
@@ -93,6 +97,8 @@ export interface Seat {
   user: SessionUser;
   /** At least one of this user's devices is in the room. */
   connected: boolean;
+  /** Unique at the table. */
+  flavor: FlavorId;
 }
 
 export interface Lobby {
@@ -113,11 +119,17 @@ export const MSG_ROLL = 'roll';
 export const MSG_HOLD = 'hold';
 export const MSG_SCORE = 'score';
 export const MSG_UNDO = 'undo';
+export const MSG_FLAVOR = 'flavor';
 
 export type SettingsIntent = Partial<LobbySettings>;
 export interface HoldIntent {
   die: number;
   held: boolean;
+}
+/** Before the start. A taken pick falls back to the backup, then any free flavor. */
+export interface FlavorIntent {
+  flavor: FlavorId;
+  backup: FlavorId;
 }
 export interface ScoreIntent {
   card: number;
@@ -146,6 +158,11 @@ export interface Snapshot {
 export interface MoveMessage {
   index: number;
   move: Move;
+  /**
+   * Rolls only: picks which recorded tumble every screen plays. It is drawn
+   * separately from the dice and never decides a result.
+   */
+  tumble?: number;
 }
 
 export type ErrorCode =

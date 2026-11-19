@@ -31,6 +31,7 @@ same table.
 | `task e2e`       | Playwright (Chromium) against the build                 |
 | `task smoke`     | Post-deploy check: `/health` SHA, then a game WebSocket |
 | `task manifests` | Render the kustomize overlays                           |
+| `task tumbles`   | Re-record the dice tumbles with Rapier (deterministic)  |
 
 ## Layout
 
