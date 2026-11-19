@@ -150,7 +150,14 @@ function TableScreen({ auth }: { auth: Auth }) {
       )}
       {!lobby ? (
         <Centered>
-          {connection === 'lost' ? 'Could not reach the table.' : 'Joining the table…'}
+          {connection === 'lost' ? (
+            <>
+              <p>Could not reach the table.</p>
+              {table.lostReason && <p className="quiet">{table.lostReason}</p>}
+            </>
+          ) : (
+            'Joining the table…'
+          )}
         </Centered>
       ) : !game ? (
         <Lobby lobby={lobby} table={table} userId={auth.user.id} cdnBase={auth.cdnBase} />
