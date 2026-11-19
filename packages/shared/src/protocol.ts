@@ -88,7 +88,7 @@ export interface LobbySettings {
 export const DEFAULT_SETTINGS: LobbySettings = {
   cardsPerPlayer: 3,
   playStyle: 'turns',
-  multipliers: true,
+  multipliers: false,
   turnOrder: 'fixed',
 };
 
