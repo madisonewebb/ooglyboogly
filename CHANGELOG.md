@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0](https://github.com/madisonewebb/rollhouse/compare/v0.2.0...v0.3.0) (2026-11-19)
+
+
+### Features
+
+* milestone 2, rules engine and dice roller ([#13](https://github.com/madisonewebb/rollhouse/issues/13)) ([6455d0a](https://github.com/madisonewebb/rollhouse/commit/6455d0a2ee8dc8d4464636a18fcbaf6d84e6583e))
+* milestone 3, playable in Discord ([#16](https://github.com/madisonewebb/rollhouse/issues/16)) ([758eec6](https://github.com/madisonewebb/rollhouse/commit/758eec6ef886ec2b021d4ba64561eb587ab3e447))
+* milestone 4, make it gorgeous ([#22](https://github.com/madisonewebb/rollhouse/issues/22)) ([b597378](https://github.com/madisonewebb/rollhouse/commit/b59737855edbd0fa87a4c47f2bdd999c705eaddb))
+* **web:** highlight scoring boxes and show Yatzy bonuses on the pad ([#23](https://github.com/madisonewebb/rollhouse/issues/23)) ([f5eaf9e](https://github.com/madisonewebb/rollhouse/commit/f5eaf9e0acccf104c6c2102323698dbcea1853b5))
+* **web:** switch between players' score pads with tabs on the pad ([#24](https://github.com/madisonewebb/rollhouse/issues/24)) ([d0854af](https://github.com/madisonewebb/rollhouse/commit/d0854afdfeecdf6329c4206ca829bb2b55dc45a0))
+
+
+### Bug Fixes
+
+* report table connection errors and stop caching index.html ([#18](https://github.com/madisonewebb/rollhouse/issues/18)) ([f414888](https://github.com/madisonewebb/rollhouse/commit/f4148881b48daa13f81b640e11a4ce5f8a20327f))
+* **web:** frame the whole dice roll and finish the tray ([#25](https://github.com/madisonewebb/rollhouse/issues/25)) ([ef3687a](https://github.com/madisonewebb/rollhouse/commit/ef3687ad71b790027470f61ad93fbfb3e6ff0b0a))
+* **web:** show the real sign-in error and which step failed ([#17](https://github.com/madisonewebb/rollhouse/issues/17)) ([5ba0e5c](https://github.com/madisonewebb/rollhouse/commit/5ba0e5c7a742adcdec5a560ed7d260067c788da4))
+* **web:** stop the Colyseus SDK rewriting URLs inside Discord ([#19](https://github.com/madisonewebb/rollhouse/issues/19)) ([d53cdd9](https://github.com/madisonewebb/rollhouse/commit/d53cdd9f897c669da38c0ac8edb6d81bfae625c9))
+
 ## [0.2.0](https://github.com/madisonewebb/rollhouse/compare/v0.1.0...v0.2.0) (2026-11-18)
 
 
