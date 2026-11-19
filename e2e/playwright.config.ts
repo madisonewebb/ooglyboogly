@@ -21,6 +21,6 @@ export default defineConfig({
     command: 'node ../apps/server/dist/index.mjs',
     url: `http://127.0.0.1:${PORT}/health`,
     reuseExistingServer: !process.env['CI'],
-    env: { PORT: String(PORT), GIT_SHA: 'e2e', WEB_DIST: '../apps/web/dist' },
+    env: { PORT: String(PORT), GIT_SHA: 'e2e', WEB_DIST: '../apps/web/dist', GUEST_LOGIN: 'true' },
   },
 });
