@@ -1,6 +1,7 @@
-# Rollhouse
+# Oogly Boogly
 
-A private five-dice game for the family, played as a Discord Activity. Each player fills 1 to 5
+A private five-dice game for the family, named for what Madi's grandma says when someone is one
+die away from a Yatzy. It's played as a Discord Activity. Each player fills 1 to 5
 scorecards at once. The server rolls every die (`crypto.randomInt`), and clients only send
 intents.
 
@@ -65,10 +66,10 @@ Fair dice: ESLint bans `Math.random` in `apps/server` and `packages/rules`.
 
 ## Deployment (GitOps)
 
-| Branch    | Environment | Namespace           | URL                                          |
-| --------- | ----------- | ------------------- | -------------------------------------------- |
-| `develop` | staging     | `rollhouse-staging` | https://rollhouse-staging.castillocurios.com |
-| `main`    | prod        | `rollhouse`         | https://rollhouse.castillocurios.com         |
+| Branch    | Environment | Namespace           | URL                                            |
+| --------- | ----------- | ------------------- | ---------------------------------------------- |
+| `develop` | staging     | `rollhouse-staging` | https://ooglyboogly-staging.castillocurios.com |
+| `main`    | prod        | `rollhouse`         | https://ooglyboogly.castillocurios.com         |
 
 On every push to `develop` or `main`, `.github/workflows/deploy.yml`:
 
@@ -95,10 +96,10 @@ The image is pushed with the workflow's `GITHUB_TOKEN`. The GHCR package must be
 
 Nginx Proxy Manager proxy hosts (both with Websockets Support on and a Let's Encrypt cert):
 
-| Host                                   | Forward to                                                |
-| -------------------------------------- | --------------------------------------------------------- |
-| `rollhouse.castillocurios.com`         | `http://rollhouse.rollhouse.svc.cluster.local:80`         |
-| `rollhouse-staging.castillocurios.com` | `http://rollhouse.rollhouse-staging.svc.cluster.local:80` |
+| Host                                     | Forward to                                                |
+| ---------------------------------------- | --------------------------------------------------------- |
+| `ooglyboogly.castillocurios.com`         | `http://rollhouse.rollhouse.svc.cluster.local:80`         |
+| `ooglyboogly-staging.castillocurios.com` | `http://rollhouse.rollhouse-staging.svc.cluster.local:80` |
 
 Advanced config on both, so idle game connections stay open:
 
@@ -107,11 +108,13 @@ proxy_read_timeout 3600s;
 proxy_send_timeout 3600s;
 ```
 
-DNS: A records for `rollhouse` and `rollhouse-staging` at Namecheap.
+DNS: A records for `ooglyboogly` and `ooglyboogly-staging` at Namecheap.
 
 ## Renaming
 
-The name and domain are each set in one place:
+The name and domain are each set in one place. The internal slug `rollhouse` (the `@rollhouse/*`
+packages, Kubernetes namespaces and service, the container image, the database file and the
+GitHub repo) stays as it is when the name players see changes.
 
 | What                 | Where                                              |
 | -------------------- | -------------------------------------------------- |
@@ -122,8 +125,8 @@ The name and domain are each set in one place:
 
 ## Discord
 
-Each environment has its own Discord app, owned by a Developer Team: **Rollhouse** (prod) and
-**Rollhouse Dev** (staging). Until the Activity is released, only team members can launch it, so family
+Each environment has its own Discord app, owned by a Developer Team: **Oogly Boogly** (prod) and
+**Oogly Boogly Dev** (staging). Until the Activity is released, only team members can launch it, so family
 players join the team as read-only members (Discord requires 2FA for that). Every player also
 needs **Developer Mode** on (User Settings → Advanced) to see the unreleased Activity in the App
 Launcher.
@@ -134,7 +137,7 @@ Per app, in the [Developer Portal](https://discord.com/developers/applications):
 - **OAuth2 → Redirects:** `https://127.0.0.1` (a placeholder; Activities don't redirect).
 - **Activities → Settings:** Enable Activities.
 - **Activities → URL Mappings** (required before Activities can be enabled): `/discord-cdn` → `cdn.discordapp.com` (avatars), then `/` → the
-  environment's host (`rollhouse-staging.castillocurios.com` or `rollhouse.castillocurios.com`).
+  environment's host (`ooglyboogly-staging.castillocurios.com` or `ooglyboogly.castillocurios.com`).
   Everything else (page, `/api`, the game WebSocket) is same-origin under `/`.
 
 The client ID is public and lives in `manifests/overlays/<env>/config.env` (`DISCORD_CLIENT_ID`).
