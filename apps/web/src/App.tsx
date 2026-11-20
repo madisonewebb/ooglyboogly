@@ -9,6 +9,7 @@ import { Game } from './screens/Game';
 import { Lobby } from './screens/Lobby';
 import { Results } from './screens/Results';
 import { errorText } from './errors';
+import { unlockAudio } from './sound';
 import { store } from './storage';
 import { DURATION, EASE_OUT, SCREEN } from './theme/motion';
 import { useTable } from './useTable';
@@ -36,6 +37,17 @@ function guestAuth(session: string, user: Auth['user']): Auth {
 }
 
 export function App() {
+  // Browsers only start sound after a click or a key, so the first one anywhere
+  // (the lobby's Start, a flavor) turns it on, ready for the first turn's chime.
+  useEffect(() => {
+    const opts = { capture: true, passive: true };
+    addEventListener('pointerdown', unlockAudio, opts);
+    addEventListener('keydown', unlockAudio, opts);
+    return () => {
+      removeEventListener('pointerdown', unlockAudio, opts);
+      removeEventListener('keydown', unlockAudio, opts);
+    };
+  }, []);
   return (
     <>
       <Corner />

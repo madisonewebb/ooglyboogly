@@ -27,6 +27,7 @@ import {
   restPose,
   timing,
 } from './timeline';
+import type { Quat } from './quat';
 import { CUP, SHELF_Y, SHELF_Z, SLOT_X, TRAY, TRAY_Z } from './tumbleFormat';
 
 export interface SlotRect {
@@ -48,6 +49,8 @@ export interface SceneProps {
   candy: string;
   /** The die under the pointer, which lifts a little. */
   hover: number | null;
+  /** How each die lies at rest, so they stay put between rolls. */
+  rests: readonly (Quat | null)[];
   /** Screen positions of each column's tray and shelf spots, for the click targets. */
   onSlots(slots: { tray: SlotRect[]; shelf: SlotRect[] }): void;
 }
@@ -239,7 +242,7 @@ function Rig({ onSlots, roll }: Pick<SceneProps, 'onSlots' | 'roll'>) {
 
   // A Yatzy lands with a little thump of the camera.
   useFrame(() => {
-    if (!roll || roll.reduced || celebrationFor(roll.values) !== 'yatzy') {
+    if (!roll || roll.reduced || !roll.path || celebrationFor(roll.values) !== 'yatzy') {
       if (!camera.position.equals(home.current)) camera.position.copy(home.current);
       return;
     }
@@ -353,6 +356,7 @@ function Dice({
   colors,
   scene,
   hover,
+  rests,
 }: Omit<SceneProps, 'onSlots' | 'candy'>) {
   const invalidate = useThree((s) => s.invalidate);
   const body = useMemo(dieGeometry, []);
@@ -373,7 +377,7 @@ function Dice({
   useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
 
   // Any change to what's shown needs a fresh frame.
-  useEffect(() => invalidate(), [values, held, roll, hops, colors, hover, invalidate]);
+  useEffect(() => invalidate(), [values, held, roll, hops, colors, hover, rests, invalidate]);
 
   useFrame((_, delta) => {
     const now = performance.now();
@@ -390,7 +394,7 @@ function Dice({
         pose = hopPose(hop, now);
         animating = true;
       } else {
-        pose = restPose(i, values[i] ?? null, held[i] ?? false);
+        pose = restPose(i, values[i] ?? null, held[i] ?? false, rests[i]);
       }
       // The die under the pointer rises to meet it.
       const want = hover === i && !rolling && !hop ? 1 : 0;
@@ -559,7 +563,7 @@ function Sprinkles({ roll, candy, colors }: Pick<SceneProps, 'roll' | 'candy' | 
     if (!m) return;
     const s = sim.current;
     const now = performance.now();
-    const on = !!roll && !roll.reduced && celebrationFor(roll.values) === 'yatzy';
+    const on = !!roll && !roll.reduced && !!roll.path && celebrationFor(roll.values) === 'yatzy';
     const t = on ? timing(roll!) : null;
     const burst = t ? t.celebrate + (t.done - t.celebrate) * 0.5 : 0;
     if (!t || now < burst || now > burst + 1700) {
@@ -669,6 +673,7 @@ export default function DiceScene(props: SceneProps) {
         colors={props.colors}
         scene={scene}
         hover={props.hover}
+        rests={props.rests}
       />
       <Cup roll={props.roll} candy={props.candy} scene={scene} />
       <Sprinkles roll={props.roll} candy={props.candy} colors={props.colors} />

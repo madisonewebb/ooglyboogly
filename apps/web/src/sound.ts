@@ -203,7 +203,8 @@ export function playRattle(delayMs: number, durationMs: number, dice: number, pa
   const start = a.currentTime + Math.max(0, delayMs) / 1000;
   const out = panned(a, ok.out, pan);
   const dur = durationMs / 1000;
-  const clicks = Math.max(4, dice * 4);
+  // About fourteen knocks a second per die, and the cup's own knock six times in 300 ms.
+  const clicks = Math.max(2, Math.round(dice * 14 * dur));
   for (let i = 0; i < clicks; i++) {
     const at = start + (i / clicks) * dur + (jitter(1) - 1) * 0.012;
     const lp = a.createBiquadFilter();
@@ -219,7 +220,9 @@ export function playRattle(delayMs: number, durationMs: number, dice: number, pa
       0.07 * jitter(0.3),
     );
   }
-  for (let i = 1; i <= 6; i++) thump(a, out, start + (i / 6.5) * dur, 300, 0.09, 0.04);
+  const knocks = Math.max(1, Math.round(dur * 20));
+  for (let i = 1; i <= knocks; i++)
+    thump(a, out, start + (i / (knocks + 0.5)) * dur, 300, 0.09, 0.04);
 }
 
 /** A die settling into its column: a soft tock that steps up a little each column, like a drumroll. */
@@ -306,13 +309,14 @@ export function playPop() {
   bell(a, out, at + 0.04, 1880, 0.03, 0.2);
 }
 
-/** It's your turn: two soft notes, up. */
+/** It's your turn: a little three-note chime, up, like a shop door bell. */
 export function playTurn() {
   const ok = audio();
   if (!ok) return;
   const { a, out } = ok;
-  bell(a, out, a.currentTime, 659, 0.09, 0.45);
-  bell(a, out, a.currentTime + 0.12, 880, 0.09, 0.6);
+  [784, 988, 1319].forEach((f, i) =>
+    bell(a, out, a.currentTime + i * 0.09, f, 0.13, 0.7 + i * 0.15),
+  );
 }
 
 /** The upper bonus earned: a quick bright triad. */
