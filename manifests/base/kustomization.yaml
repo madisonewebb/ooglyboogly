@@ -3,7 +3,7 @@ kind: Kustomization
 
 labels:
   - pairs:
-      app.kubernetes.io/name: rollhouse
+      app.kubernetes.io/name: ooglyboogly
     includeSelectors: true
 
 resources:
@@ -12,10 +12,10 @@ resources:
   - pvc.yaml
 
 # The image tag is NOT set here. Each ArgoCD Application in home-lab
-# (argocd/applications/rollhouse*.yaml) overrides it via
+# (argocd/applications/ooglyboogly*.yaml) overrides it via
 # spec.source.kustomize.images, and CI commits the new SHA there.
 
 configMapGenerator:
-  - name: rollhouse-litestream
+  - name: ooglyboogly-litestream
     files:
       - litestream.yml
