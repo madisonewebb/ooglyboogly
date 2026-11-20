@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-20T20:15:31.010Z",
-  "title": "Design System: Rollhouse",
+  "title": "Design System: Shoal",
   "extensions": {
     "colorMeta": {
       "paper-ground": {
@@ -916,7 +916,7 @@
       "kind": "custom",
       "refersTo": "print-band",
       "description": "A hand-coated Prussian plate with the wordmark in script; the #coat filter gives it a brushed edge in the app.",
-      "html": "<div class=\"ds-plate\"><span class=\"ds-wordmark\">Rollhouse</span><span class=\"ds-tagline\">Five dice, one table.</span></div>",
+      "html": "<div class=\"ds-plate\"><span class=\"ds-wordmark\">Shoal</span><span class=\"ds-tagline\">Five dice, one table.</span></div>",
       "css": ".ds-plate{display:grid;justify-items:center;gap:0.25rem;padding:1.1rem 3rem 1.2rem;border-radius:0.3rem;background:var(--band, #1D4A7A);color:var(--on-band, #FFFFFF)}.ds-wordmark{font:400 3rem/1.05 'Petit Formal Script','Atkinson Hyperlegible Next',cursive}.ds-tagline{font:700 1.0625rem/1.4 'Atkinson Hyperlegible Next',system-ui,sans-serif;color:color-mix(in srgb, var(--on-band, #FFFFFF) 82%, transparent)}"
     },
     {
@@ -930,7 +930,7 @@
   ],
   "narrative": {
     "northStar": "The Developing Sunprint",
-    "overview": "Rollhouse is printed, not painted. The world is Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, a pressed frond, a copperplate hand. By day the table is white rag paper written on in Prussian ink; in the evening it is the print itself, white on deep blue. Every state the game has is a state of a print: what you could take is unexposed sensitizer paper, what you picked is exposed Prussian, and a score you write develops out of a blur into your own ink while a blue wash clears behind it. A Yatzy exposes white seaweed on the felt.\n\nThe surfaces are sheets of paper on a table, not cards in an app. They have barely rounded corners, a faint rag grain, a hairline rule and a low, soft shadow. The Prussian surfaces (the band across the table, the wordmark plate, the winner plate) are coated by hand: a mottled tone and a ragged, brushed edge drawn by one SVG filter. Fronds are grown procedurally from seeds, so the same plant appears on every screen. The dice are glazed porcelain with cobalt pips, landing on cyanotype-blue felt inside a limed-oak contact-printing frame.\n\nDensity is calm and legible: one rose action at a time, a strict ruled pad in tabular figures, and the active player's name in script at poster size while everyone else stays quiet. The world rejects casino felt, the cartoon-bright game kit, and the earlier candy-shop identity entirely; femininity comes through lightly, in the rose, the script and the flower-and-leaf inks.",
+    "overview": "Shoal is printed, not painted. The world is Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, a pressed frond, a copperplate hand. By day the table is white rag paper written on in Prussian ink; in the evening it is the print itself, white on deep blue. Every state the game has is a state of a print: what you could take is unexposed sensitizer paper, what you picked is exposed Prussian, and a score you write develops out of a blur into your own ink while a blue wash clears behind it. A Yatzy exposes white seaweed on the felt.\n\nThe surfaces are sheets of paper on a table, not cards in an app. They have barely rounded corners, a faint rag grain, a hairline rule and a low, soft shadow. The Prussian surfaces (the band across the table, the wordmark plate, the winner plate) are coated by hand: a mottled tone and a ragged, brushed edge drawn by one SVG filter. Fronds are grown procedurally from seeds, so the same plant appears on every screen. The dice are glazed porcelain with cobalt pips, landing on cyanotype-blue felt inside a limed-oak contact-printing frame.\n\nDensity is calm and legible: one rose action at a time, a strict ruled pad in tabular figures, and the active player's name in script at poster size while everyone else stays quiet. The world rejects casino felt, the cartoon-bright game kit, and the earlier candy-shop identity entirely; femininity comes through lightly, in the rose, the script and the flower-and-leaf inks.",
     "keyCharacteristics": [
       "Prussian blue and white carry everything; one dusty-rose accent; sensitizer yellow-green for \"not yet exposed\".",
       "Players write in eight flower and leaf inks, the only other colors.",

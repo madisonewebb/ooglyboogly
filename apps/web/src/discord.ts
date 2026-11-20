@@ -7,7 +7,7 @@ export const inDiscord = () => new URLSearchParams(location.search).has('frame_i
 
 /**
  * Signs in through the Discord client: authorize (a consent prompt the first
- * time), then the server swaps the code for a token and a Rollhouse session.
+ * time), then the server swaps the code for a token and a Shoal session.
  */
 export async function discordSignIn(clientId: string): Promise<Auth> {
   const sdk = new DiscordSDK(clientId);

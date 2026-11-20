@@ -1,5 +1,5 @@
 ---
-name: Rollhouse
+name: Shoal
 description: A family's five-dice game night, printed as a cyanotype of seaweed.
 colors:
   # Day (light theme). theme/palette.ts is the source; these mirror it.
@@ -186,13 +186,13 @@ components:
     height: "3.6rem"
 ---
 
-# Design System: Rollhouse
+# Design System: Shoal
 
 ## Overview
 
 **Creative North Star: "The Developing Sunprint"**
 
-Rollhouse is printed, not painted. The world is Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, a pressed frond, a copperplate hand. By day the table is white rag paper written on in Prussian ink; in the evening it is the print itself, white on deep blue. Every state the game has is a state of a print: what you could take is unexposed sensitizer paper, what you picked is exposed Prussian, and a score you write develops out of a blur into your own ink while a blue wash clears behind it. A Yatzy exposes white seaweed on the felt.
+Shoal is printed, not painted. The world is Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, a pressed frond, a copperplate hand. By day the table is white rag paper written on in Prussian ink; in the evening it is the print itself, white on deep blue. Every state the game has is a state of a print: what you could take is unexposed sensitizer paper, what you picked is exposed Prussian, and a score you write develops out of a blur into your own ink while a blue wash clears behind it. A Yatzy exposes white seaweed on the felt.
 
 The surfaces are sheets of paper on a table, not cards in an app. They have barely rounded corners, a faint rag grain, a hairline rule and a low, soft shadow. The Prussian surfaces (the band across the table, the wordmark plate, the winner plate) are coated by hand: a mottled tone and a ragged, brushed edge drawn by one SVG filter. Fronds are grown procedurally from seeds, so the same plant appears on every screen. The dice are glazed porcelain with cobalt pips, landing on cyanotype-blue felt inside a limed-oak contact-printing frame.
 

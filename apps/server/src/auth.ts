@@ -36,7 +36,7 @@ interface DiscordUser {
 /**
  * Sign-in routes. Inside Discord the client calls authorize() and sends the
  * code here; the server swaps it for an access token with the client secret
- * (which never leaves the server) and issues a signed Rollhouse session.
+ * (which never leaves the server) and issues a signed Shoal session.
  */
 export function mountAuth(app: Application, config: Config, fetchFn: FetchFn = fetch): void {
   app.use('/api', express.json({ limit: '4kb' }));

@@ -40,7 +40,7 @@ export interface TokenRequest {
 export interface TokenResponse {
   /** Discord access token, for discordSdk.commands.authenticate(). */
   accessToken: string;
-  /** Signed Rollhouse session, passed when joining a room. */
+  /** Signed Shoal session, passed when joining a room. */
   session: string;
   user: SessionUser;
 }

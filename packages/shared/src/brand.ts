@@ -3,4 +3,4 @@
  * is a one-line change here (plus BASE_URL in the overlays and the
  * proxy/Discord settings documented in the README).
  */
-export const BRAND_NAME = 'Rollhouse';
+export const BRAND_NAME = 'Shoal';

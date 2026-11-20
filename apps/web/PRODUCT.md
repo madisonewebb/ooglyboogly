@@ -15,7 +15,7 @@ wins.
 
 ## Product Purpose
 
-Rollhouse is a private five-dice scoring game (the Yatzy family of rules) that runs as a Discord
+Shoal is a private five-dice scoring game (the Yatzy family of rules) that runs as a Discord
 Activity. Each player can fill 1 to 5 scorecards at once. Success is the family choosing it for game
 night and staying in it between turns because watching is pleasant, not only playing.
 
@@ -53,7 +53,7 @@ its owner's turn.
 
 ## Brand Commitments
 
-- Name: Rollhouse (defined only in `packages/shared/src/brand.ts`).
+- Name: Shoal (defined only in `packages/shared/src/brand.ts`).
 - The previous candy-shop identity is rejected entirely: no candy names, colors, motifs or
   vocabulary. The owner wants only a light touch of femininity in its place.
 - The aquarium fish are semi-realistic real species, not cartoons.

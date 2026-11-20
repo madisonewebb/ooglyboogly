@@ -13,7 +13,7 @@ Constraints kept: the whole pad fits a laptop window; AA contrast on every text 
 
 ## Direction contract
 
-THESIS: Rollhouse is a sunprint. The game night owns Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, pressed algae, a copperplate hand. It refuses the category's casino felt and the cartoon-bright game kit (and the discarded candy shop).
+THESIS: Shoal is a sunprint. The game night owns Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, pressed algae, a copperplate hand. It refuses the category's casino felt and the cartoon-bright game kit (and the discarded candy shop).
 
 OWN-WORLD: Committed Prussian blue (#1D4A7A day, #10294A evening) carries the band, the felt and every developed state; white paper or the blue print itself as ground. Dusty rose (#E294AB) is the one accent, for the next action. Sensitizer yellow-green (#D6DC7E) marks what is not yet exposed. Players write in eight flower and leaf inks. Porcelain dice with cobalt pips on blue felt in a limed-oak printing frame. Petit Formal Script for names and big moments only; Atkinson Hyperlegible Next for everything else. White seaweed fronds, drawn from seeds, on blue plates.
 

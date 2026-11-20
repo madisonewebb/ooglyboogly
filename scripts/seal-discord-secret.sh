@@ -7,8 +7,8 @@
 set -euo pipefail
 
 case "${1:-}" in
-  staging) ns=rollhouse-staging app='Rollhouse Dev' ;;
-  prod) ns=rollhouse app='Rollhouse' ;;
+  staging) ns=rollhouse-staging app='Shoal Dev' ;;
+  prod) ns=rollhouse app='Shoal' ;;
   *)
     echo "usage: $0 staging|prod" >&2
     exit 2

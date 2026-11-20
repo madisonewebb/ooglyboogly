@@ -1,4 +1,4 @@
-# Rollhouse
+# Shoal
 
 A private five-dice game for the family, played as a Discord Activity. Each player fills 1 to 5
 scorecards at once. The server rolls every die (`crypto.randomInt`), and clients only send
@@ -120,10 +120,14 @@ The name and domain are each set in one place:
 | Proxy hosts, DNS     | Nginx Proxy Manager and Namecheap (see above)      |
 | Discord URL mapping  | Discord Developer Portal (see Discord below)       |
 
+The game was called Rollhouse before it became Shoal. `rollhouse` is still the internal slug (the
+`@rollhouse/*` packages, the image, the namespaces, the hostnames and the database file), and it
+can stay: players never see it.
+
 ## Discord
 
-Each environment has its own Discord app, owned by a Developer Team: **Rollhouse** (prod) and
-**Rollhouse Dev** (staging). Until the Activity is released, only team members can launch it, so family
+Each environment has its own Discord app, owned by a Developer Team: **Shoal** (prod) and
+**Shoal Dev** (staging). Until the Activity is released, only team members can launch it, so family
 players join the team as read-only members (Discord requires 2FA for that). Every player also
 needs **Developer Mode** on (User Settings → Advanced) to see the unreleased Activity in the App
 Launcher.

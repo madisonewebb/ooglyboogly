@@ -1,5 +1,5 @@
 /**
- * The Rollhouse palette: Sunprint. Cyanotype blue and white, after Anna
+ * The Shoal palette: Sunprint. Cyanotype blue and white, after Anna
  * Atkins' 1843 sunprints of seaweed, with each player writing in a flower or
  * leaf color. This file is the only place colors are defined: the CSS
  * variables are generated from it, and palette.test.ts checks every text

@@ -15,7 +15,7 @@ import {
   UPPER_BONUS_THRESHOLD,
   YATZY_BONUS,
 } from '@rollhouse/rules';
-import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
+import { BRAND_NAME, type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import { Frond } from '../Frond';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
@@ -395,7 +395,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
       <header className="topbar print">
-        <span className="wordmark small">Rollhouse</span>
+        <span className="wordmark small">{BRAND_NAME}</span>
         <Frond seed={23} depth={2} lean={0.2} className="band-frond" />
       </header>
 
