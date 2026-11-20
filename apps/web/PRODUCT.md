@@ -53,9 +53,15 @@ its owner's turn.
 
 ## Brand Commitments
 
-- Name: Rollhouse (defined only in `packages/shared/src/brand.ts`).
+- Name: Oogly Boogly, what the owner's grandma says when someone is one die from a Yatzy
+  (`BRAND_NAME` in `packages/shared/src/brand.ts`; the `rollhouse` slug stays in code and infra).
 - The previous candy-shop identity is rejected entirely: no candy names, colors, motifs or
   vocabulary. The owner wants only a light touch of femininity in its place.
+- The "Sunprint" cyanotype look that followed was rejected too, once she saw it running: no
+  script typefaces, no paper or print textures, nothing old-fashioned.
+- The chosen look is "Lavender evening", picked from rendered mockups of the real screens:
+  modern and clean, dark plum with lavender and a pink accent (plus a lavender daytime theme),
+  rounded headings. New looks are judged on rendered screens, never on descriptions alone.
 - The aquarium fish are semi-realistic real species, not cartoons.
 
 ## Evidence on Hand

@@ -11,18 +11,18 @@ Every screen of the web client (sign-in, lobby, game table, results) in one repl
 
 Constraints kept: the whole pad fits a laptop window; AA contrast on every text pairing (palette.test.ts); three text sizes; reduced motion; keyboard play; the recorded dice tumbles and sounds. Next on this surface: a semi-realistic aquarium in the tray column, above the dice.
 
+History: the candy look was rejected, then "Sunprint" (cyanotype, script, print texture) was rejected once seen running. The owner rejected script faces, paper/print texture and anything old-fashioned. This direction was picked from rendered mockups of the real screens.
+
 ## Direction contract
 
-THESIS: Rollhouse is a sunprint. The game night owns Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, pressed algae, a copperplate hand. It refuses the category's casino felt and the cartoon-bright game kit (and the discarded candy shop).
+THESIS: An evening game table that feels modern and calm, with a light feminine touch carried by color and soft shapes, never by ornament. It refuses the casino-felt and cartoon-game defaults, and the rejected candy and vintage-print looks.
 
-OWN-WORLD: Committed Prussian blue (#1D4A7A day, #10294A evening) carries the band, the felt and every developed state; white paper or the blue print itself as ground. Dusty rose (#E294AB) is the one accent, for the next action. Sensitizer yellow-green (#D6DC7E) marks what is not yet exposed. Players write in eight flower and leaf inks. Porcelain dice with cobalt pips on blue felt in a limed-oak printing frame. Petit Formal Script for names and big moments only; Atkinson Hyperlegible Next for everything else. White seaweed fronds, drawn from seeds, on blue plates.
+OWN-WORLD: Dark plum ground (#1D1A2C, sheets #29253D) with lavender (#BBA9F3) for selection and state and one pink accent (#F2A7C3) for the next action; a lavender daytime theme (#F6F3FB, plum ink #2A2440, violet #6B55C8). Flat surfaces, rounded sheets (1.2rem), pill buttons, soft lifted shadows, no textures. Quicksand 700 for headings, names and big moments; Atkinson Hyperlegible Next for everything else. Porcelain dice with violet pips on violet felt in a lacquered frame.
 
-STORY: The family sees whose turn it is at a glance, reads every score instantly, and feels the evening is a little more beautiful than a game app: the table is a print developing as they play.
+STORY: The family sees whose turn it is at a glance, reads every score instantly, and enjoys the small celebrations.
 
-FIRST VIEWPORT: Full-width Prussian band with the script wordmark and a pressed frond. Left column: the roller's avatar and their name in script at poster size, the blue-felt tray with porcelain dice, the rose Roll button. Right column: the white (or blue) pad sheet with tabs per player, scores in tabular figures in each player's ink.
+FIRST VIEWPORT: Full-width plum band with the wordmark. Left: the roller's avatar and "Your turn" large in Quicksand, the violet tray, the pink Roll button. Right: the pad sheet with tabs per player, scores in tabular figures in each player's ink.
 
-FORM: Sunprint (cyanotype herbarium), position 3 on the ordered list of seven; seed:e62724b7a6e3d08d.
+FORM: Lavender evening, picked by the owner from three rendered mockups (Clear blue, Seafoam, Lavender evening); seed: none (pinned).
 
-SIGNATURE: Scores follow the print's states. A score you could take is unexposed sensitizer yellow-green; the box you pick is exposed Prussian; a written score develops from blurred yellow-green into the player's ink while a blue wash clears behind it. A Yatzy exposes white seaweed fronds on the felt.
-
-Raises kept from declined challengers: tabular figures on a strict column grid (data-sublime field); the turn name at poster scale (metro tiles); the active player's area leads while the rest stays quiet (streaming wall); player inks are the only colors besides blue, white and the rose accent (transit diagram).
+SIGNATURE: A written score comes into focus from a blur in the soft option color into the player's ink while a lavender wash clears behind it; a Yatzy and the winner's name burst into small four-point sparkles in the players' tints, pink and lavender.

@@ -4,9 +4,8 @@
  *
  * Poses come from timeline.ts each frame and are written straight onto the
  * meshes, so a roll never re-renders React. The look: glazed porcelain dice
- * with cobalt pips under a soft studio light, on cyanotype-blue felt in an oak
+ * with violet pips under a soft studio light, on violet felt in a lacquered
  * frame, with the held-dice shelf behind and a cup glazed in the roller's tint.
- * A Yatzy exposes a white seaweed frond on the felt, like a sunprint.
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
@@ -14,7 +13,6 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { SceneTokens, Tokens } from '../theme/palette';
-import { frond } from '../frond';
 import { dieGeometry, glazeMaterial, pipGeometry, porcelainMaterial } from './dieModel';
 import { fitCamera, FOV } from './framing';
 import { renderQuality } from './webgl';
@@ -131,42 +129,6 @@ function bumpTexture() {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(12, 6);
   return t;
-}
-
-/**
- * The sunprint a Yatzy exposes: three white seaweed fronds on a clear sheet the
- * size of the felt, drawn from fixed seeds so every screen shows the same one.
- */
-function exposureTexture(w: number, h: number) {
-  return canvasTexture(1024, Math.round((1024 * h) / w), (g) => {
-    const { width, height } = g.canvas;
-    g.fillStyle = '#FFFFFF';
-    // A soft over-exposure halo around every blade, like light creeping under the specimen.
-    g.shadowColor = 'rgba(255,255,255,0.55)';
-    g.shadowBlur = 6;
-    const plant = (seed: number, lean: number, cx: number, tall: number) => {
-      const f = frond(seed, 3, lean);
-      const k = (height * tall) / f.height;
-      const [minX, minY] = f.viewBox.split(' ').map(Number) as [number, number];
-      g.setTransform(
-        k,
-        0,
-        0,
-        k,
-        cx - (minX + f.width / 2) * k,
-        height * 0.97 - (minY + f.height) * k,
-      );
-      for (const b of f.blades) {
-        g.globalAlpha = b.level === 0 ? 0.95 : 0.82;
-        g.fill(new Path2D(b.d));
-      }
-      g.globalAlpha = 1;
-    };
-    plant(11, -0.25, width * 0.24, 0.62);
-    plant(3, 0, width * 0.5, 0.86);
-    plant(19, 0.25, width * 0.77, 0.66);
-    g.setTransform(1, 0, 0, 1, 0, 0);
-  });
 }
 
 function shadowTexture(): THREE.Texture {
@@ -551,64 +513,9 @@ function Cup({ roll, hue, scene }: Pick<SceneProps, 'roll' | 'hue' | 'scene'>) {
       </mesh>
       <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[CUP.radiusTop, 0.09, 14, 56]} />
-        <Gloss ref={keep} color="#F7F9FB" roughness={0.25} />
+        <Gloss ref={keep} color={scene.rim} roughness={0.25} />
       </mesh>
     </group>
-  );
-}
-
-/**
- * A Yatzy: a white seaweed frond develops on the felt like a sunprint in the
- * light, holds, then washes out.
- */
-function Exposure({ roll }: Pick<SceneProps, 'roll'>) {
-  const mesh = useRef<THREE.Mesh>(null);
-  const invalidate = useThree((s) => s.invalidate);
-  const hx = (TRAY.maxX - TRAY.minX) / 2;
-  const hz = (TRAY.maxZ - TRAY.minZ) / 2;
-  const cz = (TRAY.minZ + TRAY.maxZ) / 2;
-  const print = useMemo(() => exposureTexture(hx * 2, hz * 2), [hx, hz]);
-  useEffect(() => () => print.dispose(), [print]);
-
-  // The print outlives the roll (the tray drops its plan once the dice settle),
-  // so it keeps its own clock; any new roll that isn't a Yatzy washes it away.
-  const shown = useRef<{ plan: RollPlan; start: number } | null>(null);
-
-  useFrame(() => {
-    const m = mesh.current;
-    if (!m) return;
-    if (roll && roll !== shown.current?.plan) {
-      const yatzy = !roll.reduced && !!roll.path && celebrationFor(roll.values) === 'yatzy';
-      const t = timing(roll);
-      shown.current = yatzy
-        ? { plan: roll, start: t.celebrate + (t.done - t.celebrate) * 0.45 }
-        : null;
-    }
-    const age = shown.current ? (performance.now() - shown.current.start) / 2400 : -1;
-    if (age < 0 || age > 1) {
-      if (age > 1) shown.current = null;
-      if (m.visible) m.visible = false;
-      if (age < 0 && shown.current) invalidate();
-      return;
-    }
-    // Develop quickly, hold, then wash out slowly.
-    const k = age < 0.2 ? age / 0.2 : age < 0.6 ? 1 : 1 - (age - 0.6) / 0.4;
-    (m.material as THREE.MeshBasicMaterial).opacity = 0.82 * k;
-    m.visible = true;
-    invalidate();
-  });
-
-  return (
-    <mesh
-      ref={mesh}
-      position={[0, 0.006, cz]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      renderOrder={1}
-      visible={false}
-    >
-      <planeGeometry args={[hx * 2, hz * 2]} />
-      <meshBasicMaterial map={print} transparent depthWrite={false} opacity={0} />
-    </mesh>
   );
 }
 
@@ -661,7 +568,6 @@ export default function DiceScene(props: SceneProps) {
         hover={props.hover}
         rests={props.rests}
       />
-      <Exposure roll={props.roll} />
       <Cup roll={props.roll} hue={props.hue} scene={scene} />
     </Canvas>
   );

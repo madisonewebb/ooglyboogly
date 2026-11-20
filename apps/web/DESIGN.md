@@ -1,379 +1,343 @@
 ---
 name: Rollhouse
-description: A family's five-dice game night, printed as a cyanotype of seaweed.
+description: A family's five-dice game night on a lavender evening table.
 colors:
-  # Day (light theme). theme/palette.ts is the source; these mirror it.
-  paper-ground: "#F7F9FA"
-  paper-sheet: "#FFFFFF"
-  cyan-rule: "#C9D7E6"
-  prussian-ink: "#102B4C"
-  quiet-blue: "#4A6A8F"
-  dusty-rose: "#E294AB"
-  prussian: "#1D4A7A"
-  sensitizer: "#D6DC7E"
-  porcelain: "#F7F9FB"
-  shadow-navy: "#0B1F38"
-  # Evening (dark theme): the print itself, white on Prussian.
-  evening-ground: "#10294A"
-  evening-sheet: "#163760"
-  evening-rule: "#2C5583"
-  evening-white: "#F1F5FA"
-  evening-quiet: "#A6BCD6"
-  evening-rose: "#E9A6BA"
-  evening-sensitizer: "#CFD67E"
-  evening-band: "#1B4677"
-  evening-porcelain: "#F4F6F9"
-  evening-shadow: "#030B16"
+  # Daytime (light theme). theme/palette.ts is the only source; these mirror it.
+  lavender-mist: "#F6F3FB"
+  white-sheet: "#FFFFFF"
+  lilac-rule: "#E1DAF0"
+  plum-ink: "#2A2440"
+  dusk-quiet: "#675F84"
+  peony-pink: "#E88DB2"
+  violet: "#6B55C8"
+  lilac-wash: "#ECE6FA"
+  moonlight: "#F4F1FA"
+  iris-pip: "#5B47B0"
+  plum-shadow: "#1A1530"
+  # Evening (dark theme).
+  evening-plum: "#1D1A2C"
+  evening-sheet: "#29253D"
+  evening-rule: "#3D3757"
+  evening-quiet: "#B6AED0"
+  evening-pink: "#F2A7C3"
+  evening-lavender: "#BBA9F3"
+  evening-wash: "#463F6C"
+  evening-band: "#151321"
+  evening-die: "#F7F5FB"
+  evening-shadow: "#05040A"
   # The 3D tray (decoration only, never behind text).
-  felt-day: "#1F4E80"
-  felt-evening: "#1A4373"
-  limed-oak: "#CDBB9F"
-  limed-oak-evening: "#8E7A60"
-  # Player tints: hue for rings, swatches and the cup; ink for numbers on the pad.
+  felt-day: "#5D4FA3"
+  rim-day: "#E6E0F3"
+  shelf-day: "#D9D0EE"
+  seat-day: "#C5B9E4"
+  felt-evening: "#3A3263"
+  rim-evening: "#4E4774"
+  shelf-evening: "#453E69"
+  seat-evening: "#38325A"
+  # Player tints: hue for rings, swatches, roll dots and the cup; ink for numbers on the pad.
   tint-rose: "#E0708F"
-  tint-rose-ink: "#CB2C58"
-  tint-rose-ink-evening: "#E5859F"
+  tint-rose-ink: "#CD2C59"
+  tint-rose-ink-evening: "#E0708F"
   tint-seaglass: "#4FBFAE"
   tint-seaglass-ink: "#2C796E"
   tint-seaglass-ink-evening: "#4FBFAE"
   tint-marigold: "#EE9A2E"
-  tint-marigold-ink: "#9D5E0D"
+  tint-marigold-ink: "#9F5F0D"
   tint-marigold-ink-evening: "#EE9A2E"
   tint-fern: "#62AE5C"
-  tint-fern-ink: "#41793C"
-  tint-fern-ink-evening: "#69B163"
+  tint-fern-ink: "#427B3D"
+  tint-fern-ink-evening: "#62AE5C"
   tint-heather: "#A07BD6"
-  tint-heather-ink: "#8352C9"
-  tint-heather-ink-evening: "#B294DE"
+  tint-heather-ink: "#8454CA"
+  tint-heather-ink-evening: "#A37FD7"
   tint-primrose: "#E6CB45"
   tint-primrose-ink: "#7E6C11"
   tint-primrose-ink-evening: "#E6CB45"
   tint-poppy: "#E8613C"
-  tint-poppy-ink: "#C53D17"
-  tint-poppy-ink-evening: "#ED8467"
+  tint-poppy-ink: "#C83D18"
+  tint-poppy-ink-evening: "#E96A47"
   tint-walnut: "#A0714E"
-  tint-walnut-ink: "#8D6445"
-  tint-walnut-ink-evening: "#C09A7D"
+  tint-walnut-ink: "#8F6546"
+  tint-walnut-ink-evening: "#B48765"
 typography:
   display:
-    fontFamily: "'Petit Formal Script', 'Atkinson Hyperlegible Next', cursive"
-    fontSize: "clamp(2.6rem, 5vw, 5.4rem)"
-    fontWeight: 400
-    lineHeight: 1.15
+    fontFamily: "Quicksand, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "clamp(2.3rem, 8.5vw, 3.4rem)"
+    fontWeight: 700
+    lineHeight: 1.05
+    letterSpacing: "-0.01em"
   headline:
-    fontFamily: "'Petit Formal Script', 'Atkinson Hyperlegible Next', cursive"
-    fontSize: "1.95rem"
-    fontWeight: 400
-    lineHeight: 1.2
-  title:
-    fontFamily: "'Atkinson Hyperlegible Next', system-ui, sans-serif"
-    fontSize: "1.2rem"
+    fontFamily: "Quicksand, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "clamp(1.9rem, 2.8vw, 2.6rem)"
     fontWeight: 700
     lineHeight: 1.15
+    letterSpacing: "-0.02em"
+  title:
+    fontFamily: "Quicksand, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.45rem"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "-0.01em"
   body:
-    fontFamily: "'Atkinson Hyperlegible Next', system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 400
     lineHeight: 1.4
   label:
-    fontFamily: "'Atkinson Hyperlegible Next', system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "1.0625rem"
     fontWeight: 600
     lineHeight: 1.2
+  action:
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 800
+    lineHeight: 1.2
   score:
-    fontFamily: "'Atkinson Hyperlegible Next', system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "1.35rem"
     fontWeight: 800
     lineHeight: 1.2
-    fontFeature: "'tnum'"
-  total:
-    fontFamily: "'Atkinson Hyperlegible Next', system-ui, sans-serif"
-    fontSize: "2.2rem"
-    fontWeight: 800
-    lineHeight: 1
-    fontFeature: "'tnum'"
+    fontFeature: "tnum"
 rounded:
-  sheet: "0.3rem"
+  bonus-box: "0.4rem"
   chip: "0.55rem"
-  md: "0.7rem"
   field: "0.75rem"
-  primary: "0.85rem"
-  lg: "1rem"
+  md: "0.9rem"
   die: "1.1rem"
+  lg: "1.2rem"
   pill: "999px"
 spacing:
   xs: "0.25rem"
   sm: "0.5rem"
-  md: "0.75rem"
-  lg: "1rem"
-  xl: "1.25rem"
-  2xl: "1.5rem"
-  3xl: "1.75rem"
+  md: "1rem"
+  lg: "1.5rem"
+  xl: "1.75rem"
 components:
   button-primary:
-    backgroundColor: "{colors.dusty-rose}"
-    textColor: "{colors.prussian-ink}"
+    backgroundColor: "{colors.peony-pink}"
+    textColor: "{colors.plum-ink}"
     typography: "{typography.label}"
-    rounded: "{rounded.primary}"
+    rounded: "{rounded.pill}"
     padding: "0 1.1rem"
     height: "48px"
   button-primary-big:
-    backgroundColor: "{colors.dusty-rose}"
-    textColor: "{colors.prussian-ink}"
-    rounded: "{rounded.primary}"
+    backgroundColor: "{colors.peony-pink}"
+    textColor: "{colors.plum-ink}"
+    typography: "{typography.action}"
+    rounded: "{rounded.pill}"
     height: "3.6rem"
     width: "100%"
-  button-primary-disabled:
-    backgroundColor: "{colors.paper-sheet}"
-    textColor: "{colors.quiet-blue}"
-    rounded: "{rounded.primary}"
   button-secondary:
-    backgroundColor: "{colors.paper-sheet}"
-    textColor: "{colors.prussian-ink}"
+    backgroundColor: "{colors.white-sheet}"
+    textColor: "{colors.plum-ink}"
     typography: "{typography.label}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.pill}"
     padding: "0 1.1rem"
     height: "48px"
-  button-segmented-selected:
-    backgroundColor: "{colors.prussian}"
-    textColor: "{colors.paper-sheet}"
-    rounded: "{rounded.md}"
+  button-segment-selected:
+    backgroundColor: "{colors.violet}"
+    textColor: "{colors.white-sheet}"
+    rounded: "{rounded.pill}"
     height: "48px"
   input-text:
-    backgroundColor: "{colors.paper-sheet}"
-    textColor: "{colors.prussian-ink}"
+    backgroundColor: "{colors.white-sheet}"
+    textColor: "{colors.plum-ink}"
     rounded: "{rounded.field}"
     padding: "0 0.85rem"
     height: "48px"
-  preview-scores:
-    backgroundColor: "{colors.sensitizer}"
-    textColor: "{colors.prussian-ink}"
+  sheet:
+    backgroundColor: "{colors.white-sheet}"
+    textColor: "{colors.plum-ink}"
+    rounded: "{rounded.lg}"
+    padding: "1.5rem 1.75rem"
+  band-plate:
+    backgroundColor: "{colors.plum-ink}"
+    textColor: "{colors.moonlight}"
+    typography: "{typography.display}"
+    rounded: "{rounded.lg}"
+    padding: "1.1rem 2rem 1.2rem"
+  score-option:
+    backgroundColor: "{colors.lilac-wash}"
+    textColor: "{colors.plum-ink}"
     rounded: "{rounded.chip}"
     padding: "0 0.6rem"
-  preview-chosen:
-    backgroundColor: "{colors.prussian}"
-    textColor: "{colors.paper-sheet}"
+  score-chosen:
+    backgroundColor: "{colors.violet}"
+    textColor: "{colors.white-sheet}"
     rounded: "{rounded.chip}"
     padding: "0 0.6rem"
-  tag-up:
-    backgroundColor: "{colors.prussian}"
-    textColor: "{colors.paper-sheet}"
-    rounded: "{rounded.pill}"
-    padding: "0 0.5rem"
   bonus-tag:
-    backgroundColor: "{colors.dusty-rose}"
-    textColor: "{colors.prussian-ink}"
+    backgroundColor: "{colors.peony-pink}"
+    textColor: "{colors.plum-ink}"
     rounded: "{rounded.pill}"
     padding: "0 0.45rem"
-  notice-banner:
-    backgroundColor: "{colors.sensitizer}"
-    textColor: "{colors.prussian-ink}"
+  tab-tag-up:
+    backgroundColor: "{colors.violet}"
+    textColor: "{colors.white-sheet}"
     rounded: "{rounded.pill}"
-    padding: "0.35rem 0.5rem 0.35rem 1.1rem"
-  paper-sheet:
-    backgroundColor: "{colors.paper-sheet}"
-    textColor: "{colors.prussian-ink}"
-    rounded: "{rounded.sheet}"
-    padding: "0.85rem 1rem 1rem"
-  panel:
-    backgroundColor: "{colors.paper-sheet}"
-    textColor: "{colors.prussian-ink}"
-    rounded: "{rounded.lg}"
-    padding: "1.1rem 1.25rem"
-  print-band:
-    backgroundColor: "{colors.prussian}"
-    textColor: "{colors.paper-sheet}"
-    height: "3.6rem"
+    padding: "0 0.5rem"
 ---
 
 # Design System: Rollhouse
 
 ## Overview
 
-**Creative North Star: "The Developing Sunprint"**
+**Creative North Star: "The Lavender Evening Table"**
 
-Rollhouse is printed, not painted. The world is Anna Atkins' 1843 cyanotypes of seaweed: Prussian blue and white, a pressed frond, a copperplate hand. By day the table is white rag paper written on in Prussian ink; in the evening it is the print itself, white on deep blue. Every state the game has is a state of a print: what you could take is unexposed sensitizer paper, what you picked is exposed Prussian, and a score you write develops out of a blur into your own ink while a blue wash clears behind it. A Yatzy exposes white seaweed on the felt.
+A family game night after dark, set on a clean, modern table: dark plum around the edges, lavender for whatever is yours or chosen, and one soft pink for the thing to do next. The evening theme is the main scene, because the game is mostly played on evening voice calls. The daytime theme keeps the same structure with pale lavender ground and plum ink, so both themes share one set of roles and differ only in values.
 
-The surfaces are sheets of paper on a table, not cards in an app. They have barely rounded corners, a faint rag grain, a hairline rule and a low, soft shadow. The Prussian surfaces (the band across the table, the wordmark plate, the winner plate) are coated by hand: a mottled tone and a ragged, brushed edge drawn by one SVG filter. Fronds are grown procedurally from seeds, so the same plant appears on every screen. The dice are glazed porcelain with cobalt pips, landing on cyanotype-blue felt inside a limed-oak contact-printing frame.
+The screens are calm and roomy: soft raised white or plum sheets, pill-shaped controls, a plum band or plate holding the wordmark, and a 3D tray of porcelain dice with violet pips on violet felt. Femininity comes from the palette and the rounded display face, kept light: no ornament, no texture on the interface, no illustration. The playful moments are short and earned, like the sparkle burst on a Yatzy and on the winner's name, the pulse of your tint when your turn arrives, and a new score coming into focus on the pad.
 
-Density is calm and legible: one rose action at a time, a strict ruled pad in tabular figures, and the active player's name in script at poster size while everyone else stays quiet. The world rejects casino felt, the cartoon-bright game kit, and the earlier candy-shop identity entirely; femininity comes through lightly, in the rose, the script and the flower-and-leaf inks.
-
-The planned aquarium above the dice tray is not built yet and nothing here specifies it; it must be drawn inside this world when it arrives.
+Rejected looks the owner confirmed on rendered screens: the earlier candy-shop identity (candy names, colors, motifs) and the "Sunprint" cyanotype that followed it (script typefaces, paper or print textures, anything old-fashioned). A personal aquarium, shown as a realistic glass tank beside the dice, is planned and has no visual system yet.
 
 **Key Characteristics:**
-- Prussian blue and white carry everything; one dusty-rose accent; sensitizer yellow-green for "not yet exposed".
-- Players write in eight flower and leaf inks, the only other colors.
-- Paper sheets with 0.3rem corners and grain; hand-coated Prussian plates with a brushed edge.
-- A copperplate script for names and big moments only; a hyperlegible sans for everything else.
-- Seeded Dictyota fronds as the one ornament.
-- Scores develop like a print: blur and sensitizer, then ink.
+- Plum, lavender and one pink, in a daytime and an evening theme generated from one palette file.
+- Quicksand 700 for names and big moments; Atkinson Hyperlegible Next for everything you read and tap.
+- Soft raised sheets with plum-tinted shadows; pills for every button.
+- Each player owns a flower or leaf tint that rings their face, colors their cup and writes their numbers.
+- Short, earned celebrations; reduced motion turns all of them into fades.
 
 ## Colors
 
-A two-ink cyanotype palette (Prussian and paper white) with one rose accent, one sensitizer state color, and a ring of player inks. Every value lives in `theme/palette.ts`, which generates the CSS variables for both themes and tests every text pairing at WCAG AA (4.5:1).
+A plum-and-lavender palette with a single pink accent, and eight player tints that stay out of the chrome.
 
 ### Primary
-- **Prussian** (day: band, exposed state, pips): the developed print. The band across the game table, the wordmark and winner plates, the box you picked, the "Up" tag, earned bonus boxes, the selected segment, the upper-bonus meter, focus rings, and the cobalt pips. In the evening the band deepens to **Evening Band** and the exposed state inverts to **Evening White**, so a developed state always reads as the strongest contrast on the ground.
-- **Prussian Ink** (day text): all body text on paper, and the text on rose and sensitizer fills.
+- **Peony Pink** (day `peony-pink`, evening `evening-pink`): the one next action. Roll, Write it in, Sit down, Start game, and the earned upper-section bonus tag. Text on it is plum.
 
 ### Secondary
-- **Dusty Rose** (day) / **Evening Rose** (evening): the one accent. The next thing to do (Roll, Write it in, Start) and earned bonus tags (+35, +100). It sits on a thin lip mixed 22% toward black.
+- **Violet / Evening Lavender** (day `violet`, evening `evening-lavender`): state that belongs to you or was chosen. The box you picked, earned Yatzy bonus boxes, the selected segment, the "Up" tag on whose turn it is, the upper-bonus meter, focus rings, caret, checkboxes and the host crown.
+- **Lilac Wash** (day `lilac-wash`, evening `evening-wash`): soft fill for a score you could take, the "looking only" note on someone else's pad, the floating banner, and text selection.
 
 ### Tertiary
-- **Sensitizer** (day) / **Evening Sensitizer** (evening): unexposed print paper. A score this roll could take, the selection highlight, held flat dice, and the notice banners that ask you to wait or look (reconnecting, looking at someone else's pad).
+- **Player tints** (`tint-*`): Rose, Sea glass, Marigold, Fern, Heather, Primrose, Poppy, Walnut. The hue rings avatars, fills swatches and roll dots, tints the active pad tab, pulses on a new score and glazes the dice cup. The ink, per theme, is the only form a tint takes as text: the numbers a player writes on the pad and their totals on the results.
 
 ### Neutral
-- **Paper Ground** / **Evening Ground**: the page. In day mode the page carries a faint Prussian rag grain.
-- **Paper Sheet** / **Evening Sheet**: the pad, the lobby sheet, the standings, panels, and default buttons.
-- **Cyan Rule** / **Evening Rule**: pad rules, borders, dividers, the empty meter. Decoration only, never text.
-- **Quiet Blue** / **Evening Quiet**: secondary text, column heads, disabled labels, preview chips that score zero.
-- **Porcelain** / **Evening Porcelain**: the dice.
-- **Shadow Navy** / **Evening Shadow**: the only shadow color, always mixed down to 6–50% with `color-mix`.
-
-### Player tints
-Eight tints (Rose, Sea glass, Marigold, Fern, Heather, Primrose, Poppy, Walnut), one per seat. Each has a **hue** for avatar rings, swatches, roll dots, the active tab's edge and wash, the turn pulse and the dice cup, and a per-theme **ink** for numbers written on the pad and totals in the standings.
-
-### Tray materials
-- **Felt** (day / evening): cyanotype-blue felt with a fine nap, darker where the rim shades it.
-- **Limed Oak** (day / evening): the frame and the held-dice shelf, with a darker seat for each held die.
+- **Lavender Mist / Evening Plum** (`lavender-mist`, `evening-plum`): page ground.
+- **White Sheet / Evening Sheet** (`white-sheet`, `evening-sheet`): the score pad, lobby sheet, standings, panels, secondary buttons and inputs.
+- **Lilac Rule / Evening Rule** (`lilac-rule`, `evening-rule`): pad rules, borders, dashed empty seats, the meter track. Decoration only, never text.
+- **Plum Ink / Moonlight** (`plum-ink`, `moonlight`): body text. Plum Ink is also the daytime band.
+- **Dusk Quiet / Evening Quiet** (`dusk-quiet`, `evening-quiet`): secondary text, zero previews, badges, column heads.
+- **Band** (`plum-ink` by day, `evening-band` at night) with **Moonlight** text: the top bar at the table, the brand plate, the winner plate.
+- **Die and Pip** (`white-sheet` / `evening-die`, `iris-pip`): porcelain dice with violet pips, in 3D and flat.
+- **Shadow** (`plum-shadow`, `evening-shadow`): mixed into every shadow; never used as a fill.
+- **Tray** (`felt-*`, `rim-*`, `shelf-*`, `seat-*`): the 3D tray's violet felt, lacquered lavender frame and held-dice shelf. Decoration only.
 
 ### Named Rules
-**The Two-Ink Rule.** Prussian and paper white carry the world. Beyond them, only the rose accent, the sensitizer state and the player inks may appear. No other hue enters the UI.
+**The One Pink Rule.** Pink marks the single thing to do next, plus the earned +35 bonus. If two pink buttons are on screen, one of them is wrong.
 
-**The One Rose Rule.** Dusty rose marks the one thing to do next, and an earned bonus. Never decoration, never a second button competing with the first.
+**The Lavender Is Yours Rule.** Violet and lavender mean chosen, selected, focused or earned. They never decorate.
 
-**The Print States Rule.** Sensitizer means "could be taken, not yet exposed"; Prussian means "chosen, developed". These two colors never swap roles.
+**The One Palette File Rule.** Every color comes from `theme/palette.ts` as a generated CSS variable, and every text pairing there passes 4.5:1 in a test. A new color is added there with its pairing, never typed into a component.
 
-**The Hue Is Not Ink Rule.** A tint's hue is never text on the pad. Numbers use the tint's ink for the current theme, which passes AA on the sheet.
-
-**The One Palette File Rule.** Every color is defined in `theme/palette.ts` and reaches CSS as a generated variable. A text pairing not in its contrast test is not allowed to ship.
+**The Ink, Not Hue Rule.** A player's hue never sets text on the pad; only its per-theme ink does.
 
 ## Typography
 
-**Display Font:** Petit Formal Script (with Atkinson Hyperlegible Next, cursive)
-**Body Font:** Atkinson Hyperlegible Next (with system-ui, sans-serif), weights 400 / 600 / 800
+**Display Font:** Quicksand 700 (falls back to Atkinson Hyperlegible Next, system-ui)
+**Body Font:** Atkinson Hyperlegible Next 400 / 600 / 800 (falls back to system-ui)
 
-**Character:** A copperplate hand, as on a herbarium label, for who and what matters; a hyperlegible sans that reads instantly on a laptop across a call for every number and instruction.
+**Character:** A rounded, friendly geometric face for names and big moments over a legibility-first sans that carries every label, number and control.
 
 ### Hierarchy
-- **Display** (Script 400, clamp(2.6rem, 5vw, 5.4rem), 1.15): the active player's name on their own turn ("Your turn"). Other players' turns use clamp(2.2rem, 3.6vw, 3.8rem); 2.2rem on phones.
-- **Wordmark** (Script 400, 2.6rem; 1.6rem in the band; clamp(2.3rem, 8.5vw, 3.4rem) on the sign-in plate; clamp(2.4rem, 7vw, 3.8rem) for the winner).
-- **Headline** (Script 400, 1.95rem, 1.2): the lobby sheet's section captions. The top standing's name uses 2rem.
-- **Title** (Sans 700, 1.2rem, 1.15): plain headings such as the pad's title.
-- **Body** (Sans 400, 1.0625rem / 17px, 1.4): everything else. 17px is the floor at Regular text size; nothing is smaller.
-- **Label** (Sans 600, 1.0625rem): buttons, row labels, badges, tabs. Primary buttons go to 800; big ones to 1.25rem.
-- **Score** (Sans 800, 1.35rem, tabular): a written score, in the player's ink.
-- **Total** (Sans 800, 2.2rem, 1, tabular): standings totals; 3rem for the winner.
+- **Display** (Quicksand 700, clamp(2.3rem, 8.5vw, 3.4rem), 1.05): the wordmark on the brand plate and the winner's name (clamp(2.4rem, 6vw, 3.4rem)). The Yatzy word over the tray is the largest use (4.2rem).
+- **Headline** (Quicksand 700, clamp(1.9rem, 2.8vw, 2.6rem), 1.15, -0.02em): whose turn it is; on your own turn it grows to clamp(2.2rem, 3.4vw, 3.2rem).
+- **Title** (Quicksand 700, 1.45rem, 1.2): lobby section heads and the top standing's name (1.6rem). The small wordmark on the table band is 1.6rem.
+- **Body** (Atkinson 400, 1.0625rem, 1.4): all running text. 17px at Regular is the floor everywhere.
+- **Label** (Atkinson 600, 1.0625rem): buttons, pad row names, seat names. Selected states step to 700, primary buttons to 800.
+- **Score** (Atkinson 800, 1.35rem, tabular figures): numbers written on the pad in the player's ink; totals on results run 2.2rem, the winner's 3rem.
 
 ### Named Rules
-**The Copperplate Is for Names Rule.** Script appears only at 1.6rem and above, only for names and big moments: the wordmark, the turn name, lobby captions, the winner and the Yatzy word. Never on buttons, labels, numbers or body text.
+**The Rounded Moments Rule.** Quicksand is for names and moments: wordmark, section heads, the turn headline, the winner, the Yatzy word. Controls, tables and numbers stay in Atkinson.
 
-**The Tabular Column Rule.** Every number on the pad, in previews and in the standings uses tabular figures on a strict column.
-
-**The 17px Floor Rule.** All sizes are rem and scale with the Text size setting (Regular / Large / Extra large); no text is set below 1.0625rem except the avatar initial and key caps.
+**The 17px Floor Rule.** No text is smaller than 1.0625rem, and every size is in rem so the Text size setting scales the whole UI.
 
 ## Layout
 
-- **Game table:** a full-bleed Prussian band (3.6rem) across the window, then two columns: the tray column (minmax(24rem, 1.18fr)) and the pad sheet (minmax(0, 1fr)) with a 1.5rem gutter, inside a max-width of 86rem. Above 52rem wide the screen is exactly 100dvh: the dice stage takes whatever height is left, and the pad's rows share the remaining height (clamp(1.75rem, (100dvh − 14rem) / 16, 2.65rem)) so the whole pad fits a laptop window without scrolling. Below 52rem the columns stack.
-- **Tray column:** turn banner (avatar, name in script, roll dots in the player's hue), the dice stage, then an action area with a fixed minimum height (8.8rem) so the tray never jumps between states.
-- **Lobby:** one herbarium sheet, max 64rem, two columns of sections separated by a vertical rule (1.75rem either side); stacks with a horizontal rule below 48rem.
-- **Results:** a single 42rem column: the winner plate, then the standings sheet.
-- **Other screens:** a 44rem centered column with 1rem gaps; sign-in centers vertically.
-- **Corner controls:** theme, sound and settings sit fixed at the top right; non-game screens leave 4.4rem of top padding for them. On the game screen they sit on the band as white line icons without fills.
-- **Rhythm:** gaps cluster at 0.25 / 0.5 / 0.75 / 1 / 1.25 / 1.5 / 1.75rem. Touch targets are at least 48px.
+Single centered column with generous padding: screens cap at 44rem (results 42rem, lobby 64rem) with 1rem gutters, and non-table screens leave 4.4rem at the top for the corner controls (theme, sound, settings) pinned top right.
+
+The lobby is one sheet split into two columns with a rule between them, stacking with a top rule below 48rem. The table is a plum band bleeding edge to edge with the wordmark, then two columns: the dice tray (minmax(24rem, 1.18fr)) with the turn headline above and actions below, and the score pad (1fr) with player tabs across its top. Above 52rem the table fills exactly one window: the tray takes the leftover height and pad rows share the rest (clamped 1.75rem to 2.65rem) so the pad never scrolls. Below 52rem everything stacks.
+
+Spacing steps run 0.25, 0.5, 0.75, 1, 1.5 and 1.75rem; sheet padding is 1.5rem 1.75rem on the lobby, 0.85rem 1rem on the pad. The action row reserves 8.8rem so the tray never jumps.
 
 ## Elevation & Depth
 
-Hybrid and quiet: depth comes from paper resting on a table, not from floating cards. Sheets and panels carry soft, low shadows in Shadow Navy mixed down with `color-mix`; the Prussian plates carry none and read as flat coated paper. Texture carries the rest: a fractal rag grain on the day page and on every sheet, and a mottled tone under every Prussian plate. The 3D tray provides the only real depth, under a soft studio light.
+Soft, layered and tinted. Surfaces are raised sheets on the ground, each with a two-part shadow mixed from the theme's plum shadow color through `color-mix`, so depth reads warm in daylight and stays visible on plum at night. Bands and plates sit flat with a medium shadow. The 3D tray carries its own depth through studio light and real cast shadows.
 
 ### Shadow Vocabulary
-- **Sheet** (`0 1px 2px shadow/6%, 0 14px 34px -14px shadow/28%`): the pad, the lobby sheet and the standings.
-- **Small** (`0 1px 2px shadow/10%, 0 3px 10px -2px shadow/8%`): panels, corner icon buttons, flat dice, hovered score previews.
-- **Medium** (`0 2px 4px shadow/7%, 0 12px 30px -8px shadow/18%`): the zero-score confirmation, notice banners.
-- **Large** (`0 4px 10px shadow/10%, 0 24px 50px -12px shadow/30%`): the settings popover.
-- **Primary lip** (`0 0.1rem 0.25rem shadow/16%, 0 0.55rem 1.2rem -0.45rem shadow/45%`): the rose button, which rises 1px on hover and presses 0.12rem into its lip when pushed or busy.
+- **Sheet** (`0 1px 2px shadow 6%, 0 14px 34px -14px shadow 28%`): the pad, lobby sheet, standings and sign-in form.
+- **Small** (`--shadow-sm`): corner icons, flat dice, a hovered score option.
+- **Medium** (`--shadow-md`): brand and winner plates, the banner, the confirm-zero card.
+- **Large** (`--shadow-lg`): the settings popover.
+- **Primary lift** (`0 0.1rem 0.25rem shadow 16%, 0 0.55rem 1.2rem -0.45rem shadow 45%`): the pink action, which lifts on hover and presses down on press and while busy.
 
 ### Named Rules
-**The Sheet, Not Card Rule.** A surface that holds content is a sheet of paper: 0.3rem corners, grain, a hairline rule at 70%, the Sheet shadow. Rounder, elevated cards are reserved for small interactive panels and popovers.
+**The Tinted Shadow Rule.** Every shadow mixes `--shadow` at low opacity with negative spread. No pure black, no hard offset shadows.
 
-**The Halo, Not Shadow Rule.** Fronds on Prussian plates get a soft white over-exposure halo, never a dark drop shadow.
+**The Press-Down Rule.** The primary action sits on a darker lip (accent mixed 22% toward black) and presses down 0.12rem when pressed or while the dice roll; it jiggles while you hold to shake.
 
 ## Shapes
 
-Mostly square paper with soft controls. Sheets and Prussian plates use 0.3rem; Prussian plates also take the `#coat` brushed edge, a turbulent displacement that makes their edge look hand-coated (the band shows it only along its lower edge). Controls are gently rounded (0.7rem default, 0.75rem fields, 0.85rem for the rose button, 1rem for panels). Tags, badges and banners are full pills. Avatars, swatches, roll dots and rank markers are circles. Flat dice use 1.1rem; the 3D dice are rounded cubes (0.16 bevel).
-
-Dashed borders mean "not available yet": disabled buttons, zero-score previews, empty seats.
+Round and soft throughout. Every button, tag, badge and banner is a full pill (999px); sheets and plates use 1.2rem; seats and tabs 0.9rem; inputs 0.75rem; score chips 0.55rem; bonus boxes 0.4rem. Avatars, swatches, roll dots and rank badges are circles. Dice are rounded cubes (1.1rem when flat). Borders are 1.5px on controls, 1px on sheets; dashed borders mean empty or unavailable (an open seat, a zero preview, a disabled button). The pad divides upper and lower sections with a 3px double rule. Sparkles are small four-point stars.
 
 ## Components
 
 ### Buttons
-Tactile and quiet, with exactly one rose button in view.
-- **Shape:** gently curved (0.7rem), 1.5px border, at least 48px square.
-- **Default:** paper sheet with a Cyan Rule border, label weight 600. Hover turns the border Prussian; active presses down 1px.
-- **Primary:** dusty rose on a lip 22% darker, Prussian Ink text at weight 800, 0.85rem corners, Primary lip shadow. Hover rises 1px; pressed and busy (shaking the cup, dice rolling) sit 0.12rem down, and busy jiggles every 110ms. The big variant (Roll, Write it in) is full width and 3.6rem tall with a Space key cap.
-- **Disabled:** quiet text, dashed border; the primary drops to a dashed paper button.
-- **Focus:** 3px Prussian outline, 3px offset, on everything.
-- **Corner icons:** 2.9rem squares holding inline SVG line icons (2.2 stroke, round caps). On the band they become transparent with a 35% white border.
+Rounded, friendly and press-able.
+- **Shape:** full pill, 48px minimum height and width.
+- **Primary:** peony pink with plum text at 800 weight, on a darker lip with the primary lift. The big variant fills the action row at 3.6rem and 1.25rem type.
+- **Secondary:** sheet fill, 1.5px rule border, 600 weight; hover turns the border violet; press nudges down 1px.
+- **Segmented:** a row of pills; the selected one slides a violet pill behind its label (text on-strong, 700).
+- **Disabled:** quiet text with a dashed border; a disabled primary loses its pink and shadow.
+- **Corner icons:** 2.9rem circles with line icons; on the table band they go transparent with a moonlight border.
 
-### Segmented control
-Paper buttons in a wrapped row; the selected one is filled Prussian with white text by a pill that slides between options.
-
-### Chips and tags
-- **Badge** ("you", "away"): pill with a Cyan Rule border and quiet text.
-- **Up tag:** filled Prussian pill on the active player's tab.
-- **Bonus tag** (+35, +100): rose pill, weight 800.
-- **Bonus boxes:** 1.6rem squares (0.4rem corners), filled Prussian when earned.
+### Chips
+- **Score option:** lilac wash fill, full row width, a faint inset ring; lifts 1px on hover.
+- **Zero preview:** small dashed chip in quiet text; goes solid on hover.
+- **Chosen:** violet fill with a check icon and a slowly breathing ring.
+- **Tags:** pill outlines in quiet text ("you", "away"); "Up" is a violet fill; the +35 bonus is a pink fill.
 
 ### Cards / Containers
-- **Paper sheet:** pad, lobby, standings. Corner 0.3rem, paper with grain, 1px rule at 70%, Sheet shadow, padding 0.85rem 1rem 1rem (pad) or 1.5rem 1.75rem (lobby).
-- **Panel:** paper, 1rem corners, 1px rule, Small shadow, padding 1.1rem 1.25rem. Inside the lobby sheet panels lose all chrome and become plain sections.
-- **Notice banner:** sensitizer pill, fixed top center, Medium shadow.
+- **Corner Style:** 1.2rem.
+- **Background:** sheet (`white-sheet` / `evening-sheet`) with a 70% rule border.
+- **Shadow Strategy:** the Sheet shadow (see Elevation).
+- **Internal Padding:** 1.1rem 1.25rem for panels, 1.5rem 1.75rem for the lobby sheet.
 
 ### Inputs / Fields
-- **Text field:** paper, 1.5px Cyan Rule border, 0.75rem corners, 48px tall. Focus turns the border Prussian.
-- **Toggles and sliders:** native controls tinted Prussian (`accent-color`).
+- **Style:** sheet fill, 1.5px rule border, 0.75rem corners, 48px tall.
+- **Focus:** border turns violet, plus the global 3px violet focus ring offset 3px. Checkboxes and sliders take the violet accent color.
 
 ### Navigation
-- **Pad tabs:** one per player across the top of the sheet, scrolling sideways at a big table. Each holds the avatar and name; the selected tab gets a 1.5px border in the player's hue and a 12% hue wash, open at the bottom so it joins the sheet. When someone else writes, a dot in their hue pulses on their tab and fades over 2.4s.
+- **Pad tabs:** one tab per player across the top of the pad, avatar plus name. The selected tab wears the player's hue as a 1.5px border and a 12% hue wash over the sheet, open at the bottom into the pad. A tint dot pulses on a tab when that player writes a score.
 
-### Avatars and player tints
-A circle with a 3px ring in the player's hue and a small pill initial in their ink. On your turn a hue ring ripples out twice (900ms). Tint pickers are paper buttons with a 2.25rem hue swatch; the chosen one wears a hue border and a 3px hue glow.
+### Band and Plates
+The plum band runs edge to edge at the table with the small wordmark. The brand plate (lobby and sign-in) and winner plate are band-colored 1.2rem slabs with moonlight Quicksand; the brand plate has a slowly turning 3D die beside the name (a flat die where WebGL is unavailable).
 
-### The score pad (signature)
-A ruled table in tabular figures: 1px Cyan Rule between rows, a 3px double rule before the lower section, row labels with a small die glyph (paper face, quiet stroke, Prussian pips) and the box's fixed points in quiet text.
-- **Preview, scores:** a full-width sensitizer chip (0.55rem) in the cell; hover lifts 1px.
-- **Preview, zero:** a small dashed quiet chip.
-- **Preview, chosen:** filled Prussian with a 0.2rem Prussian halo that breathes on a 1.8s loop.
-- **Developing score:** the new number starts sensitizer-colored and blurred (2.5px) at 35% opacity and sets into the player's ink over 1300ms, while a Prussian wash spreads behind it and clears.
-- **Upper progress:** a 3rem pill meter filling in Prussian, replaced by the +35 tag when earned.
+### Player Avatar
+A circle ringed 3px in the player's hue, with a small pill initial at the lower right in their ink. On your turn, a hue ring ripples out from it twice. Roll dots beside the headline fill in the same hue.
 
-### The print plates and fronds (signature)
-Prussian plates hold the wordmark (sign-in, lobby), the band (game) and the winner (results): mottled coating, brushed `#coat` edge, white text. Seeded Dictyota fronds (two broad flat ribbons diverging from one holdfast with no trunk, each forking in pairs three times and staying wide to blunt tips, overlaps printing denser) stand beside the name at 85% opacity with a white halo; below 30rem the plates drop them, since there is no margin beside the name. On the results plate they expose out of a 6px blur over 2.2s, staggered 180ms.
+### Dice Tray
+Glazed porcelain dice with violet pips on violet felt in a lacquered lavender frame, the held-dice shelf behind with five seats, and a glossy cup in the roller's tint. Each die has an invisible button over it for holding. A Yatzy fades in the word in moonlight Quicksand over the tray with a sparkle burst in the roller's hue, pink and violet.
 
-### The dice tray (signature)
-A WebGL scene: porcelain dice (clear-coated, roughness 0.34) with cobalt glaze pips, on cyanotype-blue felt in a limed-oak frame with a five-seat held-dice shelf; a glazed cup in the player's hue. A Yatzy exposes three white fronds on the felt with the word in white script over it. Without WebGL, flat porcelain dice (1.1rem corners, inset lower edge) stand in, and a held die gets a 4px sensitizer outline.
-
-### Motion
-Durations 140 / 220 / 380ms on a soft ease-out (`cubic-bezier(0.22, 1, 0.36, 1)`); a gentle spring overshoot for things that pop into place. The authored moments are the score developing, the chosen preview breathing, the turn pulse and the fronds exposing; developing and exposing use their own slow-in, slow-out curve (`--ease-develop`, `cubic-bezier(0.45, 0, 0.25, 1)`) so the print visibly resolves. In Take turns the pad holds on the last player for the 1.3s develop before following the next. With reduced motion every animation collapses to 1ms, the tab dot becomes a plain fade, and the chosen preview stops breathing.
+### Score Pad
+A ruled sheet: 1px rules, a double rule before the lower section, die glyphs (violet pips) beside the upper rows, point values in quiet after a middle dot. A new score comes into focus: it starts blurred in the option color while a violet wash spreads behind it, then settles into the player's ink. An upper-bonus meter tracks progress until it turns into the pink +35 tag.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** take every color from `theme/palette.ts` and add any new text pairing to `TEXT_PAIRS`, so the AA test covers it.
-- **Do** express state as a print: sensitizer for "could take", Prussian for "chosen / developed", the player's ink for "written".
-- **Do** keep exactly one rose action on screen at a time.
-- **Do** lay content on paper sheets (0.3rem, grain, hairline rule, Sheet shadow) and put names and headlines on hand-coated Prussian plates with the `#coat` edge.
-- **Do** draw ornament as seeded fronds in the current text color on Prussian, with the white halo.
-- **Do** set every number in tabular figures and keep text at 17px or larger, in rem.
-- **Do** draw icons as inline SVG line icons (2.2 stroke, round caps, currentColor).
-- **Do** give every motion a reduced-motion form that keeps the cue without the movement.
+- **Do** take every color from `theme/palette.ts` and add any new text pairing to its contrast test (4.5:1).
+- **Do** keep pink to the single next action and the earned bonus; use violet/lavender for chosen, selected, focused and earned.
+- **Do** write player numbers in their tint's ink for the current theme, and use the hue only for rings, swatches, dots, tab washes and the cup.
+- **Do** set names, headlines and big moments in Quicksand 700, and everything you read or tap in Atkinson Hyperlegible Next.
+- **Do** make every button a pill at least 48px tall, and every surface a soft sheet with the plum-tinted shadow.
+- **Do** keep sizes in rem with nothing under 1.0625rem.
+- **Do** design both themes at once, evening first, and judge a new look on rendered screens.
+- **Do** keep celebrations short and decorative, and make reduced motion turn them into fades.
 
 ### Don't:
-- **Don't** use casino green felt, gold, or slot-machine glitter; the felt is cyanotype blue.
-- **Don't** bring back anything from the candy-shop identity: candy names, colors, motifs or vocabulary.
-- **Don't** use cartoon-bright saturated game-kit color; the player inks are the only colors beyond blue, white, rose and sensitizer.
-- **Don't** set Petit Formal Script below 1.6rem or on buttons, labels, numbers or body copy.
-- **Don't** use a tint's hue as text on the pad; use its ink.
-- **Don't** use rose for decoration, a secondary action, or a state.
-- **Don't** swap the roles of sensitizer and Prussian.
-- **Don't** give content surfaces big rounded-card corners; sheets are 0.3rem.
+- **Don't** use script typefaces, paper or print textures, or anything old-fashioned.
+- **Don't** bring back candy names, candy colors or candy motifs; femininity stays a light touch.
+- **Don't** type a hex value into a component or stylesheet.
+- **Don't** use a player's hue as text on the pad.
+- **Don't** use pure-black or hard offset shadows.
+- **Don't** make it look like a casino or a slot machine; it is a calm evening game among family.

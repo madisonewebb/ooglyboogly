@@ -103,7 +103,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute(
         'content',
-        getComputedStyle(html).getPropertyValue('--band').trim() || '#1D4A7A',
+        getComputedStyle(html).getPropertyValue('--band').trim() || '#2A2440',
       );
   }, [theme, prefs.textSize]);
 
