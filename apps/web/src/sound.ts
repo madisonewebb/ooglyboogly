@@ -1,6 +1,6 @@
 /**
  * Synthesized sounds, so there are no audio files to license or load. Dice
- * use modal synthesis: a hard candy die rings at a few inharmonic partials
+ * use modal synthesis: a porcelain die rings at a few inharmonic partials
  * for a few hundredths of a second, felt deadens it to a thump, and the
  * glossy rim adds a hollow knock. Every impact comes from the recorded
  * physics, panned to where it happens.
@@ -160,7 +160,7 @@ export function playImpact(delayMs: number, kind: ImpactSound, strength: number,
   const s = 0.25 + 0.75 * Math.min(1, strength);
   switch (kind) {
     case 'die':
-      // Candy on candy: bright and ringing.
+      // Porcelain on porcelain: bright and ringing.
       ring(a, out, at, 2300 * jitter(0.12), DIE_PARTIALS, 0.16 * s);
       burst(a, out, at, 'highpass', 3500, 0.7, 0.12 * s, 0.012);
       break;

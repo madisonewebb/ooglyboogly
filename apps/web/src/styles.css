@@ -1,15 +1,17 @@
 /*
- * Rollhouse: a candy shop on game night. Colors come only from the generated
- * theme variables (theme/palette.ts), so the contrast test covers every one.
- * Sizes are in rem, so the Text size setting scales everything. Motion
- * timings mirror theme/motion.ts.
+ * Rollhouse: Sunprint. Cyanotype blue and white, after Anna Atkins' 1843
+ * sunprints of seaweed. Colors come only from the generated theme variables
+ * (theme/palette.ts), so the contrast test covers every one. Sizes are in
+ * rem, so the Text size setting scales everything. Motion timings mirror
+ * theme/motion.ts.
  */
 
 :root {
-  --radius: 1rem;
-  --radius-lg: 1.4rem;
+  --radius: 0.7rem;
+  --radius-lg: 1rem;
   --font: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
-  --display: 'Gluten', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  /* A copperplate hand, for names and big moments only, never small text. */
+  --display: 'Petit Formal Script', 'Atkinson Hyperlegible Next', cursive;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -26,6 +28,11 @@
     0.99 78%,
     1
   );
+  /* Rag-paper grain, and the tonal mottle of a brushed cyanotype coating. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.17 0 0 0 0 0.3 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008 0.02' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.38 0 0 0 -0.17'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+  /* A print developing: slow to appear, then it sets. */
+  --ease-develop: cubic-bezier(0.45, 0, 0.25, 1);
   --dur-fast: 140ms;
   --dur: 220ms;
   --dur-slow: 380ms;
@@ -43,6 +50,25 @@
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  scrollbar-color: var(--rule) transparent;
+  caret-color: var(--exposed);
+}
+
+/* The band bleeds past the page edges; it must never make the page scroll sideways. */
+body {
+  overflow-x: clip;
+}
+
+:root[data-theme='light'] body {
+  background-image: var(--grain);
+}
+
+::selection {
+  background: var(--sensitizer);
+  color: var(--on-sensitizer);
 }
 
 body {
@@ -72,14 +98,32 @@ h1 {
 
 h2 {
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: 700;
+}
+
+/*
+ * A Prussian print: the coating brushed on by hand, with a ragged edge (the
+ * #coat filter, defined once in the page) and uneven tone. Put it on an
+ * element's ::before, behind its content.
+ */
+.print::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border-radius: inherit;
+  background: var(--mottle), var(--band);
+  background-size:
+    600px 300px,
+    auto;
+  filter: url(#coat);
 }
 
 .wordmark {
   font-family: var(--display);
-  font-weight: 700;
+  font-weight: 400;
   font-size: 2.6rem;
-  letter-spacing: 0.01em;
+  line-height: 1.15;
   color: var(--text);
 }
 
@@ -120,8 +164,8 @@ button {
   min-height: 48px;
   min-width: 48px;
   padding: 0 1.1rem;
-  border: 2px solid var(--rule);
-  border-radius: 999px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
   background: var(--pad);
   font-weight: 600;
   cursor: pointer;
@@ -133,11 +177,11 @@ button {
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--exposed);
 }
 
 button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: translateY(1px);
 }
 
 button:disabled {
@@ -147,102 +191,74 @@ button:disabled {
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--exposed);
   outline-offset: 3px;
 }
 
 /*
- * The candy button: a glossy face on a darker lip, which you press down into.
- * One per screen, for the thing to do next.
+ * The one thing to do next, in dusty rose: Roll, Write it in, Start. It sits
+ * on a thin darker lip and presses down into it.
  */
-.candy,
 button.primary {
-  --face: var(--accent);
-  --lip: color-mix(in oklab, var(--accent), #000 24%);
-  position: relative;
-  isolation: isolate;
-  border: 0;
-  border-radius: 1.1rem;
-  background: var(--face);
+  --lip: color-mix(in oklab, var(--accent), #000 22%);
+  border: 1.5px solid var(--lip);
+  border-radius: 0.85rem;
+  background: var(--accent);
   color: var(--on-accent);
   font-weight: 800;
   box-shadow:
-    0 0.32rem 0 var(--lip),
-    0 0.7rem 1.4rem -0.4rem color-mix(in srgb, var(--accent) 55%, transparent);
+    0 0.1rem 0.25rem color-mix(in srgb, var(--shadow) 16%, transparent),
+    0 0.55rem 1.2rem -0.45rem color-mix(in srgb, var(--shadow) 45%, transparent);
 }
 
-.candy::before,
-button.primary::before {
-  content: '';
-  position: absolute;
-  inset: 0.2rem 0.6rem auto;
-  height: 42%;
-  border-radius: 0.9rem 0.9rem 0.6rem 0.6rem;
-  background: linear-gradient(rgb(255 255 255 / 0.42), rgb(255 255 255 / 0));
-  pointer-events: none;
-  z-index: -1;
-}
-
-.candy:hover:not(:disabled),
 button.primary:hover:not(:disabled) {
+  border-color: var(--lip);
   transform: translateY(-1px);
   box-shadow:
-    0 0.38rem 0 var(--lip),
-    0 0.9rem 1.6rem -0.4rem color-mix(in srgb, var(--accent) 60%, transparent);
+    0 0.15rem 0.35rem color-mix(in srgb, var(--shadow) 18%, transparent),
+    0 0.8rem 1.5rem -0.5rem color-mix(in srgb, var(--shadow) 50%, transparent);
 }
 
-.candy:active:not(:disabled),
 button.primary:active:not(:disabled) {
-  transform: translateY(0.28rem);
+  transform: translateY(0.12rem);
   box-shadow:
-    0 0.04rem 0 var(--lip),
-    0 0.3rem 0.6rem -0.3rem color-mix(in srgb, var(--accent) 50%, transparent);
+    0 0.05rem 0.15rem color-mix(in srgb, var(--shadow) 20%, transparent),
+    0 0.25rem 0.6rem -0.3rem color-mix(in srgb, var(--shadow) 35%, transparent);
 }
 
-.candy:disabled,
 button.primary:disabled {
-  --face: var(--pad);
-  --lip: var(--rule);
+  background: var(--pad);
   color: var(--quiet);
-  box-shadow: 0 0.2rem 0 var(--lip);
-  border: 2px dashed var(--rule);
+  border: 1.5px dashed var(--rule);
+  box-shadow: none;
 }
 
-.candy:disabled::before,
-button.primary:disabled::before {
-  display: none;
-}
-
-/* Pressed and held down while the dice roll, then it pops back up. */
 /* Held down while you shake and while the dice roll, then it pops back up. */
-.candy.busy,
-.candy.busy:hover:not(:disabled),
-.candy.busy:active:not(:disabled),
-.candy.busy:disabled {
-  --face: var(--accent);
-  --lip: color-mix(in oklab, var(--accent), #000 24%);
-  border: 0;
+button.primary.busy,
+button.primary.busy:hover:not(:disabled),
+button.primary.busy:active:not(:disabled),
+button.primary.busy:disabled {
+  --lip: color-mix(in oklab, var(--accent), #000 22%);
+  background: var(--accent);
   color: var(--on-accent);
-  transform: translateY(0.28rem);
-  box-shadow: 0 0.04rem 0 var(--lip);
+  border: 1.5px solid var(--lip);
+  transform: translateY(0.12rem);
+  box-shadow:
+    0 0.05rem 0.15rem color-mix(in srgb, var(--shadow) 20%, transparent),
+    0 0.25rem 0.6rem -0.3rem color-mix(in srgb, var(--shadow) 35%, transparent);
 }
 
-.candy.busy:not(:disabled) {
+button.primary.busy:not(:disabled) {
   animation: jiggle 110ms linear infinite;
 }
 
 @keyframes jiggle {
   25% {
-    transform: translate(-1px, 0.28rem) rotate(-0.4deg);
+    transform: translate(-1px, 0.12rem) rotate(-0.4deg);
   }
   75% {
-    transform: translate(1px, 0.28rem) rotate(0.4deg);
+    transform: translate(1px, 0.12rem) rotate(0.4deg);
   }
-}
-
-.candy.busy:disabled::before {
-  display: block;
-  opacity: 0.6;
 }
 
 button.big {
@@ -262,7 +278,7 @@ kbd {
 input[type='text'],
 input:not([type]) {
   min-height: 48px;
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 0.75rem;
   background: var(--pad);
   padding: 0 0.85rem;
@@ -270,7 +286,7 @@ input:not([type]) {
 }
 
 input:not([type]):focus {
-  border-color: var(--accent);
+  border-color: var(--exposed);
 }
 
 .toggle {
@@ -285,7 +301,7 @@ input:not([type]):focus {
 .toggle input {
   width: 1.5rem;
   height: 1.5rem;
-  accent-color: var(--accent);
+  accent-color: var(--exposed);
 }
 
 .slider {
@@ -297,12 +313,12 @@ input:not([type]):focus {
 .slider input {
   width: 100%;
   min-height: 2rem;
-  accent-color: var(--accent);
+  accent-color: var(--exposed);
 }
 
 .panel {
   background: var(--pad);
-  border: 2px solid var(--rule);
+  border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.1rem 1.25rem;
@@ -339,16 +355,16 @@ input:not([type]):focus {
 }
 
 .segmented button[aria-pressed='true'] {
-  border-color: var(--accent);
-  color: var(--on-accent);
-  font-weight: 800;
+  border-color: var(--exposed);
+  color: var(--on-exposed);
+  font-weight: 700;
 }
 
 .seg-pill {
   position: absolute;
-  inset: -2px;
+  inset: -1.5px;
   border-radius: inherit;
-  background: var(--accent);
+  background: var(--exposed);
   z-index: -1;
 }
 
@@ -359,7 +375,7 @@ input:not([type]):focus {
 /* ---------- Corner ---------- */
 
 .corner {
-  position: fixed;
+  position: absolute;
   top: 0.6rem;
   right: 0.75rem;
   z-index: 20;
@@ -376,6 +392,23 @@ input:not([type]):focus {
 
 .corner .icon:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+/* At the table the controls sit on the Prussian band: white line icons, no chrome. */
+body:has(.screen.game) .corner .icon {
+  border-color: color-mix(in srgb, var(--on-band) 35%, transparent);
+  background: transparent;
+  color: var(--on-band);
+  box-shadow: none;
+}
+
+body:has(.screen.game) .corner .icon:hover:not(:disabled) {
+  border-color: var(--on-band);
+}
+
+/* Every other screen leaves the top-right corner to the controls. */
+.screen:not(.game, .centered) {
+  padding-top: 4.4rem;
 }
 
 .settings {
@@ -422,15 +455,15 @@ input:not([type]):focus {
   margin: 0;
   padding: 0.35rem 0.5rem 0.35rem 1.1rem;
   border-radius: 999px;
-  background: var(--butter);
-  color: var(--on-fill);
+  background: var(--sensitizer);
+  color: var(--on-sensitizer);
   box-shadow: var(--shadow-md);
   font-weight: 700;
 }
 
 .banner button {
   min-height: 40px;
-  border-color: var(--on-fill);
+  border-color: var(--on-sensitizer);
   color: var(--text);
 }
 
@@ -443,17 +476,73 @@ input:not([type]):focus {
   margin-top: 0.5rem;
 }
 
+/* The name form is a sheet of paper too. */
+.guest.panel {
+  border-color: color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: 0.3rem;
+  background: var(--pad) var(--grain);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
+}
+
 .guest label {
   font-weight: 700;
 }
 
-/* The wordmark with its jelly die. */
+/*
+ * The wordmark on a sunprint plate: Prussian blue, white seaweed pressed
+ * along its edges, and the porcelain die turning beside the name.
+ */
 .brand {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: auto auto;
   align-items: center;
   justify-content: center;
-  column-gap: 0.4rem;
+  column-gap: 0.5rem;
+  /* Wide margins, so the fronds grow beside the name, not through it. */
+  padding: 1.1rem 6.75rem 1.2rem;
+  border-radius: 0.3rem;
+  color: var(--on-band);
+}
+
+.brand-frond {
+  position: absolute;
+  bottom: 0.3rem;
+  z-index: -1;
+  height: 88%;
+  max-width: 5rem;
+  color: var(--on-band);
+  opacity: 0.85;
+  /* A soft over-exposure halo, like light creeping under the specimen. */
+  filter: drop-shadow(0 0 0.14rem color-mix(in srgb, var(--on-band) 35%, transparent));
+}
+
+.brand-frond.left {
+  left: 0.6rem;
+}
+
+.brand-frond.right {
+  right: 0.6rem;
+  height: 96%;
+}
+
+@media (max-width: 30rem) {
+  .brand {
+    padding-inline: 1rem;
+  }
+
+  /* No margin for them beside the name on a phone. */
+  .brand-frond {
+    display: none;
+  }
+
+  .brand .brand-die {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
 }
 
 .brand-die {
@@ -483,18 +572,19 @@ input:not([type]):focus {
 }
 
 .brand .wordmark {
-  font-size: 3rem;
-  line-height: 1;
+  font-size: clamp(2.3rem, 8.5vw, 3.4rem);
+  line-height: 1.05;
+  color: var(--on-band);
 }
 
 .tagline {
   margin: 0;
-  color: var(--quiet);
+  color: color-mix(in srgb, var(--on-band) 82%, transparent);
   font-weight: 700;
   text-align: left;
 }
 
-/* ---------- Avatars and flavors ---------- */
+/* ---------- Avatars and tints ---------- */
 
 .avatar {
   position: relative;
@@ -503,7 +593,7 @@ input:not([type]):focus {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  border: 3px solid var(--candy);
+  border: 3px solid var(--hue);
   background: var(--pad);
 }
 
@@ -516,7 +606,7 @@ input:not([type]):focus {
 }
 
 .avatar-face {
-  background: var(--candy);
+  background: var(--hue);
 }
 
 .avatar .initial {
@@ -528,7 +618,7 @@ input:not([type]):focus {
   padding: 0 0.2rem;
   border-radius: 999px;
   background: var(--pad);
-  border: 2px solid var(--candy);
+  border: 2px solid var(--hue);
   color: var(--ink);
   font-size: 0.8rem;
   font-weight: 800;
@@ -536,45 +626,43 @@ input:not([type]):focus {
   text-align: center;
 }
 
-.flavors {
+.tints {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
   gap: 0.5rem;
 }
 
-.flavor {
+.tint {
   justify-content: flex-start;
   gap: 0.65rem;
   padding: 0 0.9rem 0 0.35rem;
   color: var(--text);
 }
 
-.flavor .swatch {
+.tint .swatch {
   flex: none;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  background: var(--candy);
+  background: var(--hue);
   display: grid;
   place-items: center;
   font-weight: 800;
-  color: var(--pad);
-  box-shadow:
-    inset 0 -0.2rem 0 rgb(0 0 0 / 0.16),
-    inset 0 0.25rem 0.35rem rgb(255 255 255 / 0.45);
+  color: var(--on-sensitizer);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shadow) 18%, transparent);
 }
 
-.flavor[aria-pressed='true'] {
-  border-color: var(--candy);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--candy) 28%, transparent);
-  font-weight: 800;
+.tint[aria-pressed='true'] {
+  border-color: var(--hue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hue) 28%, transparent);
+  font-weight: 700;
 }
 
-.flavor:disabled {
+.tint:disabled {
   color: var(--quiet);
 }
 
-.flavor:disabled .swatch {
+.tint:disabled .swatch {
   opacity: 0.55;
 }
 
@@ -592,7 +680,6 @@ input:not([type]):focus {
 
 .lobby h2 .count {
   color: var(--quiet);
-  font-weight: 700;
 }
 
 .seats {
@@ -637,13 +724,13 @@ input:not([type]):focus {
   top: -0.85rem;
   left: 50%;
   translate: -50% 0;
-  color: var(--butter);
+  color: var(--exposed);
   font-size: 1.2rem;
   filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--shadow) 40%, transparent));
 }
 
 .seat-name {
-  font-weight: 700;
+  font-weight: 600;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -661,30 +748,75 @@ input:not([type]):focus {
 }
 
 .badge {
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 999px;
   padding: 0 0.5rem;
   color: var(--quiet);
-  font-weight: 700;
+  font-weight: 600;
 }
 
+/*
+ * The lobby is one herbarium sheet: two columns of sections, each captioned in
+ * the copperplate hand, with a rule between the columns.
+ */
 .lobby-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
   align-items: start;
+  padding: 1.5rem 1.75rem 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: 0.3rem;
+  background: var(--pad) var(--grain);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
 }
 
 .lobby-stack {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.6rem;
   min-width: 0;
+}
+
+.lobby-stack + .lobby-stack {
+  margin-left: 1.75rem;
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--rule);
+}
+
+.lobby .panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.lobby h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.95rem;
+  line-height: 1.2;
+}
+
+.lobby h2 .count {
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  font-weight: 600;
 }
 
 @media (max-width: 48rem) {
   .lobby-columns {
     grid-template-columns: 1fr;
+    padding: 1.25rem;
+  }
+
+  .lobby-stack + .lobby-stack {
+    margin: 1.6rem 0 0;
+    padding: 1.6rem 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--rule);
   }
 }
 
@@ -729,13 +861,42 @@ input:not([type]):focus {
   gap: 0.5rem;
 }
 
+/*
+ * A Prussian band across the whole window, under the corner controls, with
+ * the wordmark and a pressed frond. Its print layer bleeds to the window's
+ * edges, with a brushed lower edge.
+ */
 .topbar {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
-  min-height: 3rem;
-  gap: 1rem;
+  min-height: 3.6rem;
+  gap: 0.6rem;
+  margin-top: -0.6rem;
   /* Clear the corner controls. */
   padding-right: 11rem;
+  color: var(--on-band);
+}
+
+.topbar.print::before {
+  /* Starts above the window, so only the lower edge shows the brush. */
+  inset: -1.5rem auto -0.2rem 50%;
+  width: 100vw;
+  translate: -50% 0;
+  border-radius: 0;
+}
+
+.topbar .wordmark {
+  color: var(--on-band);
+}
+
+.band-frond {
+  height: 3.1rem;
+  width: auto;
+  align-self: flex-end;
+  margin-bottom: -0.1rem;
+  filter: drop-shadow(0 0 0.12rem color-mix(in srgb, var(--on-band) 35%, transparent));
 }
 
 .table-layout {
@@ -752,7 +913,7 @@ input:not([type]):focus {
   min-width: 0;
 }
 
-/* Whose turn it is, in their flavor, with the rolls left as dots. */
+/* Whose turn it is, in their tint, with the rolls left as dots. The name is in script, poster size on your own turn. */
 .turn-banner {
   display: flex;
   align-items: center;
@@ -766,12 +927,12 @@ input:not([type]):focus {
   display: flex;
 }
 
-/* Your turn: a ring in your flavor ripples out from your face, twice. */
+/* Your turn: a ring in your tint ripples out from your face, twice. */
 .turn-pulse {
   position: absolute;
   inset: -0.2rem;
   border-radius: 50%;
-  border: 3px solid var(--candy);
+  border: 3px solid var(--hue);
   pointer-events: none;
   opacity: 0;
   animation: turn-pulse 900ms var(--ease-out) 2;
@@ -805,11 +966,26 @@ input:not([type]):focus {
   display: inline-block;
 }
 
-.turn-banner.yours .status {
+.status.script {
   font-family: var(--display);
-  font-weight: 700;
-  font-size: 1.75rem;
-  line-height: 1.1;
+  font-weight: 400;
+  font-size: clamp(2.2rem, 3.6vw, 3.8rem);
+  line-height: 1.15;
+}
+
+.turn-banner.yours .status.script {
+  font-size: clamp(2.6rem, 5vw, 5.4rem);
+}
+
+@media (max-width: 30rem) {
+  .status.script,
+  .turn-banner.yours .status.script {
+    font-size: 2.2rem;
+  }
+}
+
+.turn-banner.yours .status:not(.script) {
+  font-weight: 800;
 }
 
 .roll-dots {
@@ -822,14 +998,14 @@ input:not([type]):focus {
   width: 0.85rem;
   height: 0.85rem;
   border-radius: 50%;
-  border: 2.5px solid var(--candy);
+  border: 2.5px solid var(--hue);
   transition:
     background-color var(--dur) var(--ease-out),
     transform var(--dur-slow) var(--ease-spring);
 }
 
 .roll-dots span.on {
-  background: var(--candy);
+  background: var(--hue);
   transform: scale(1.12);
 }
 
@@ -849,7 +1025,7 @@ input:not([type]):focus {
   max-width: 34rem;
 }
 
-.action-row .candy.big {
+.action-row .primary.big {
   flex: 1;
 }
 
@@ -867,7 +1043,7 @@ input:not([type]):focus {
   width: 100%;
   max-width: 34rem;
   padding: 0.7rem;
-  border: 2px solid var(--accent);
+  border: 1.5px solid var(--exposed);
   border-radius: var(--radius-lg);
   background: var(--pad);
   box-shadow: var(--shadow-md);
@@ -883,7 +1059,7 @@ input:not([type]):focus {
   gap: 0.6rem;
 }
 
-.confirm-buttons .candy {
+.confirm-buttons .primary {
   padding: 0 1.4rem;
 }
 
@@ -951,7 +1127,7 @@ input:not([type]):focus {
 }
 
 .dice-stage.flat .die.held {
-  outline: 4px solid var(--butter);
+  outline: 4px solid var(--sensitizer);
   outline-offset: 3px;
 }
 
@@ -964,8 +1140,7 @@ input:not([type]):focus {
   border-radius: 1.1rem;
   background: var(--die);
   box-shadow:
-    inset 0 -0.35rem 0 rgb(0 0 0 / 0.14),
-    inset 0.3rem 0.3rem 0.6rem rgb(255 255 255 / 0.45),
+    inset 0 -0.25rem 0 color-mix(in srgb, var(--pip) 12%, transparent),
     var(--shadow-sm);
 }
 
@@ -981,7 +1156,7 @@ input:not([type]):focus {
   visibility: hidden;
 }
 
-/* A Yatzy: the word over the sprinkles in the 3D scene. */
+/* A Yatzy: the word, in script, over the frond exposing on the felt. */
 .celebrate {
   position: absolute;
   inset: 0;
@@ -992,77 +1167,45 @@ input:not([type]):focus {
 
 .celebrate-word {
   font-family: var(--display);
-  font-size: 4.2rem;
-  color: var(--text);
+  font-size: 4.6rem;
+  color: var(--on-band);
   text-shadow:
-    0 0 0.5rem var(--bg),
-    0 0 1.2rem var(--bg),
-    0 0.2rem 0 var(--butter);
+    0 0.1rem 0.4rem color-mix(in srgb, var(--shadow) 55%, transparent),
+    0 0 1.4rem color-mix(in srgb, var(--shadow) 50%, transparent);
   animation: celebrate 1400ms var(--ease-out) forwards;
 }
 
 @keyframes celebrate {
   0% {
     opacity: 0;
-    transform: scale(0.3) rotate(-10deg);
+    filter: blur(6px);
+    transform: scale(0.92);
   }
-  22% {
+  25% {
     opacity: 1;
-    transform: scale(1.12) rotate(3deg);
-  }
-  34% {
-    transform: scale(0.98) rotate(-1deg);
-  }
-  80% {
-    opacity: 1;
-    transform: scale(1) rotate(0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.06);
-  }
-}
-
-/* Sprinkles for the results. */
-.confetti {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.confetti span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0.75rem;
-  height: 0.3rem;
-  border-radius: 999px;
-  opacity: 0;
-  animation: sprinkle 1300ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
-}
-
-@keyframes sprinkle {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(var(--rot)) scale(0.4);
+    filter: blur(0);
+    transform: scale(1);
   }
   80% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 3rem))
-      rotate(calc(var(--rot) + 260deg)) scale(1);
+    filter: blur(3px);
+    transform: scale(1.03);
   }
 }
 
 /* ---------- The score pad: one ruled sheet ---------- */
 
+/* The pad is a sheet of paper on the table, not a card. */
 .pad-col {
-  background: var(--pad);
-  border: 2px solid var(--rule);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  background: var(--pad) var(--grain);
+  border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: 0.3rem;
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
   padding: 0.85rem 1rem 1rem;
   overflow-x: auto;
   min-width: 0;
@@ -1074,7 +1217,7 @@ input:not([type]):focus {
   color: var(--quiet);
 }
 
-/* One tab per player across the top of the sheet; the chosen one wears their candy. */
+/* One tab per player across the top of the sheet; the chosen one wears their tint. */
 .pad-tabs {
   display: flex;
   gap: 0.4rem;
@@ -1083,7 +1226,7 @@ input:not([type]):focus {
   margin: -0.4rem -0.5rem 0;
   padding: 0.4rem 0.5rem 0;
   /* The rule is drawn inside the row so the chosen tab can cover it without overflowing. */
-  box-shadow: inset 0 -2px 0 var(--rule);
+  box-shadow: inset 0 -1px 0 var(--rule);
 }
 
 .pad-tab {
@@ -1096,7 +1239,7 @@ input:not([type]):focus {
   min-height: 3.4rem;
   padding: 0.3rem 1rem 0.3rem 0.45rem;
   border: 0;
-  border-radius: 1rem 1rem 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: transparent;
   color: var(--text);
 }
@@ -1110,7 +1253,7 @@ input:not([type]):focus {
 }
 
 .pad-tab[aria-selected='true'] {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .pad-tab[aria-selected='true']:hover {
@@ -1121,11 +1264,10 @@ input:not([type]):focus {
   position: absolute;
   inset: 0;
   z-index: -1;
-  border: 2px solid var(--candy);
+  border: 1.5px solid var(--hue);
   border-bottom: 0;
   border-radius: inherit;
-  background: var(--pad);
-  box-shadow: inset 0 0.3rem 0 var(--candy);
+  background: color-mix(in srgb, var(--hue) 12%, var(--pad));
 }
 
 .pad-tab:focus-visible {
@@ -1143,16 +1285,16 @@ input:not([type]):focus {
 
 .tab-tag {
   padding: 0 0.5rem;
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 999px;
   color: var(--quiet);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .tab-tag.up {
-  border-color: var(--butter);
-  background: var(--butter);
-  color: var(--on-fill);
+  border-color: var(--exposed);
+  background: var(--exposed);
+  color: var(--on-exposed);
 }
 
 /* Someone else just wrote on their pad: their dot pulses on the tab, then fades. */
@@ -1164,7 +1306,7 @@ input:not([type]):focus {
   height: 1rem;
   border-radius: 50%;
   border: 2px solid var(--pad);
-  background: var(--candy);
+  background: var(--hue);
   opacity: 0;
   pointer-events: none;
   animation: tab-pulse 2400ms ease-out forwards;
@@ -1206,8 +1348,8 @@ input:not([type]):focus {
   margin: 0.2rem 0 0.6rem;
   padding: 0.5rem 0.6rem 0.5rem 1rem;
   border-radius: var(--radius);
-  background: var(--butter);
-  color: var(--on-fill);
+  background: var(--sensitizer);
+  color: var(--on-sensitizer);
 }
 
 .look-only p {
@@ -1238,9 +1380,9 @@ input:not([type]):focus {
 
 .pad thead th {
   text-align: center;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--quiet);
-  border-bottom: 2px solid var(--rule);
+  border-bottom: 1.5px solid var(--rule);
   white-space: nowrap;
 }
 
@@ -1250,7 +1392,7 @@ input:not([type]):focus {
 
 .pad tbody th {
   text-align: left;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -1273,7 +1415,7 @@ input:not([type]):focus {
 }
 
 .die-glyph circle {
-  fill: var(--text);
+  fill: var(--exposed);
 }
 
 .box-points {
@@ -1307,35 +1449,58 @@ input:not([type]):focus {
   color: var(--ink);
 }
 
-.pop-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 2.6rem;
-  height: 2.6rem;
-  margin: -1.3rem 0 0 -1.3rem;
-  border-radius: 50%;
-  border: 3px solid var(--candy);
-  opacity: 0;
-  animation: ring 600ms var(--ease-out);
-  pointer-events: none;
+/*
+ * The signature: a new score develops like a sunprint. It starts as the
+ * sensitizer's yellow-green, blurred, while a Prussian wash spreads behind
+ * it; then the wash clears and the number sets in the player's ink.
+ */
+.pad .filled .score.developing {
+  animation: develop 1300ms var(--ease-develop) both;
 }
 
-@keyframes ring {
+@keyframes develop {
   0% {
-    opacity: 0.9;
-    transform: scale(0.3);
+    color: var(--sensitizer);
+    filter: blur(2.5px);
+    opacity: 0.35;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    color: var(--ink);
+    filter: blur(0);
+  }
+}
+
+.wash {
+  position: absolute;
+  inset: 0.2rem 0.25rem;
+  border-radius: 0.55rem;
+  background: var(--exposed);
+  opacity: 0;
+  pointer-events: none;
+  animation: wash 1300ms var(--ease-develop);
+}
+
+@keyframes wash {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.35);
+  }
+  22% {
+    opacity: 0.2;
   }
   100% {
     opacity: 0;
-    transform: scale(1.8);
+    transform: scaleX(1);
   }
 }
 
 /*
- * Previews read as previews by shape. A box this roll scores in is a solid
- * mint pill; a zero is a small dashed chip in deep mauve; the one you picked
- * turns bubblegum with a check.
+ * Previews read as previews by shape and by the print's own states. A box
+ * this roll scores in is unexposed paper, sensitizer yellow-green; a zero is
+ * a small dashed chip; the one you picked is exposed, Prussian, with a check.
  */
 .preview {
   display: inline-flex;
@@ -1346,11 +1511,11 @@ input:not([type]):focus {
   min-height: min(1.75rem, calc(var(--row, 2.65rem) - 0.3rem));
   padding: 0 0.6rem;
   line-height: 1.1;
-  border: 2px dashed var(--quiet);
-  border-radius: 0.7rem;
+  border: 1.5px dashed var(--quiet);
+  border-radius: 0.55rem;
   background: transparent;
   color: var(--quiet);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 1.0625rem;
   font-variant-numeric: tabular-nums;
   animation: preview-in var(--dur) var(--ease-out) both;
@@ -1381,39 +1546,39 @@ input:not([type]):focus {
 
 .preview.scores {
   border: 0;
-  background: var(--mint);
-  color: var(--on-fill);
-  box-shadow: inset 0 -0.15rem 0 color-mix(in srgb, var(--shadow) 14%, transparent);
+  background: var(--sensitizer);
+  color: var(--on-sensitizer);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shadow) 10%, transparent);
 }
 
 .preview.scores:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow:
-    inset 0 -0.15rem 0 color-mix(in srgb, var(--shadow) 14%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--shadow) 10%, transparent),
     var(--shadow-sm);
 }
 
 .preview.chosen,
 .preview.chosen:hover:not(:disabled) {
   border: 0;
-  background: var(--accent);
-  color: var(--on-accent);
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 30%, transparent);
+  background: var(--exposed);
+  color: var(--on-exposed);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--exposed) 25%, transparent);
   transform: none;
   animation: chosen 1.8s var(--ease-in-out) infinite;
 }
 
 @keyframes chosen {
   50% {
-    box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--accent) 18%, transparent);
+    box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--exposed) 12%, transparent);
   }
 }
 
 .bonus-tag {
   padding: 0 0.45rem;
   border-radius: 999px;
-  background: var(--butter);
-  color: var(--on-fill);
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 1.0625rem;
   font-weight: 800;
   display: inline-block;
@@ -1446,7 +1611,7 @@ input:not([type]):focus {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--mint);
+  background: var(--exposed);
   transition: width var(--dur-slow) var(--ease-out);
 }
 
@@ -1465,15 +1630,15 @@ input:not([type]):focus {
   place-items: center;
   width: 1.6rem;
   height: 1.6rem;
-  border: 2px solid var(--rule);
-  border-radius: 0.45rem;
+  border: 1.5px solid var(--rule);
+  border-radius: 0.4rem;
   font-weight: 800;
 }
 
 .bonus-boxes span.earned {
-  border-color: var(--mint);
-  background: var(--mint);
-  color: var(--on-fill);
+  border-color: var(--exposed);
+  background: var(--exposed);
+  color: var(--on-exposed);
 }
 
 /* ---------- Laptop: everything in one window ---------- */
@@ -1548,31 +1713,93 @@ input:not([type]):focus {
   max-width: 42rem;
 }
 
+/*
+ * The winner on a sunprint plate. As the results arrive the fronds expose
+ * beside the name: they develop out of a blur, the one authored moment here.
+ */
 .winner-banner {
   position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
-  padding: 2.5rem 0 1rem;
+  min-height: 12rem;
+  padding: 2rem 6rem;
+  border-radius: 0.3rem;
+  color: var(--on-band);
+}
+
+.winner-banner .brand-frond {
+  height: 92%;
+  max-width: 7rem;
+  animation: expose 2200ms var(--ease-develop) both;
+}
+
+.winner-banner .brand-frond.right {
+  animation-delay: 180ms;
+}
+
+@keyframes expose {
+  0% {
+    opacity: 0;
+    filter: blur(6px) drop-shadow(0 0 0.14rem color-mix(in srgb, var(--on-band) 35%, transparent));
+  }
+  60% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0.85;
+    filter: blur(0) drop-shadow(0 0 0.14rem color-mix(in srgb, var(--on-band) 35%, transparent));
+  }
 }
 
 .winner-banner .wordmark {
   text-align: center;
-  font-size: 3rem;
+  font-size: clamp(2.4rem, 7vw, 3.8rem);
+  color: var(--on-band);
+  text-wrap: balance;
 }
 
+@media (max-width: 30rem) {
+  .winner-banner {
+    padding-inline: 1.25rem;
+  }
+
+  .winner-banner .brand-frond {
+    display: none;
+  }
+}
+
+/* The standings: rows ruled on one sheet, totals large in each player's ink. */
 .standings {
   list-style: none;
-  padding: 0;
+  padding: 0.25rem 0;
   margin: 0;
   display: grid;
-  gap: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: 0.3rem;
+  background: var(--pad) var(--grain);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
 }
 
-.standing.top {
-  border-color: var(--butter);
-  box-shadow:
-    var(--shadow-md),
-    0 0 0 3px color-mix(in srgb, var(--butter) 45%, transparent);
+.standings .standing {
+  padding: 0.9rem 1.4rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.standings .standing + .standing {
+  border-top: 1px solid var(--rule);
+}
+
+.standing.top .standing-name {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 2rem;
+  line-height: 1.15;
 }
 
 .row {
@@ -1594,18 +1821,23 @@ input:not([type]):focus {
 }
 
 .standing.top .rank {
-  background: var(--butter);
-  color: var(--on-fill);
+  background: var(--exposed);
+  color: var(--on-exposed);
 }
 
 .standing-name {
   font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.standing.top .total {
+  font-size: 3rem;
 }
 
 .standings .total {
   margin-left: auto;
-  font-family: var(--display);
-  font-size: 2rem;
+  font-weight: 800;
+  font-size: 2.2rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--ink);

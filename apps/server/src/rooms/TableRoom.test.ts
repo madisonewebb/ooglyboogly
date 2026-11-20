@@ -7,7 +7,7 @@ import {
   type Lobby,
   type MoveMessage,
   MSG_ERROR,
-  MSG_FLAVOR,
+  MSG_TINT,
   MSG_HOLD,
   MSG_LOBBY,
   MSG_MOVE,
@@ -233,36 +233,36 @@ describe('table room', () => {
     await playTurn(back);
   });
 
-  it('gives each seat its own flavor, honoring the pick when it is free', async () => {
+  it('gives each seat its own tint, honoring the pick when it is free', async () => {
     t = await startTestServer();
-    const a = await join('Madi', 'inst-1', 'u-Madi', { flavor: 'grape' });
-    const b = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'lemon' });
-    const c = await join('Mema', 'inst-1', 'u-Mema', { flavor: 'grape' });
-    const d = await join('Kid', 'inst-1', 'u-Kid', { flavor: 'mud' });
+    const a = await join('Madi', 'inst-1', 'u-Madi', { tint: 'heather' });
+    const b = await join('Mom', 'inst-1', 'u-Mom', { tint: 'primrose' });
+    const c = await join('Mema', 'inst-1', 'u-Mema', { tint: 'heather' });
+    const d = await join('Kid', 'inst-1', 'u-Kid', { tint: 'mud' });
     await until(() => a.lobby!.seats.length === 4, 'four seats');
-    expect(a.lobby!.seats.map((s) => s.flavor)).toEqual([
-      'grape',
-      'lemon',
-      'raspberry',
-      'blueberry',
+    expect(a.lobby!.seats.map((s) => s.tint)).toEqual(['heather', 'primrose', 'rose', 'seaglass']);
+
+    // Changing tint: a free pick applies; a taken one leaves the tint as it was.
+    c.room.send(MSG_TINT, { tint: 'walnut' });
+    await until(() => a.lobby!.seats[2]!.tint === 'walnut', 'walnut');
+    d.room.send(MSG_TINT, { tint: 'heather' });
+    d.room.send(MSG_TINT, { tint: 'marigold' });
+    await until(() => a.lobby!.seats[3]!.tint === 'marigold', 'marigold');
+    expect(a.lobby!.seats.map((s) => s.tint)).toEqual([
+      'heather',
+      'primrose',
+      'walnut',
+      'marigold',
     ]);
+    expect(await d.expectError(MSG_TINT, { tint: 'mud' })).toBe('BAD_INTENT');
 
-    // Changing flavor: a free pick applies; a taken one leaves the flavor as it was.
-    c.room.send(MSG_FLAVOR, { flavor: 'cocoa' });
-    await until(() => a.lobby!.seats[2]!.flavor === 'cocoa', 'cocoa');
-    d.room.send(MSG_FLAVOR, { flavor: 'grape' });
-    d.room.send(MSG_FLAVOR, { flavor: 'tangerine' });
-    await until(() => a.lobby!.seats[3]!.flavor === 'tangerine', 'tangerine');
-    expect(a.lobby!.seats.map((s) => s.flavor)).toEqual(['grape', 'lemon', 'cocoa', 'tangerine']);
-    expect(await d.expectError(MSG_FLAVOR, { flavor: 'mud' })).toBe('BAD_INTENT');
-
-    // A dropped seat frees its flavor; a rejoin whose pick is taken gets the first free one.
+    // A dropped seat frees its tint; a rejoin whose pick is taken gets the first free one.
     await b.room.leave();
-    const b2 = await join('Mom', 'inst-1', 'u-Mom', { flavor: 'cocoa' });
-    expect(b2.lobby!.seats.find((s) => s.user.id === 'u-Mom')!.flavor).toBe('raspberry');
-    // After the start, flavors are locked.
+    const b2 = await join('Mom', 'inst-1', 'u-Mom', { tint: 'walnut' });
+    expect(b2.lobby!.seats.find((s) => s.user.id === 'u-Mom')!.tint).toBe('rose');
+    // After the start, tints are locked.
     await startGame(a, [b2, c, d], {});
-    expect(await a.expectError(MSG_FLAVOR, { flavor: 'lemon' })).toBe('STARTED');
+    expect(await a.expectError(MSG_TINT, { tint: 'primrose' })).toBe('STARTED');
   });
 
   it('seats late arrivals as spectators who cannot act', async () => {

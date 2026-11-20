@@ -4,7 +4,15 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/coverage/**', 'e2e/test-results/**', 'e2e/playwright-report/**'],
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      'e2e/test-results/**',
+      'e2e/playwright-report/**',
+      // Impeccable's installed skills and its working files.
+      '.claude/**',
+      '**/.impeccable/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.strict,

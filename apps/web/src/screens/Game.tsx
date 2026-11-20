@@ -17,8 +17,9 @@ import {
 } from '@rollhouse/rules';
 import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
+import { Frond } from '../Frond';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
-import { flavorOf, flavorVars } from '../flavor';
+import { tintOf, tintVars } from '../tint';
 import { CheckIcon, DieGlyph } from '../icons';
 import { BOX_LABELS, BOX_POINTS } from '../labels';
 import { playBonus, playPop, playTurn, unlockAudio } from '../sound';
@@ -129,7 +130,7 @@ function onControl(t: EventTarget | null): boolean {
 }
 
 export function Game({ game, lobby, table, seat, cdnBase }: Props) {
-  const { theme } = usePrefs();
+  const { theme, reducedMotion } = usePrefs();
   const active = activePlayers(game);
   const [viewed, setViewed] = useState<number>(seat ?? active[0] ?? 0);
   const [pick, setPick] = useState<Pick | null>(null);
@@ -139,10 +140,21 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const up = turns ? game.setup.turnOrder[game.pointer]! : null;
 
   // In Take turns, the pad follows whoever is up, so everyone watches scores land.
-  // It only moves when the turn changes, so a tab you pick stays put until then.
+  // It only moves when the turn changes, so a tab you pick stays put until then,
+  // and it waits for the score just written to develop before it moves on.
+  const followed = useRef(false);
+  const [settling, setSettling] = useState(false);
   useEffect(() => {
-    if (up !== null) setViewed(up);
-  }, [up]);
+    if (up === null) return;
+    const wait = followed.current && !reducedMotion ? DEVELOP_MS : 0;
+    followed.current = true;
+    setSettling(wait > 0);
+    const t = setTimeout(() => {
+      setViewed(up);
+      setSettling(false);
+    }, wait);
+    return () => clearTimeout(t);
+  }, [up, reducedMotion]);
 
   // In Everyone at once, a score on someone else's pad pulses their tab.
   const pulses = useScorePulses(game, seat, viewed, !turns);
@@ -237,6 +249,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     return `Still playing: ${still.join(', ')}`;
   })();
   const yours = (turns && up === seat) || (!turns && canAct);
+  // "Your turn" and "Mom's turn" are short enough for the script; longer lines stay plain.
+  const scriptStatus = turns && (up === seat || lobby.seats[up!]?.connected !== false);
 
   const holdable = myTray && dice !== null && rollsLeft > 0 && !rolling && !shaking;
   const allHeld = turn.held.every(Boolean);
@@ -331,11 +345,12 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   }, []);
 
   const multi = player.cards.length > 1;
-  const viewedFlavor = lobby.seats[viewed]?.flavor;
-  const trayFlavor = lobby.seats[trayPlayer]?.flavor;
+  const viewedTint = lobby.seats[viewed]?.tint;
+  const trayTint = lobby.seats[trayPlayer]?.tint;
   const trayUser = lobby.seats[trayPlayer]?.user;
   // Your go, but you're looking at someone else's pad: say so, with a way back.
-  const lookingAway = !mine && seat !== null && canAct && (!turns || up === seat);
+  // Not while the pad is still showing the last score develop on its way to yours.
+  const lookingAway = !mine && !settling && seat !== null && canAct && (!turns || up === seat);
   const where = (p: { card: number; box: Box }) =>
     `${BOX_LABELS[p.box].long}${multi ? ` on card ${p.card + 1}` : ''}`;
 
@@ -379,16 +394,14 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
 
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
-      <header className="topbar">
+      <header className="topbar print">
         <span className="wordmark small">Rollhouse</span>
+        <Frond seed={23} depth={2} lean={0.2} className="band-frond" />
       </header>
 
       <div className="table-layout">
         <section className="tray-col" aria-label="Dice">
-          <div
-            className={`turn-banner${yours ? ' yours' : ''}`}
-            style={flavorVars(trayFlavor, theme)}
-          >
+          <div className={`turn-banner${yours ? ' yours' : ''}`} style={tintVars(trayTint, theme)}>
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
                 key={trayPlayer}
@@ -397,13 +410,13 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 animate={{ opacity: 1, scale: 1, rotate: 0, transition: SPRING.pop }}
                 exit={{ opacity: 0, scale: 0.6, transition: { duration: DURATION.fast } }}
               >
-                {trayUser && <Avatar user={trayUser} cdnBase={cdnBase} flavor={trayFlavor} />}
+                {trayUser && <Avatar user={trayUser} cdnBase={cdnBase} tint={trayTint} />}
                 {myTurn && turnPulse > 0 && trayPlayer === seat && (
                   <span key={turnPulse} className="turn-pulse" aria-hidden="true" />
                 )}
               </motion.span>
             </AnimatePresence>
-            <p className="status" role="status">
+            <p className={`status${scriptStatus ? ' script' : ''}`} role="status">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={status}
@@ -432,7 +445,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             rolling={rolling}
             onToggle={toggle}
             onSettled={onSettled}
-            candy={flavorOf(trayFlavor).candy}
+            hue={tintOf(trayTint).hue}
             shake={myTray ? shake : null}
           />
 
@@ -447,7 +460,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 >
                   <p>Put 0 in {where(pick)}?</p>
                   <div className="confirm-buttons">
-                    <button type="button" className="candy" onClick={write}>
+                    <button type="button" className="primary" onClick={write}>
                       Yes, put 0
                     </button>
                     <button type="button" onClick={() => setConfirming(false)}>
@@ -457,7 +470,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 </Swap>
               ) : myTray && pick ? (
                 <Swap key="write" className="action-row">
-                  <button type="button" className="candy big write" onClick={write}>
+                  <button type="button" className="primary big write" onClick={write}>
                     <CheckIcon /> Write it in: {pick.value} in {where(pick)}
                   </button>
                   {rollsLeft > 0 && !allHeld && (
@@ -475,7 +488,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 <Swap key="roll" className="action-row">
                   <button
                     type="button"
-                    className={`candy big roll${rolling || shaking ? ' busy' : ''}`}
+                    className={`primary big roll${rolling || shaking ? ' busy' : ''}`}
                     aria-label={
                       rollsLeft === 0 && !rolling ? 'No rolls left' : `Roll (${rollsLeft} left)`
                     }
@@ -517,7 +530,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
         <section
           className="pad-col"
           aria-label={`${name(viewed)}'s score pad`}
-          style={flavorVars(viewedFlavor, theme)}
+          style={tintVars(viewedTint, theme)}
         >
           <PadTabs
             lobby={lobby}
@@ -623,15 +636,10 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                             const isNew = fresh.has(`${c}:${box}`);
                             return (
                               <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
-                                {isNew && <span className="pop-ring" aria-hidden="true" />}
-                                <motion.span
-                                  className="score"
-                                  initial={isNew ? { scale: 2, opacity: 0, rotate: -10 } : false}
-                                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                                  transition={SPRING.pop}
-                                >
+                                {isNew && <span className="wash" aria-hidden="true" />}
+                                <span className={`score${isNew ? ' developing' : ''}`}>
                                   {filled}
-                                </motion.span>
+                                </span>
                               </td>
                             );
                           }
@@ -696,6 +704,9 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     </main>
   );
 }
+
+/** How long a new score takes to develop on the pad (the `develop` animation in styles.css). */
+const DEVELOP_MS = 1300;
 
 /** Action buttons swap in place: a quick rise and fade, so the next thing to do is ready at once. */
 const ACTION = {
