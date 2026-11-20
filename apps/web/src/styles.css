@@ -214,6 +214,10 @@ button.primary:disabled::before {
 }
 
 /* Pressed and held down while the dice roll, then it pops back up. */
+/* Held down while you shake and while the dice roll, then it pops back up. */
+.candy.busy,
+.candy.busy:hover:not(:disabled),
+.candy.busy:active:not(:disabled),
 .candy.busy:disabled {
   --face: var(--accent);
   --lip: color-mix(in oklab, var(--accent), #000 24%);
@@ -221,6 +225,19 @@ button.primary:disabled::before {
   color: var(--on-accent);
   transform: translateY(0.28rem);
   box-shadow: 0 0.04rem 0 var(--lip);
+}
+
+.candy.busy:not(:disabled) {
+  animation: jiggle 110ms linear infinite;
+}
+
+@keyframes jiggle {
+  25% {
+    transform: translate(-1px, 0.28rem) rotate(-0.4deg);
+  }
+  75% {
+    transform: translate(1px, 0.28rem) rotate(0.4deg);
+  }
 }
 
 .candy.busy:disabled::before {
@@ -745,7 +762,30 @@ input:not([type]):focus {
 }
 
 .turn-face {
+  position: relative;
   display: flex;
+}
+
+/* Your turn: a ring in your flavor ripples out from your face, twice. */
+.turn-pulse {
+  position: absolute;
+  inset: -0.2rem;
+  border-radius: 50%;
+  border: 3px solid var(--candy);
+  pointer-events: none;
+  opacity: 0;
+  animation: turn-pulse 900ms var(--ease-out) 2;
+}
+
+@keyframes turn-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
 }
 
 .turn-banner .avatar {

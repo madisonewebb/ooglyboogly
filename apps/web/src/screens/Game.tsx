@@ -143,13 +143,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     if (up !== null) setViewed(up);
   }, [up]);
 
-  // Your turn coming round gets a soft chime.
-  const wasUp = useRef(up);
-  useEffect(() => {
-    if (up !== null && up === seat && wasUp.current !== up) playTurn();
-    wasUp.current = up;
-  }, [up, seat]);
-
   // In Everyone at once, a score on someone else's pad pulses their tab.
   const pulses = useScorePulses(game, seat, viewed, !turns);
   useBonusChime(game, seat);
@@ -161,6 +154,20 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const rollsLeft = ROLLS_PER_TURN - turn.rolls;
   const canAct = seat !== null && active.includes(seat);
   const myTray = trayPlayer === seat && canAct;
+
+  // Your turn starting (the first one too) gets a little chime and a pulse on your face.
+  const myTurn = turns ? up === seat : canAct;
+  const [turnPulse, setTurnPulse] = useState(0);
+  const wasMine = useRef(false);
+  useEffect(() => {
+    const fresh = myTurn && !wasMine.current;
+    wasMine.current = myTurn;
+    if (!fresh) return;
+    setTurnPulse((n) => n + 1);
+    // After the last player's score pop has had its moment.
+    const id = setTimeout(playTurn, 350);
+    return () => clearTimeout(id);
+  }, [myTurn]);
 
   // Only rolls that arrive while this tray is showing animate.
   // Switching trays resets the mark in the same render, so an old roll never replays.
@@ -186,15 +193,24 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     setConfirming(false);
   }, [myTurnKey]);
 
+  /**
+   * Hold to shake: pressing Roll (or holding Space) brings the cup out and
+   * rattles it until you let go, which sends the roll. A quick click is the
+   * same with a short shake, and the rattle covers the trip to the server.
+   */
+  const [shake, setShake] = useState<{ start: number; from: number; sent: boolean } | null>(null);
+  const pressing = useRef<'pointer' | 'key' | null>(null);
+  const shaking = shake !== null;
+
   /** Per card: each open box's option, and whether this roll earns a Yatzy bonus there. */
   const options = useMemo(() => {
-    if (!mine || !canAct || !player.turn.dice || rolling) return null;
+    if (!mine || !canAct || !player.turn.dice || rolling || shaking) return null;
     const d = player.turn.dice;
     return player.cards.map((c) => {
       const o = cardOptions(c, d);
       return { boxes: new Map<Box, BoxOption>(o.options.map((x) => [x.box, x])), bonus: o.bonus };
     });
-  }, [mine, canAct, player, rolling]);
+  }, [mine, canAct, player, rolling, shaking]);
 
   const fresh = useNewlyFilled(game, viewed);
 
@@ -214,18 +230,47 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   })();
   const yours = (turns && up === seat) || (!turns && canAct);
 
-  const holdable = myTray && dice !== null && rollsLeft > 0 && !rolling;
+  const holdable = myTray && dice !== null && rollsLeft > 0 && !rolling && !shaking;
   const allHeld = turn.held.every(Boolean);
   const toggle = holdable
     ? (i: number) => table.send(MSG_HOLD, { die: i, held: !turn.held[i] })
     : null;
-  const canRoll = myTray && rollsLeft > 0 && !allHeld && !rolling;
+  const canRoll = myTray && rollsLeft > 0 && !allHeld && !rolling && !shaking;
   const rollNow = () => {
     if (!canRoll) return;
     unlockAudio();
     setPick(null);
     table.send(MSG_ROLL);
   };
+  const press = (how: 'pointer' | 'key') => {
+    if (!canRoll || pressing.current) return;
+    unlockAudio();
+    pressing.current = how;
+    setPick(null);
+    setConfirming(false);
+    setShake({ start: performance.now(), from: (live?.index ?? -1) + 1, sent: false });
+  };
+  const letGo = () => {
+    if (!pressing.current) return;
+    pressing.current = null;
+    setShake((s) => s && { ...s, sent: true });
+    table.send(MSG_ROLL);
+  };
+
+  // The roll is back: the tray has taken over the shake.
+  useEffect(() => {
+    if (shake && live && live.player === seat && live.index >= shake.from) setShake(null);
+  }, [live, shake, seat]);
+  // Held a very long time: roll anyway. Sent but nothing came back (an error): put the dice back.
+  const letGoRef = useRef(letGo);
+  letGoRef.current = letGo;
+  useEffect(() => {
+    if (!shake) return;
+    const id = shake.sent
+      ? setTimeout(() => setShake(null), 4000)
+      : setTimeout(() => letGoRef.current(), 8000);
+    return () => clearTimeout(id);
+  }, [shake]);
 
   const write = () => {
     if (!pick) return;
@@ -235,16 +280,28 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     setConfirming(false);
   };
 
-  // Keyboard play: Space rolls, 1 to 5 hold dice, Enter writes in, Escape lets go.
-  const keys = useRef({ rollNow, toggle, write, pick });
-  keys.current = { rollNow, toggle, write, pick };
+  // Keyboard play: Space rolls (hold it to shake), 1 to 5 hold dice, Enter writes in, Escape lets go.
+  const keys = useRef({ press, letGo, toggle, write, pick });
+  keys.current = { press, letGo, toggle, write, pick };
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
-      const k = keys.current;
-      if ((e.key === ' ' || e.key === 'r' || e.key === 'R') && !onControl(e.target)) {
+    const isRollKey = (e: KeyboardEvent) => e.key === ' ' || e.key === 'r' || e.key === 'R';
+    const onUp = (e: KeyboardEvent) => {
+      if (isRollKey(e) && pressing.current === 'key') {
         e.preventDefault();
-        k.rollNow();
+        keys.current.letGo();
+      }
+    };
+    // Switching away mid-shake: roll rather than shake forever.
+    const onBlur = () => pressing.current === 'key' && keys.current.letGo();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) {
+        if (e.repeat && isRollKey(e) && pressing.current) e.preventDefault();
+        return;
+      }
+      const k = keys.current;
+      if (isRollKey(e) && !onControl(e.target)) {
+        e.preventDefault();
+        k.press('key');
       } else if (/^[1-5]$/.test(e.key) && k.toggle) {
         k.toggle(Number(e.key) - 1);
       } else if (e.key === 'Enter' && k.pick && !onControl(e.target)) {
@@ -256,7 +313,13 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
       }
     };
     addEventListener('keydown', onKey);
-    return () => removeEventListener('keydown', onKey);
+    addEventListener('keyup', onUp);
+    addEventListener('blur', onBlur);
+    return () => {
+      removeEventListener('keydown', onKey);
+      removeEventListener('keyup', onUp);
+      removeEventListener('blur', onBlur);
+    };
   }, []);
 
   const last = seat === null ? null : game.players[seat]!.lastScore;
@@ -269,13 +332,19 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const where = (p: { card: number; box: Box }) =>
     `${BOX_LABELS[p.box].long}${multi ? ` on card ${p.card + 1}` : ''}`;
 
-  const hint = holdable
-    ? turn.held.some(Boolean)
-      ? 'Held dice wait on the shelf. Click one to put it back.'
-      : 'Click dice to hold them, then roll the rest.'
-    : myTray && dice && !rolling && rollsLeft === 0
-      ? 'Pick a box on your pad.'
-      : '';
+  const hint = shaking
+    ? shake.sent
+      ? ''
+      : 'Let go to roll.'
+    : holdable
+      ? turn.held.some(Boolean)
+        ? 'Held dice wait on the shelf. Click one to put it back.'
+        : 'Click dice to hold them. Hold Roll to shake longer.'
+      : myTray && dice && !rolling && rollsLeft === 0
+        ? 'Pick a box on your pad.'
+        : canRoll
+          ? 'Hold Roll to shake the cup longer.'
+          : '';
 
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
@@ -298,6 +367,9 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 exit={{ opacity: 0, scale: 0.6, transition: { duration: DURATION.fast } }}
               >
                 {trayUser && <Avatar user={trayUser} cdnBase={cdnBase} flavor={trayFlavor} />}
+                {myTurn && turnPulse > 0 && trayPlayer === seat && (
+                  <span key={turnPulse} className="turn-pulse" aria-hidden="true" />
+                )}
               </motion.span>
             </AnimatePresence>
             <p className="status" role="status">
@@ -330,6 +402,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             onToggle={toggle}
             onSettled={onSettled}
             candy={flavorOf(trayFlavor).candy}
+            shake={myTray ? shake : null}
           />
 
           <div className="tray-actions">
@@ -371,21 +444,36 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 <Swap key="roll" className="action-row">
                   <button
                     type="button"
-                    className={`candy big roll${rolling ? ' busy' : ''}`}
+                    className={`candy big roll${rolling || shaking ? ' busy' : ''}`}
                     aria-label={
                       rollsLeft === 0 && !rolling ? 'No rolls left' : `Roll (${rollsLeft} left)`
                     }
                     aria-keyshortcuts="Space"
-                    disabled={!canRoll}
-                    onClick={rollNow}
+                    disabled={!canRoll && !shaking}
+                    onPointerDown={(e) => {
+                      if (e.button !== 0) return;
+                      try {
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                      } catch {
+                        // No capture: letting go elsewhere still ends it below.
+                      }
+                      press('pointer');
+                    }}
+                    onPointerUp={() => pressing.current === 'pointer' && letGo()}
+                    onPointerCancel={() => pressing.current === 'pointer' && letGo()}
+                    onLostPointerCapture={() => pressing.current === 'pointer' && letGo()}
+                    // Enter or Space on the focused button: a plain roll.
+                    onClick={(e) => e.detail === 0 && rollNow()}
                   >
-                    {rolling
-                      ? 'Rolling…'
-                      : rollsLeft === 0
-                        ? 'No rolls left'
-                        : turn.rolls === 0
-                          ? 'Roll'
-                          : 'Roll again'}
+                    {shaking && !shake.sent
+                      ? 'Shaking…'
+                      : rolling || shaking
+                        ? 'Rolling…'
+                        : rollsLeft === 0
+                          ? 'No rolls left'
+                          : turn.rolls === 0
+                            ? 'Roll'
+                            : 'Roll again'}
                     {canRoll && <kbd aria-hidden="true">Space</kbd>}
                   </button>
                 </Swap>

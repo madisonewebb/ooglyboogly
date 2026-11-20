@@ -50,13 +50,21 @@ export interface RollPlan {
   held: readonly boolean[];
   /** Whether the free dice were showing before (a reroll scoops them up first). */
   hadDice: boolean;
-  /** The recorded tumble, one track per free die; null plays the reduced fade. */
+  /**
+   * The recorded tumble, one track per free die. Null while the roll hasn't
+   * arrived yet (the cup rattles for as long as Roll is held), or with
+   * `reduced` for the plain fade.
+   */
   path: TumblePath | null;
   /** Play the path mirrored front to back. */
   mirror: boolean;
   /** 1 normally, 0.5 with Fast rolls. */
   speed: number;
   reduced: boolean;
+  /** How each die lay before the roll; held dice keep it, rolled dice are scooped from it. */
+  before?: readonly (Quat | null)[] | undefined;
+  /** Hold to shake: the cup rattles at least until then. */
+  shakeUntil?: number | undefined;
 }
 
 export interface Pose {
@@ -94,6 +102,8 @@ const BASE = {
   hop: 280,
 };
 const LAND_SQUISH_MS = 150;
+/** The rattle eases in and out over this long; a held shake winds down for this long after the roll arrives. */
+export const SHAKE_EASE = 90;
 const CELEBRATE_MS = 760;
 /** How high a Yatzy jump and a hold hop go. The camera frames room for both. */
 export const JUMP = 1.5;
@@ -233,7 +243,24 @@ function prepare(plan: RollPlan): Prepared {
   const tidyQuat = endQuat.map((q, i) => nearestRest(plan.values[plan.free[i]!] ?? 1, q));
 
   let timing: Timing;
-  if (plan.reduced || !plan.path || n === 0) {
+  const scoopEnd = plan.hadDice ? BASE.scoopStagger * (n - 1) + BASE.scoop : 0;
+  const shakeStart = plan.start + Math.max(BASE.cupIn * BASE.shakeLead, scoopEnd * 0.85) * k;
+  if (!plan.reduced && !plan.path && n > 0) {
+    // Roll is held down and the roll hasn't come back yet: rattle until it does.
+    const never = Infinity;
+    timing = {
+      shakeStart,
+      shakeEnd: never,
+      physStart: never,
+      physEnd: never,
+      tidyStart: never,
+      settled: plan.free.map(() => never),
+      end: never,
+      celebrate: never,
+      done: never,
+      cupGone: never,
+    };
+  } else if (plan.reduced || !plan.path || n === 0) {
     const end = plan.start + BASE.fade * k;
     timing = {
       shakeStart: plan.start,
@@ -248,9 +275,7 @@ function prepare(plan: RollPlan): Prepared {
       cupGone: plan.start,
     };
   } else {
-    const scoopEnd = plan.hadDice ? BASE.scoopStagger * (n - 1) + BASE.scoop : 0;
-    const shakeStart = plan.start + Math.max(BASE.cupIn * BASE.shakeLead, scoopEnd * 0.85) * k;
-    const shakeEnd = shakeStart + BASE.shake * k;
+    const shakeEnd = Math.max(shakeStart + BASE.shake * k, plan.shakeUntil ?? 0);
     const physStart = shakeEnd + BASE.pour * SPAWN_AT * k;
     const restFrame = Math.max(...tracks.map((t) => t.restFrame));
     const lastSpawn = Math.max(...tracks.map((t) => t.spawnFrame));
@@ -303,7 +328,7 @@ export interface RollSound {
 export function rollSounds(plan: RollPlan): RollSound[] {
   const p = prepare(plan);
   const t = p.timing;
-  if (plan.reduced || !plan.path) return [];
+  if (plan.reduced) return [];
   const out: RollSound[] = [];
   // Rerolled dice dropping into the cup.
   if (plan.hadDice) {
@@ -316,6 +341,7 @@ export function rollSounds(plan: RollPlan): RollSound[] {
       });
     });
   }
+  if (!plan.path) return out;
   // Collisions from the recording, matched to the dice they belong to.
   for (const im of plan.path.impacts) {
     const track = plan.path.tracks[im.die];
@@ -362,7 +388,7 @@ export function cupAt(plan: RollPlan | null, now: number): CupPose {
     scale: 0.7,
     opacity: 0,
   };
-  if (!plan || plan.reduced || !plan.path || plan.free.length === 0) return home;
+  if (!plan || plan.reduced || plan.free.length === 0) return home;
   const t = timing(plan);
   const k = plan.speed;
   if (now < plan.start || now >= t.cupGone) return home;
@@ -374,13 +400,14 @@ export function cupAt(plan: RollPlan | null, now: number): CupPose {
   let opacity = clamp01(inU * 2.5);
   let tip = 0;
   if (now >= t.shakeStart && now < t.shakeEnd) {
-    // Three hearty rattles, strongest in the middle.
-    const u = (now - t.shakeStart) / (t.shakeEnd - t.shakeStart);
-    const env = Math.sin(Math.PI * u);
-    const wave = Math.sin(u * Math.PI * 2 * 3);
-    tip = wave * 0.26 * env;
+    // Hearty rattles, ten a second, easing in and out; a held shake also sways.
+    const s = (now - t.shakeStart) / k;
+    const env = Math.min(1, s / SHAKE_EASE) * Math.min(1, (t.shakeEnd - now) / k / SHAKE_EASE);
+    const wave = Math.sin((s / 1000) * Math.PI * 2 * 10);
+    const sway = Math.sin((s / 1000) * Math.PI * 2 * 1.3) * Math.min(1, s / 600);
+    tip = (wave * 0.26 + sway * 0.12) * env;
     // Still finishing its drop as the rattle starts.
-    pos = [CUP.x + wave * 0.16 * env, pos[1] + Math.abs(wave) * 0.12 * env, CUP.z];
+    pos = [CUP.x + (wave * 0.16 + sway * 0.18) * env, pos[1] + Math.abs(wave) * 0.12 * env, CUP.z];
   } else if (now >= t.shakeEnd) {
     const pourU = clamp01((now - t.shakeEnd) / (BASE.pour * k));
     tip = POUR_TIP * easeInOut(pourU);
@@ -425,7 +452,7 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
 
   if (rank < 0) {
     // Held: wiggle while the others roll, then join any celebration.
-    let quat = restQuat(value);
+    let quat = plan.before?.[die] ?? restQuat(value);
     if (!plan.reduced && now < t.physEnd) {
       quat = mul(
         fromAxisAngle(Z, Math.sin(((now - plan.start) / 1000) * Math.PI * 10) * 0.07),
@@ -441,16 +468,16 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
     });
   }
 
-  if (plan.reduced || !plan.path) {
+  if (plan.reduced) {
     const opacity = clamp01((now - plan.start) / (t.end - plan.start || 1));
     return { pos: rest, quat: restQuat(value), squash: ONE, opacity, visible: true };
   }
 
   const k = plan.speed;
-  const track = p.tracks[rank]!;
+  const track = p.tracks[rank];
   const frame = (now - t.physStart) / (FRAME_MS * k);
 
-  if (frame < track.spawnFrame) {
+  if (!track || frame < track.spawnFrame) {
     // A reroll: hop from the column up into the cup's mouth first.
     const scoopStart = plan.start + rank * BASE.scoopStagger * k;
     const scoopEnd = scoopStart + BASE.scoop * k;
@@ -462,7 +489,7 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
       const s = 1 - (1 - IN_CUP) * easeInOut(u);
       return {
         pos,
-        quat: mul(fromAxisAngle([1, 0, 0], -u * 1.2), restQuat(value)),
+        quat: mul(fromAxisAngle([1, 0, 0], -u * 1.2), plan.before?.[die] ?? restQuat(value)),
         squash: [s, s, s],
         opacity: 1,
         visible: true,
@@ -544,6 +571,8 @@ export interface HopPlan {
   toShelf: boolean;
   speed: number;
   reduced: boolean;
+  /** How the die lies, so the hop keeps it. */
+  quat?: Quat | undefined;
 }
 
 export function hopEnd(h: HopPlan): number {
@@ -565,13 +594,32 @@ export function hopPose(h: HopPlan, now: number): Pose {
   const flip = fromAxisAngle([1, 0, 0], (h.toShelf ? -1 : 1) * Math.sin(Math.PI * u) * 0.35);
   const squash: Vec3 =
     bounce > 0 ? squish(bounce) : [1 - air * 0.05, 1 + air * 0.08, 1 - air * 0.05];
-  return { pos, quat: mul(flip, restQuat(h.value)), squash, opacity: 1, visible: true };
+  return { pos, quat: mul(flip, h.quat ?? restQuat(h.value)), squash, opacity: 1, visible: true };
 }
 
-export const restPose = (die: number, value: number | null, held: boolean): Pose => ({
+/** A die at rest in its column or on the shelf, lying the way it settled. */
+export const restPose = (
+  die: number,
+  value: number | null,
+  held: boolean,
+  quat?: Quat | null,
+): Pose => ({
   pos: restPos(die, held),
-  quat: restQuat(value ?? 1),
+  quat: quat ?? restQuat(value ?? 1),
   squash: ONE,
   opacity: 1,
   visible: value !== null,
 });
+
+/**
+ * How die `die` lies once `plan` is over: rolled dice as they hopped into
+ * their columns (turned to the quarter nearest how they landed), held dice as
+ * they were. The tray keeps this, so nothing snaps when the roll ends.
+ */
+export function settledQuat(plan: RollPlan, die: number): Quat {
+  const value = plan.values[die] ?? 1;
+  const rank = plan.free.indexOf(die);
+  if (rank < 0) return plan.before?.[die] ?? restQuat(value);
+  const tidy = plan.reduced || !plan.path ? undefined : prepare(plan).tidyQuat[rank];
+  return tidy ?? restQuat(value);
+}

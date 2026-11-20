@@ -19,9 +19,14 @@ import {
   poseAt,
   type RollPlan,
   restPos,
+  restPose,
+  restQuat,
   rollSounds,
+  settledQuat,
+  SHAKE_EASE,
   timing,
 } from './timeline';
+import { fromAxisAngle, mul, type Quat } from './quat';
 
 const raw = gunzipSync(readFileSync(new URL('./tumbles.bin', import.meta.url)));
 const tumbles = decodeTumbles(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length));
@@ -187,5 +192,92 @@ describe('camera framing', () => {
     const shelfTop = SHELF_Y + DIE_SIZE;
     expect(FRAME.maxY).toBeGreaterThanOrEqual(shelfTop + JUMP);
     expect(FRAME.maxY).toBeGreaterThanOrEqual(DIE_SIZE + HOP);
+  });
+});
+
+/** Same rotation (q and -q are the same). */
+function sameTurn(a: readonly number[], b: readonly number[]) {
+  const dot = a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]! + a[3]! * b[3]!;
+  expect(Math.abs(dot)).toBeGreaterThan(0.9999);
+}
+
+describe('after a roll', () => {
+  it('leaves every die lying exactly as the tray keeps it, so nothing snaps', () => {
+    for (let p = 0; p < PATHS_PER_COUNT; p += 3) {
+      for (const values of [
+        [1, 2, 3, 4, 5],
+        [6, 6, 6, 6, 6],
+      ]) {
+        const r = plan(values, ALL_FREE, p, { mirror: p % 2 === 0 });
+        const t = timing(r);
+        for (let die = 0; die < 5; die++) {
+          const last = poseAt(r, die, t.done + 1);
+          sameTurn(last.quat, settledQuat(r, die));
+          sameTurn(restPose(die, values[die]!, false, settledQuat(r, die)).quat, last.quat);
+        }
+      }
+    }
+  });
+
+  it('keeps how held dice lay, and scoops the others from how they lay', () => {
+    const turned: Quat = mul(fromAxisAngle([0, 1, 0], Math.PI / 2), restQuat(5));
+    const before = [turned, turned, null, null, null];
+    const r = plan([5, 5, 1, 2, 3], [true, true, false, false, false], 2, { before });
+    const t = timing(r);
+    sameTurn(poseAt(r, 0, t.end).quat, turned);
+    sameTurn(settledQuat(r, 1), turned);
+    const rr = plan([5, 2, 3, 4, 6], ALL_FREE, 2, { before: [turned, null, null, null, null] });
+    sameTurn(poseAt(rr, 0, rr.start).quat, turned);
+  });
+
+  it('hops a die to the shelf without turning it', () => {
+    const turned: Quat = mul(fromAxisAngle([0, 1, 0], Math.PI / 2), restQuat(2));
+    const h = { start: 0, die: 3, value: 2, toShelf: true, speed: 1, reduced: false, quat: turned };
+    sameTurn(hopPose(h, hopEnd(h) + 500).quat, turned);
+  });
+});
+
+describe('holding Roll down', () => {
+  const held = (start: number): RollPlan => ({
+    ...plan([1, 2, 3, 4, 5], ALL_FREE, 0),
+    start,
+    path: null,
+  });
+
+  it('rattles the cup with the dice in it for as long as it is held', () => {
+    const r = held(0);
+    const t = timing(r);
+    expect(t.shakeEnd).toBe(Infinity);
+    for (const now of [400, 2500, 7000]) {
+      const cup = cupAt(r, now);
+      expect(cup.visible).toBe(true);
+      const die = poseAt(r, 2, now);
+      expect(Math.hypot(die.pos[0] - cup.pos[0], die.pos[2] - cup.pos[2])).toBeLessThan(
+        CUP.radiusTop,
+      );
+    }
+    // Moving, not frozen.
+    expect(cupAt(r, 2500).tip).not.toBeCloseTo(cupAt(r, 2525).tip, 3);
+    expect(rollSounds(r).every((s) => s.kind === 'cup')).toBe(true);
+  });
+
+  it('carries on into the roll without a jump, and pours once the roll is back', () => {
+    const pending = held(1000);
+    const arrived = 1000 + 2200;
+    const r = plan([1, 2, 3, 4, 5], ALL_FREE, 5, {
+      start: 1000,
+      shakeUntil: arrived + SHAKE_EASE,
+    });
+    const t = timing(r);
+    expect(t.shakeEnd).toBe(arrived + SHAKE_EASE);
+    expect(t.physStart).toBeGreaterThan(arrived);
+    for (const now of [1100, 1600, 2400, arrived]) {
+      expect(cupAt(r, now)).toEqual(cupAt(pending, now));
+      for (let die = 0; die < 5; die++)
+        expect(poseAt(r, die, now)).toEqual(poseAt(pending, die, now));
+    }
+    // A quick click still gets the full short shake.
+    const quick = plan([1, 2, 3, 4, 5], ALL_FREE, 5, { start: 1000, shakeUntil: 1100 });
+    expect(timing(quick).shakeEnd).toBeGreaterThan(1100);
   });
 });
