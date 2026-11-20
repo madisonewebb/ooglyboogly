@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { type GameState, playerTotal, type PlayerTotal, UPPER_BONUS } from '@rollhouse/rules';
 import type { Lobby } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
-import { Frond } from '../Frond';
-import { tintVars } from '../tint';
+import { Sparkles } from '../Sparkles';
+import { tintOf, tintVars } from '../tint';
 import { CrownIcon } from '../icons';
 import { playCelebrate } from '../sound';
 import { SPRING } from '../theme/motion';
@@ -60,9 +60,15 @@ export function Results({ game, lobby, cdnBase }: Props) {
 
   return (
     <main className="screen results">
-      <div className="winner-banner print">
-        <Frond seed={19} lean={-0.25} className="brand-frond left" />
-        <Frond seed={7} lean={0.2} className="brand-frond right" />
+      <div className="winner-banner">
+        <Sparkles
+          colors={[
+            ...winners.map((r) => tintOf(r.seat.tint).hue),
+            'var(--accent)',
+            'var(--strong)',
+          ]}
+          count={30}
+        />
         <motion.h1
           className="wordmark"
           data-testid="winner"

@@ -4,7 +4,6 @@ import { type AppConfig, BRAND_NAME } from '@rollhouse/shared';
 import { type Auth, getConfig, guestSignIn } from './api';
 import { Brand } from './Brand';
 import { Corner } from './Corner';
-import { PrintFilters } from './PrintFilters';
 import { discordSignIn, inDiscord } from './discord';
 import { Game } from './screens/Game';
 import { Lobby } from './screens/Lobby';
@@ -51,7 +50,6 @@ export function App() {
   }, []);
   return (
     <>
-      <PrintFilters />
       <Corner />
       <Boot />
     </>

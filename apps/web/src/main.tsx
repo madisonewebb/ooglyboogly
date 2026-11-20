@@ -5,7 +5,7 @@ import { BRAND_NAME } from '@rollhouse/shared';
 import '@fontsource/atkinson-hyperlegible-next/latin-400.css';
 import '@fontsource/atkinson-hyperlegible-next/latin-600.css';
 import '@fontsource/atkinson-hyperlegible-next/latin-800.css';
-import '@fontsource/petit-formal-script/latin-400.css';
+import '@fontsource/quicksand/latin-700.css';
 import { App } from './App';
 import { installThemeCss, PrefsProvider } from './theme/prefs';
 import './styles.css';

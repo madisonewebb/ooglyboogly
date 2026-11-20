@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { SCENE, THEMES } from '../theme/palette';
 import { usePrefs } from '../theme/prefs';
 import { playCelebrate, playHop, playImpact, playRattle, playSettle } from '../sound';
+import { Sparkles } from '../Sparkles';
 import type { SceneProps, SlotRect } from './DiceScene';
 import { STAGE_ASPECT } from './framing';
 import { loadTumbles, tumblesNow } from './loadTumbles';
@@ -322,6 +323,7 @@ export function DiceTray({
       </div>
       {party !== null && (
         <div className="celebrate" aria-hidden="true">
+          <Sparkles colors={[hue, 'var(--accent)', 'var(--strong)', 'var(--on-band)']} count={30} />
           <strong className="celebrate-word">Yatzy!</strong>
         </div>
       )}

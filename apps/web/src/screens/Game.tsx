@@ -15,9 +15,8 @@ import {
   UPPER_BONUS_THRESHOLD,
   YATZY_BONUS,
 } from '@rollhouse/rules';
-import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
+import { BRAND_NAME, type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
-import { Frond } from '../Frond';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
 import { CheckIcon, DieGlyph } from '../icons';
@@ -249,8 +248,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     return `Still playing: ${still.join(', ')}`;
   })();
   const yours = (turns && up === seat) || (!turns && canAct);
-  // "Your turn" and "Mom's turn" are short enough for the script; longer lines stay plain.
-  const scriptStatus = turns && (up === seat || lobby.seats[up!]?.connected !== false);
+  // "Your turn" and "Mom's turn" are short enough to set large; longer lines stay plain.
+  const headline = turns && (up === seat || lobby.seats[up!]?.connected !== false);
 
   const holdable = myTray && dice !== null && rollsLeft > 0 && !rolling && !shaking;
   const allHeld = turn.held.every(Boolean);
@@ -394,9 +393,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
 
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
-      <header className="topbar print">
-        <span className="wordmark small">Rollhouse</span>
-        <Frond seed={23} depth={2} lean={0.2} className="band-frond" />
+      <header className="topbar">
+        <span className="wordmark small">{BRAND_NAME}</span>
       </header>
 
       <div className="table-layout">
@@ -416,7 +414,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 )}
               </motion.span>
             </AnimatePresence>
-            <p className={`status${scriptStatus ? ' script' : ''}`} role="status">
+            <p className={`status${headline ? ' headline' : ''}`} role="status">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
                   key={status}
@@ -688,7 +686,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                           {/* Three boxes like a paper pad, and another for each bonus past them. */}
                           {Array.from({ length: Math.max(3, card.yatzyBonuses) }, (_, i) => (
                             <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
-                              {i < card.yatzyBonuses ? '✓' : ''}
+                              {i < card.yatzyBonuses ? <CheckIcon /> : null}
                             </span>
                           ))}
                         </span>

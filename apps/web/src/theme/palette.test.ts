@@ -8,9 +8,9 @@ describe('contrast()', () => {
   it('matches the WCAG reference values', () => {
     expect(contrast('#000000', '#FFFFFF')).toBeCloseTo(21, 5);
     expect(contrast('#FFFFFF', '#FFFFFF')).toBe(1);
-    // White on the dusty rose fails; Prussian ink passes.
-    expect(contrast('#FFFFFF', '#E294AB')).toBeCloseTo(2.32, 2);
-    expect(contrast('#102B4C', '#E294AB')).toBeCloseTo(6.15, 2);
+    // White on the pink accent fails; plum ink passes.
+    expect(contrast('#FFFFFF', '#E88DB2')).toBeLessThan(4.5);
+    expect(contrast('#2A2440', '#E88DB2')).toBeCloseTo(6.24, 2);
   });
 });
 
@@ -31,8 +31,8 @@ describe.each(themes)('%s theme', (name) => {
 describe('themeCss()', () => {
   it('defines every token for both themes', () => {
     const css = themeCss();
-    expect(css).toContain(":root[data-theme='light']{--bg:#F7F9FA;");
-    expect(css).toContain('--on-accent:#10294A;');
+    expect(css).toContain(":root[data-theme='light']{--bg:#F6F3FB;");
+    expect(css).toContain('--on-accent:#1D1A2C;');
     expect(css.match(/--quiet:/g)).toHaveLength(2);
   });
 });

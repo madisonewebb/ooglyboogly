@@ -1,6 +1,6 @@
 /**
- * The die itself: glazed white porcelain with cobalt-blue pips, like a
- * cyanotype in reverse. Shared by the tray and the lobby's turning die.
+ * The die itself: glazed white porcelain with violet pips. Shared by the tray
+ * and the lobby's turning die.
  */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -44,7 +44,7 @@ const PIPS: Record<number, [number, number][]> = {
 
 export const dieGeometry = () => new RoundedBoxGeometry(1, 1, 1, 5, 0.16);
 
-/** Cobalt glaze: a very low dome per pip, pooled just proud of each face. */
+/** Glaze: a very low dome per pip, pooled just proud of each face. */
 export function pipGeometry(): THREE.BufferGeometry {
   const dome = new THREE.SphereGeometry(0.09, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2);
   dome.scale(1, 0.2, 1);
@@ -93,7 +93,7 @@ export function porcelainMaterial(color: string, rich = true): THREE.MeshStandar
   });
 }
 
-/** The cobalt glaze in the pips: deeper and glossier than the body. */
+/** The glaze in the pips: deeper and glossier than the body. */
 export function glazeMaterial(color: string, rich = true): THREE.MeshStandardMaterial {
   if (!rich) return new THREE.MeshStandardMaterial({ color, roughness: 0.25 });
   return new THREE.MeshPhysicalMaterial({

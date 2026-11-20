@@ -1,9 +1,9 @@
 /**
- * The Rollhouse palette: Sunprint. Cyanotype blue and white, after Anna
- * Atkins' 1843 sunprints of seaweed, with each player writing in a flower or
- * leaf color. This file is the only place colors are defined: the CSS
- * variables are generated from it, and palette.test.ts checks every text
- * pairing against WCAG AA (4.5:1).
+ * The Rollhouse palette: Lavender evening. Dark plum with lavender and a pink
+ * accent for the evening calls it's mostly played on, and a lavender daytime
+ * version. Each player writes in a flower or leaf color. This file is the
+ * only place colors are defined: the CSS variables are generated from it, and
+ * palette.test.ts checks every text pairing against WCAG AA (4.5:1).
  */
 
 export type ThemeName = 'light' | 'dark';
@@ -18,23 +18,23 @@ export interface Tokens {
   text: string;
   /** Quiet text. */
   quiet: string;
-  /** Dusty rose, the one accent: Roll, Write it in, Sit down, Start. */
+  /** Pink, the one accent: Roll, Write it in, Sit down, Start. */
   accent: string;
   /** Text on the accent. */
   onAccent: string;
-  /** A developed print: the box you picked, earned bonuses, whose turn it is, focus rings. */
-  exposed: string;
-  /** Text on an exposed fill. */
-  onExposed: string;
-  /** Unexposed print paper: a score you could take, still waiting for light. */
-  sensitizer: string;
-  /** Text on a sensitizer fill. */
-  onSensitizer: string;
-  /** The band across the top of the table. */
+  /** Lavender: the box you picked, earned bonuses, whose turn it is, selections, focus rings. */
+  strong: string;
+  /** Text on a strong fill. */
+  onStrong: string;
+  /** A soft fill for a score you could take. */
+  option: string;
+  /** Text on an option fill. */
+  onOption: string;
+  /** The band across the top of the table, and the name plates. */
   band: string;
   /** Text on the band. */
   onBand: string;
-  /** Porcelain dice. */
+  /** Dice. */
   die: string;
   /** Pips. */
   pip: string;
@@ -43,56 +43,56 @@ export interface Tokens {
 }
 
 export const THEMES: Record<ThemeName, Tokens> = {
-  // Day: white paper, Prussian ink.
+  // Daytime: pale lavender and white, plum ink.
   light: {
-    bg: '#F7F9FA',
+    bg: '#F6F3FB',
     pad: '#FFFFFF',
-    rule: '#C9D7E6',
-    text: '#102B4C',
-    quiet: '#4A6A8F',
-    accent: '#E294AB',
-    onAccent: '#102B4C',
-    exposed: '#1D4A7A',
-    onExposed: '#FFFFFF',
-    sensitizer: '#D6DC7E',
-    onSensitizer: '#102B4C',
-    band: '#1D4A7A',
-    onBand: '#FFFFFF',
-    die: '#F7F9FB',
-    pip: '#1D4A7A',
-    shadow: '#0B1F38',
+    rule: '#E1DAF0',
+    text: '#2A2440',
+    quiet: '#675F84',
+    accent: '#E88DB2',
+    onAccent: '#2A2440',
+    strong: '#6B55C8',
+    onStrong: '#FFFFFF',
+    option: '#ECE6FA',
+    onOption: '#2A2440',
+    band: '#2A2440',
+    onBand: '#F4F1FA',
+    die: '#FFFFFF',
+    pip: '#5B47B0',
+    shadow: '#1A1530',
   },
-  // Evening: the print itself, white on Prussian blue.
+  // Evening: dark plum, lavender and pink.
   dark: {
-    bg: '#10294A',
-    pad: '#163760',
-    rule: '#2C5583',
-    text: '#F1F5FA',
-    quiet: '#A6BCD6',
-    accent: '#E9A6BA',
-    onAccent: '#10294A',
-    exposed: '#F1F5FA',
-    onExposed: '#10294A',
-    sensitizer: '#CFD67E',
-    onSensitizer: '#10294A',
-    band: '#1B4677',
-    onBand: '#F1F5FA',
-    die: '#F4F6F9',
-    pip: '#1D4A7A',
-    shadow: '#030B16',
+    bg: '#1D1A2C',
+    pad: '#29253D',
+    rule: '#3D3757',
+    text: '#F4F1FA',
+    quiet: '#B6AED0',
+    accent: '#F2A7C3',
+    onAccent: '#1D1A2C',
+    strong: '#BBA9F3',
+    onStrong: '#1D1A2C',
+    option: '#463F6C',
+    onOption: '#F4F1FA',
+    band: '#151321',
+    onBand: '#F4F1FA',
+    die: '#F7F5FB',
+    pip: '#5B47B0',
+    shadow: '#05040A',
   },
 };
 
 /** The 3D tray's materials: decoration only, never behind text. */
 export interface SceneTokens {
-  /** The cyanotype-blue felt the dice land on. */
+  /** The felt the dice land on. */
   felt: string;
-  /** The limed-oak frame around the felt, like a contact-printing frame. */
+  /** The lacquered frame around the felt. */
   rim: string;
   /** The held-dice shelf and its five seats. */
   shelf: string;
   seat: string;
-  /** Inside the glazed cup. */
+  /** Inside the cup. */
   cupInside: string;
   /** How bright the studio light is. */
   light: number;
@@ -100,19 +100,19 @@ export interface SceneTokens {
 
 export const SCENE: Record<ThemeName, SceneTokens> = {
   light: {
-    felt: '#1F4E80',
-    rim: '#CDBB9F',
-    shelf: '#C2AE90',
-    seat: '#A89273',
-    cupInside: '#0E2340',
+    felt: '#5D4FA3',
+    rim: '#E6E0F3',
+    shelf: '#D9D0EE',
+    seat: '#C5B9E4',
+    cupInside: '#2A2440',
     light: 1,
   },
   dark: {
-    felt: '#1A4373',
-    rim: '#8E7A60',
-    shelf: '#836F57',
-    seat: '#6B5944',
-    cupInside: '#081A33',
+    felt: '#3A3263',
+    rim: '#4E4774',
+    shelf: '#453E69',
+    seat: '#38325A',
+    cupInside: '#151321',
     light: 0.9,
   },
 };
@@ -138,14 +138,14 @@ export interface Tint {
 }
 
 export const TINTS: Record<TintId, Tint> = {
-  rose: { name: 'Rose', hue: '#E0708F', ink: { light: '#CB2C58', dark: '#E5859F' } },
+  rose: { name: 'Rose', hue: '#E0708F', ink: { light: '#CD2C59', dark: '#E0708F' } },
   seaglass: { name: 'Sea glass', hue: '#4FBFAE', ink: { light: '#2C796E', dark: '#4FBFAE' } },
-  marigold: { name: 'Marigold', hue: '#EE9A2E', ink: { light: '#9D5E0D', dark: '#EE9A2E' } },
-  fern: { name: 'Fern', hue: '#62AE5C', ink: { light: '#41793C', dark: '#69B163' } },
-  heather: { name: 'Heather', hue: '#A07BD6', ink: { light: '#8352C9', dark: '#B294DE' } },
+  marigold: { name: 'Marigold', hue: '#EE9A2E', ink: { light: '#9F5F0D', dark: '#EE9A2E' } },
+  fern: { name: 'Fern', hue: '#62AE5C', ink: { light: '#427B3D', dark: '#62AE5C' } },
+  heather: { name: 'Heather', hue: '#A07BD6', ink: { light: '#8454CA', dark: '#A37FD7' } },
   primrose: { name: 'Primrose', hue: '#E6CB45', ink: { light: '#7E6C11', dark: '#E6CB45' } },
-  poppy: { name: 'Poppy', hue: '#E8613C', ink: { light: '#C53D17', dark: '#ED8467' } },
-  walnut: { name: 'Walnut', hue: '#A0714E', ink: { light: '#8D6445', dark: '#C09A7D' } },
+  poppy: { name: 'Poppy', hue: '#E8613C', ink: { light: '#C83D18', dark: '#E96A47' } },
+  walnut: { name: 'Walnut', hue: '#A0714E', ink: { light: '#8F6546', dark: '#B48765' } },
 };
 
 /** Every [text, surface] pairing the UI uses. All must reach 4.5:1. */
@@ -155,8 +155,8 @@ export const TEXT_PAIRS: [keyof Tokens, keyof Tokens][] = [
   ['quiet', 'bg'],
   ['quiet', 'pad'],
   ['onAccent', 'accent'],
-  ['onExposed', 'exposed'],
-  ['onSensitizer', 'sensitizer'],
+  ['onStrong', 'strong'],
+  ['onOption', 'option'],
   ['onBand', 'band'],
 ];
 
