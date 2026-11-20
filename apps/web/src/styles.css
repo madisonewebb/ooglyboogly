@@ -893,18 +893,6 @@ input:not([type]):focus {
   text-align: center;
 }
 
-.undo {
-  min-height: 40px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--quiet);
-}
-
-.undo:hover:not(:disabled) {
-  color: var(--text);
-  background: var(--pad);
-}
-
 /* The dice stage: the 3D tray, with a button laid over each die. */
 .dice-stage {
   position: relative;

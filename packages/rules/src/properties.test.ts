@@ -157,9 +157,10 @@ describe('whole-game properties', () => {
             const ct = cardTotal(c, ci, setup.multipliers);
             expect(ct.raw).toBe(ct.upper + ct.upperBonus + ct.lower + ct.yatzyBonus);
             expect(ct.total).toBe(ct.raw * (setup.multipliers ? ci + 1 : 1));
-            // Bonuses only exist on cards whose Yatzy box holds 50.
+            // Bonuses only exist on cards whose Yatzy box holds 50, and each
+            // one was written into another box: at most 12 on a 13-box card.
             if (c.yatzyBonuses > 0) expect(c.boxes.yatzy).toBe(50);
-            expect(c.yatzyBonuses).toBeLessThanOrEqual(3);
+            expect(c.yatzyBonuses).toBeLessThanOrEqual(Object.keys(c.boxes).length - 1);
           });
         });
       }),

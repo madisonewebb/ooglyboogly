@@ -85,13 +85,12 @@ describe('joker rules (Yatzy box filled on this card)', () => {
     expect(value(o2, 'fives')).toBe(0);
   });
 
-  it('earns at most three bonuses per card, then still plays as a joker', () => {
-    const third = cardOptions(card({ yatzy: 50 }, 2), d('33333'));
-    expect(third.bonus).toBe(true);
+  it('earns a bonus for every further Yatzy, with no limit', () => {
     const fourth = cardOptions(card({ yatzy: 50 }, 3), d('33333'));
-    expect(fourth.bonus).toBe(false);
+    expect(fourth.bonus).toBe(true);
     expect(fourth.joker).toBe(true);
     expect(allowed(fourth)).toEqual(['threes']);
+    expect(cardOptions(card({ yatzy: 50 }, 9), d('33333')).bonus).toBe(true);
   });
 
   it('still earns the bonus when forced into a 0', () => {

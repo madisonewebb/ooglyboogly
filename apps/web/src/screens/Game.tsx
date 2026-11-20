@@ -9,16 +9,17 @@ import {
   cardTotal,
   type GameState,
   isPlayerDone,
-  MAX_YATZY_BONUSES,
   ROLLS_PER_TURN,
+  upperBoxFor,
   UPPER_BONUS,
   UPPER_BONUS_THRESHOLD,
+  YATZY_BONUS,
 } from '@rollhouse/rules';
-import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE, MSG_UNDO } from '@rollhouse/shared';
+import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { flavorOf, flavorVars } from '../flavor';
-import { CheckIcon, DieGlyph, UndoIcon } from '../icons';
+import { CheckIcon, DieGlyph } from '../icons';
 import { BOX_LABELS, BOX_POINTS } from '../labels';
 import { playBonus, playPop, playTurn, unlockAudio } from '../sound';
 import { DURATION, EASE_OUT, SPRING } from '../theme/motion';
@@ -186,7 +187,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const player = game.players[viewed]!;
   const mine = viewed === seat;
 
-  // A new roll, a score or an undo clears any half-made choice.
+  // A new roll or a score clears any half-made choice.
   const myTurnKey = JSON.stringify(seat === null ? null : game.players[seat]!.turn);
   useEffect(() => {
     setPick(null);
@@ -202,13 +203,20 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const pressing = useRef<'pointer' | 'key' | null>(null);
   const shaking = shake !== null;
 
-  /** Per card: each open box's option, and whether this roll earns a Yatzy bonus there. */
+  /**
+   * Per card: each open box's option, whether this roll earns a Yatzy bonus
+   * there, and whether the joker rule limits where it can go.
+   */
   const options = useMemo(() => {
     if (!mine || !canAct || !player.turn.dice || rolling || shaking) return null;
     const d = player.turn.dice;
     return player.cards.map((c) => {
       const o = cardOptions(c, d);
-      return { boxes: new Map<Box, BoxOption>(o.options.map((x) => [x.box, x])), bonus: o.bonus };
+      return {
+        boxes: new Map<Box, BoxOption>(o.options.map((x) => [x.box, x])),
+        bonus: o.bonus,
+        joker: o.joker,
+      };
     });
   }, [mine, canAct, player, rolling, shaking]);
 
@@ -322,7 +330,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     };
   }, []);
 
-  const last = seat === null ? null : game.players[seat]!.lastScore;
   const multi = player.cards.length > 1;
   const viewedFlavor = lobby.seats[viewed]?.flavor;
   const trayFlavor = lobby.seats[trayPlayer]?.flavor;
@@ -332,19 +339,43 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const where = (p: { card: number; box: Box }) =>
     `${BOX_LABELS[p.box].long}${multi ? ` on card ${p.card + 1}` : ''}`;
 
+  /**
+   * A Yatzy when every card's Yatzy box is already filled: the official joker
+   * rule decides where it may go, so say why the other boxes are greyed out.
+   */
+  const jokerHint = (() => {
+    const rolled = player.turn.dice;
+    if (!options || !rolled || options.some((o) => !o.joker)) return '';
+    const lead = options.some((o) => o.bonus) ? 'Yatzy bonus, +100!' : 'Another Yatzy!';
+    if (multi) {
+      return `${lead} On each card it goes in the matching upper box first, then any lower box at full value.`;
+    }
+    const upper = upperBoxFor(rolled[0]!);
+    const open = options[0]!.boxes;
+    if (open.get(upper)?.allowed) {
+      return `${lead} The joker rule puts it in ${BOX_LABELS[upper].long} while that box is open.`;
+    }
+    if ([...open.values()].some((o) => o.allowed && o.value > 0)) {
+      return `${lead} ${BOX_LABELS[upper].long} is filled, so any open lower box takes it at full value.`;
+    }
+    return `${lead} Every lower box is filled, so it goes in an open upper box as a 0.`;
+  })();
+
   const hint = shaking
     ? shake.sent
       ? ''
       : 'Let go to roll.'
-    : holdable
-      ? turn.held.some(Boolean)
-        ? 'Held dice wait on the shelf. Click one to put it back.'
-        : 'Click dice to hold them. Hold Roll to shake longer.'
-      : myTray && dice && !rolling && rollsLeft === 0
-        ? 'Pick a box on your pad.'
-        : canRoll
-          ? 'Hold Roll to shake the cup longer.'
-          : '';
+    : jokerHint
+      ? jokerHint
+      : holdable
+        ? turn.held.some(Boolean)
+          ? 'Held dice wait on the shelf. Click one to put it back.'
+          : 'Click dice to hold them. Hold Roll to shake longer.'
+        : myTray && dice && !rolling && rollsLeft === 0
+          ? 'Pick a box on your pad.'
+          : canRoll
+            ? 'Hold Roll to shake the cup longer.'
+            : '';
 
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
@@ -480,15 +511,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
               ) : null}
             </AnimatePresence>
             <p className="hint quiet">{hint || ' '}</p>
-            <AnimatePresence initial={false}>
-              {last && (
-                <Swap key={`${last.card}:${last.box}`}>
-                  <button type="button" className="undo" onClick={() => table.send(MSG_UNDO)}>
-                    <UndoIcon /> Undo {where(last)}
-                  </button>
-                </Swap>
-              )}
-            </AnimatePresence>
           </div>
         </section>
 
@@ -652,10 +674,11 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                     {player.cards.map((card, c) => (
                       <td
                         key={c}
-                        aria-label={`Card ${c + 1} Yatzy bonus: ${card.yatzyBonuses} of ${MAX_YATZY_BONUSES}`}
+                        aria-label={`Card ${c + 1} Yatzy bonuses: ${card.yatzyBonuses}, ${card.yatzyBonuses * YATZY_BONUS} points`}
                       >
                         <span className="bonus-boxes" aria-hidden="true">
-                          {Array.from({ length: MAX_YATZY_BONUSES }, (_, i) => (
+                          {/* Three boxes like a paper pad, and another for each bonus past them. */}
+                          {Array.from({ length: Math.max(3, card.yatzyBonuses) }, (_, i) => (
                             <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
                               {i < card.yatzyBonuses ? '✓' : ''}
                             </span>

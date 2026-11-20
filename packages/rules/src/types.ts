@@ -27,9 +27,8 @@ export const FULL_HOUSE = 25;
 export const SMALL_STRAIGHT = 30;
 export const LARGE_STRAIGHT = 40;
 export const YATZY = 50;
+/** Every further Yatzy on a card whose Yatzy box holds 50, with no limit (official rules). */
 export const YATZY_BONUS = 100;
-/** Bonus boxes per card; a further Yatzy still plays as a joker but earns nothing. */
-export const MAX_YATZY_BONUSES = 3;
 
 export const MIN_CARDS = 1;
 export const MAX_CARDS = 5;
