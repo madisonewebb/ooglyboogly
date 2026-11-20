@@ -15,7 +15,7 @@ import {
 } from '@rollhouse/shared';
 import { type Auth, reportError } from './api';
 import { errorText } from './errors';
-import { loadFlavor } from './flavorPrefs';
+import { loadTint } from './tintPrefs';
 import { store } from './storage';
 
 export type Connection = 'connecting' | 'open' | 'reconnecting' | 'lost';
@@ -90,7 +90,7 @@ export function useTable(auth: Auth): Table {
     const options: JoinOptions = {
       instanceId: auth.instanceId,
       session: auth.session,
-      ...loadFlavor(),
+      ...loadTint(),
     };
     tableClient(endpoint())
       .joinOrCreate(TABLE_ROOM, options)

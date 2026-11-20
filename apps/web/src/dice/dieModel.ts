@@ -1,6 +1,6 @@
 /**
- * The jelly die itself: a rounded body that light passes into, and candy
- * pearl pips. Shared by the tray and the lobby's spinning die.
+ * The die itself: glazed white porcelain with cobalt-blue pips, like a
+ * cyanotype in reverse. Shared by the tray and the lobby's turning die.
  */
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -44,10 +44,10 @@ const PIPS: Record<number, [number, number][]> = {
 
 export const dieGeometry = () => new RoundedBoxGeometry(1, 1, 1, 5, 0.16);
 
-/** Candy pearls: a low dome per pip, set just into each face. */
+/** Cobalt glaze: a very low dome per pip, pooled just proud of each face. */
 export function pipGeometry(): THREE.BufferGeometry {
-  const dome = new THREE.SphereGeometry(0.088, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-  dome.scale(1, 0.45, 1);
+  const dome = new THREE.SphereGeometry(0.09, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+  dome.scale(1, 0.2, 1);
   const parts: THREE.BufferGeometry[] = [];
   for (let v = 1; v <= 6; v++) {
     const n = new THREE.Vector3(...AXES[FACE_AXIS[v]!]!);
@@ -70,47 +70,36 @@ export function pipGeometry(): THREE.BufferGeometry {
 }
 
 /**
- * Translucent jelly candy: light goes in, picks up a deeper pink, and the
- * clear coat shines. Without `rich` (no GPU), a plain glossy standard
- * material: the physical one takes seconds to compile in software.
+ * Glazed porcelain: an opaque white body under a glassy clear coat. Without
+ * `rich` (no GPU), a plain glossy standard material: the physical one takes
+ * seconds to compile in software. The faint emissive lets a hovered die glow.
  */
-export function jellyMaterial(
-  color: string,
-  deep: string,
-  rich = true,
-): THREE.MeshStandardMaterial {
+export function porcelainMaterial(color: string, rich = true): THREE.MeshStandardMaterial {
   if (!rich) {
     return new THREE.MeshStandardMaterial({
       color,
-      roughness: 0.22,
+      roughness: 0.3,
       emissive: new THREE.Color(color),
-      emissiveIntensity: 0.12,
+      emissiveIntensity: 0.04,
     });
   }
   return new THREE.MeshPhysicalMaterial({
     color,
-    roughness: 0.16,
-    transmission: 0.55,
-    thickness: 0.9,
-    ior: 1.42,
-    attenuationColor: new THREE.Color(deep),
-    attenuationDistance: 0.65,
+    roughness: 0.34,
     clearcoat: 1,
-    clearcoatRoughness: 0.04,
-    sheen: 0.35,
-    sheenRoughness: 0.4,
-    sheenColor: new THREE.Color('#FFD6EA'),
+    clearcoatRoughness: 0.06,
     emissive: new THREE.Color(color),
-    emissiveIntensity: 0.05,
+    emissiveIntensity: 0.04,
   });
 }
 
-export function pearlMaterial(color: string, rich = true): THREE.MeshStandardMaterial {
-  if (!rich) return new THREE.MeshStandardMaterial({ color, roughness: 0.35 });
+/** The cobalt glaze in the pips: deeper and glossier than the body. */
+export function glazeMaterial(color: string, rich = true): THREE.MeshStandardMaterial {
+  if (!rich) return new THREE.MeshStandardMaterial({ color, roughness: 0.25 });
   return new THREE.MeshPhysicalMaterial({
     color,
-    roughness: 0.3,
-    clearcoat: 0.8,
-    clearcoatRoughness: 0.15,
+    roughness: 0.2,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05,
   });
 }

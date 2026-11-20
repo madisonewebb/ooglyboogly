@@ -3,7 +3,7 @@
  * time, so every screen plays the identical roll and tests can check the
  * result face.
  *
- * A roll: the candy cup pops in (on a reroll the free dice hop into it), the
+ * A roll: the dice cup pops in (on a reroll the free dice hop into it), the
  * cup rattles, tips, and the dice spill out one after another and play their
  * recorded tumble, with the server's values renumbered onto the top faces.
  * Once everything is still, the dice hop together into their columns (the

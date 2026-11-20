@@ -3,9 +3,10 @@
  * lazily, so the rest of the app paints before three.js arrives.
  *
  * Poses come from timeline.ts each frame and are written straight onto the
- * meshes, so a roll never re-renders React. The look: jelly dice with candy
- * pearl pips under a soft studio light, on felt inside a glossy rim, with the
- * butter shelf behind and the candy cup in the roller's flavor.
+ * meshes, so a roll never re-renders React. The look: glazed porcelain dice
+ * with cobalt pips under a soft studio light, on cyanotype-blue felt in an oak
+ * frame, with the held-dice shelf behind and a cup glazed in the roller's tint.
+ * A Yatzy exposes a white seaweed frond on the felt, like a sunprint.
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
@@ -13,7 +14,8 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { SceneTokens, Tokens } from '../theme/palette';
-import { dieGeometry, jellyMaterial, pearlMaterial, pipGeometry } from './dieModel';
+import { frond } from '../frond';
+import { dieGeometry, glazeMaterial, pipGeometry, porcelainMaterial } from './dieModel';
 import { fitCamera, FOV } from './framing';
 import { renderQuality } from './webgl';
 import {
@@ -45,8 +47,8 @@ export interface SceneProps {
   hops: readonly HopPlan[];
   colors: Tokens;
   scene: SceneTokens;
-  /** The roller's candy shade, for the cup and the sprinkles. */
-  candy: string;
+  /** The roller's tint, for the cup. */
+  hue: string;
   /** The die under the pointer, which lifts a little. */
   hover: number | null;
   /** How each die lies at rest, so they stay put between rolls. */
@@ -82,16 +84,28 @@ function feltTexture(color: string, w: number, h: number) {
     g.fillStyle = color;
     g.fillRect(0, 0, width, height);
     const rand = noise(11);
+    // Uneven tone, like a coating brushed on by hand: broad soft patches.
+    for (let i = 0; i < 46; i++) {
+      const x = rand() * width;
+      const y = rand() * height;
+      const r = 50 + rand() * 170;
+      const glow = g.createRadialGradient(x, y, 0, x, y, r);
+      const tone = rand() > 0.55 ? '255,255,255' : '4,14,32';
+      glow.addColorStop(0, `rgba(${tone},${0.03 + rand() * 0.04})`);
+      glow.addColorStop(1, `rgba(${tone},0)`);
+      g.fillStyle = glow;
+      g.fillRect(x - r, y - r, r * 2, r * 2);
+    }
     for (let i = 0; i < 14000; i++) {
       const light = rand() > 0.5;
-      g.fillStyle = light ? 'rgba(255,255,255,0.05)' : 'rgba(40,10,50,0.05)';
+      g.fillStyle = light ? 'rgba(255,255,255,0.05)' : 'rgba(4,14,32,0.06)';
       g.fillRect(rand() * width, rand() * height, 1 + rand() * 2, 1 + rand() * 2);
     }
     const e = height * 0.12;
     const shade = (x0: number, y0: number, x1: number, y1: number, rect: number[]) => {
       const grad = g.createLinearGradient(x0, y0, x1, y1);
-      grad.addColorStop(0, 'rgba(40,10,50,0.22)');
-      grad.addColorStop(1, 'rgba(40,10,50,0)');
+      grad.addColorStop(0, 'rgba(4,14,32,0.26)');
+      grad.addColorStop(1, 'rgba(4,14,32,0)');
       g.fillStyle = grad;
       g.fillRect(rect[0]!, rect[1]!, rect[2]!, rect[3]!);
     };
@@ -119,24 +133,48 @@ function bumpTexture() {
   return t;
 }
 
-/** The cup's paper: candy and white stripes all the way round. */
-function stripeTexture(candy: string) {
-  const t = canvasTexture(512, 8, (g) => {
-    for (let i = 0; i < 16; i++) {
-      g.fillStyle = i % 2 === 0 ? candy : '#FFF7FB';
-      g.fillRect((i * 512) / 16, 0, 512 / 16, 8);
-    }
+/**
+ * The sunprint a Yatzy exposes: three white seaweed fronds on a clear sheet the
+ * size of the felt, drawn from fixed seeds so every screen shows the same one.
+ */
+function exposureTexture(w: number, h: number) {
+  return canvasTexture(1024, Math.round((1024 * h) / w), (g) => {
+    const { width, height } = g.canvas;
+    g.fillStyle = '#FFFFFF';
+    // A soft over-exposure halo around every blade, like light creeping under the specimen.
+    g.shadowColor = 'rgba(255,255,255,0.55)';
+    g.shadowBlur = 6;
+    const plant = (seed: number, lean: number, cx: number, tall: number) => {
+      const f = frond(seed, 3, lean);
+      const k = (height * tall) / f.height;
+      const [minX, minY] = f.viewBox.split(' ').map(Number) as [number, number];
+      g.setTransform(
+        k,
+        0,
+        0,
+        k,
+        cx - (minX + f.width / 2) * k,
+        height * 0.97 - (minY + f.height) * k,
+      );
+      for (const b of f.blades) {
+        g.globalAlpha = b.level === 0 ? 0.95 : 0.82;
+        g.fill(new Path2D(b.d));
+      }
+      g.globalAlpha = 1;
+    };
+    plant(11, -0.25, width * 0.24, 0.62);
+    plant(3, 0, width * 0.5, 0.86);
+    plant(19, 0.25, width * 0.77, 0.66);
+    g.setTransform(1, 0, 0, 1, 0, 0);
   });
-  t.wrapS = THREE.RepeatWrapping;
-  return t;
 }
 
 function shadowTexture(): THREE.Texture {
   return canvasTexture(64, 64, (g) => {
     const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(40,10,50,0.5)');
-    grad.addColorStop(0.6, 'rgba(40,10,50,0.18)');
-    grad.addColorStop(1, 'rgba(40,10,50,0)');
+    grad.addColorStop(0, 'rgba(4,14,32,0.5)');
+    grad.addColorStop(0.6, 'rgba(4,14,32,0.18)');
+    grad.addColorStop(1, 'rgba(4,14,32,0)');
     g.fillStyle = grad;
     g.fillRect(0, 0, 64, 64);
   });
@@ -270,7 +308,7 @@ function groundTexture() {
   return canvasTexture(512, 512, (g) => {
     const { width, height } = g.canvas;
     g.filter = 'blur(22px)';
-    g.fillStyle = 'rgba(40,10,50,0.42)';
+    g.fillStyle = 'rgba(4,14,32,0.4)';
     g.beginPath();
     g.roundRect(width * 0.17, height * 0.2, width * 0.66, height * 0.66, 30);
     g.fill();
@@ -322,7 +360,7 @@ function Tray({ scene }: { scene: SceneTokens }) {
           <Gloss color={scene.rim} roughness={0.28} clearcoatRoughness={0.12} />
         </mesh>
       ))}
-      {/* The butter shelf for held dice, with a seat for each column. */}
+      {/* The oak shelf for held dice, with a seat for each column. */}
       <mesh
         position={[0, SHELF_Y / 2 - 0.02, SHELF_Z]}
         geometry={rounded(outerW, SHELF_Y + 0.04, SHELF_D, 0.3)}
@@ -354,10 +392,9 @@ function Dice({
   roll,
   hops,
   colors,
-  scene,
   hover,
   rests,
-}: Omit<SceneProps, 'onSlots' | 'candy'>) {
+}: Omit<SceneProps, 'onSlots' | 'hue' | 'scene'>) {
   const invalidate = useThree((s) => s.invalidate);
   const body = useMemo(dieGeometry, []);
   const pips = useMemo(pipGeometry, []);
@@ -367,13 +404,10 @@ function Dice({
   const blobs = useRef<(THREE.Mesh | null)[]>([]);
   const lift = useRef([0, 0, 0, 0, 0]);
   const materials = useMemo(
-    () =>
-      [0, 1, 2, 3, 4].map(() =>
-        jellyMaterial(colors.die, scene.dieDeep, renderQuality() === 'high'),
-      ),
-    [colors.die, scene.dieDeep],
+    () => [0, 1, 2, 3, 4].map(() => porcelainMaterial(colors.die, renderQuality() === 'high')),
+    [colors.die],
   );
-  const pipMat = useMemo(() => pearlMaterial(colors.pip, renderQuality() === 'high'), [colors.pip]);
+  const pipMat = useMemo(() => glazeMaterial(colors.pip, renderQuality() === 'high'), [colors.pip]);
   useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
 
   // Any change to what's shown needs a fresh frame.
@@ -416,7 +450,7 @@ function Dice({
         m.needsUpdate = true;
       }
       m.opacity = pose.opacity;
-      m.emissiveIntensity = 0.05 + lift.current[i]! * 0.18;
+      m.emissiveIntensity = 0.04 + lift.current[i]! * 0.14;
       const b = blobs.current[i];
       if (b) {
         const onShelf = held[i] && !(roll && rolling && roll.free.includes(i));
@@ -457,7 +491,7 @@ function Dice({
   );
 }
 
-function Cup({ roll, candy, scene }: Pick<SceneProps, 'roll' | 'candy' | 'scene'>) {
+function Cup({ roll, hue, scene }: Pick<SceneProps, 'roll' | 'hue' | 'scene'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const shell = useMemo(() => {
@@ -470,12 +504,10 @@ function Cup({ roll, candy, scene }: Pick<SceneProps, 'roll' | 'candy' | 'scene'
     ];
     return new THREE.LatheGeometry(profile, 56);
   }, []);
-  const stripes = useMemo(() => stripeTexture(candy), [candy]);
-  useEffect(() => () => stripes.dispose(), [stripes]);
   const materials = useRef<THREE.Material[]>([]);
   const inside = useMemo(
-    () => new THREE.Color(candy).lerp(new THREE.Color(scene.cupInside), 0.55),
-    [candy, scene.cupInside],
+    () => new THREE.Color(hue).lerp(new THREE.Color(scene.cupInside), 0.55),
+    [hue, scene.cupInside],
   );
 
   useFrame(() => {
@@ -487,7 +519,7 @@ function Cup({ roll, candy, scene }: Pick<SceneProps, 'roll' | 'candy' | 'scene'
     g.position.set(...c.pos);
     g.rotation.z = c.tip;
     g.scale.setScalar(c.scale);
-    // Opaque unless fading, so the jelly dice can see the cup behind them.
+    // Opaque unless fading, so it never hides the dice it is pouring.
     const fading = c.opacity < 0.999;
     for (const m of materials.current) {
       if (m.transparent !== fading) {
@@ -507,10 +539,10 @@ function Cup({ roll, candy, scene }: Pick<SceneProps, 'roll' | 'candy' | 'scene'
       <mesh geometry={shell} castShadow>
         <Gloss
           ref={keep}
-          map={stripes}
-          roughness={0.38}
-          clearcoat={0.7}
-          clearcoatRoughness={0.2}
+          color={hue}
+          roughness={0.32}
+          clearcoat={0.9}
+          clearcoatRoughness={0.1}
           side={THREE.FrontSide}
         />
       </mesh>
@@ -519,109 +551,64 @@ function Cup({ roll, candy, scene }: Pick<SceneProps, 'roll' | 'candy' | 'scene'
       </mesh>
       <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[CUP.radiusTop, 0.09, 14, 56]} />
-        <Gloss ref={keep} color="#FFF7FB" roughness={0.25} />
+        <Gloss ref={keep} color="#F7F9FB" roughness={0.25} />
       </mesh>
     </group>
   );
 }
 
-const SPRINKLES = 110;
-
-/** A Yatzy: a burst of candy sprinkles that bounce on the felt. */
-function Sprinkles({ roll, candy, colors }: Pick<SceneProps, 'roll' | 'candy' | 'colors'>) {
-  const mesh = useRef<THREE.InstancedMesh>(null);
+/**
+ * A Yatzy: a white seaweed frond develops on the felt like a sunprint in the
+ * light, holds, then washes out.
+ */
+function Exposure({ roll }: Pick<SceneProps, 'roll'>) {
+  const mesh = useRef<THREE.Mesh>(null);
   const invalidate = useThree((s) => s.invalidate);
-  const geometry = useMemo(() => new THREE.CapsuleGeometry(0.045, 0.2, 4, 8), []);
-  const sim = useRef<{
-    plan: RollPlan | null;
-    last: number;
-    p: Float32Array;
-    v: Float32Array;
-    r: Float32Array;
-    w: Float32Array;
-  }>({
-    plan: null,
-    last: 0,
-    p: new Float32Array(SPRINKLES * 3),
-    v: new Float32Array(SPRINKLES * 3),
-    r: new Float32Array(SPRINKLES * 3),
-    w: new Float32Array(SPRINKLES * 3),
-  });
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const hx = (TRAY.maxX - TRAY.minX) / 2;
+  const hz = (TRAY.maxZ - TRAY.minZ) / 2;
+  const cz = (TRAY.minZ + TRAY.maxZ) / 2;
+  const print = useMemo(() => exposureTexture(hx * 2, hz * 2), [hx, hz]);
+  useEffect(() => () => print.dispose(), [print]);
 
-  useEffect(() => {
-    const m = mesh.current;
-    if (!m) return;
-    const palette = [candy, colors.butter, '#FFFFFF', colors.mint, candy];
-    const c = new THREE.Color();
-    for (let i = 0; i < SPRINKLES; i++) m.setColorAt(i, c.set(palette[i % palette.length]!));
-    if (m.instanceColor) m.instanceColor.needsUpdate = true;
-  }, [candy, colors.butter, colors.mint]);
+  // The print outlives the roll (the tray drops its plan once the dice settle),
+  // so it keeps its own clock; any new roll that isn't a Yatzy washes it away.
+  const shown = useRef<{ plan: RollPlan; start: number } | null>(null);
 
   useFrame(() => {
     const m = mesh.current;
     if (!m) return;
-    const s = sim.current;
-    const now = performance.now();
-    const on = !!roll && !roll.reduced && !!roll.path && celebrationFor(roll.values) === 'yatzy';
-    const t = on ? timing(roll!) : null;
-    const burst = t ? t.celebrate + (t.done - t.celebrate) * 0.5 : 0;
-    if (!t || now < burst || now > burst + 1700) {
-      m.visible = false;
+    if (roll && roll !== shown.current?.plan) {
+      const yatzy = !roll.reduced && !!roll.path && celebrationFor(roll.values) === 'yatzy';
+      const t = timing(roll);
+      shown.current = yatzy
+        ? { plan: roll, start: t.celebrate + (t.done - t.celebrate) * 0.45 }
+        : null;
+    }
+    const age = shown.current ? (performance.now() - shown.current.start) / 2400 : -1;
+    if (age < 0 || age > 1) {
+      if (age > 1) shown.current = null;
+      if (m.visible) m.visible = false;
+      if (age < 0 && shown.current) invalidate();
       return;
     }
-    if (s.plan !== roll) {
-      s.plan = roll;
-      s.last = burst;
-      const rand = noise(7 + Math.round(roll!.start));
-      for (let i = 0; i < SPRINKLES; i++) {
-        const a = rand() * Math.PI * 2;
-        const up = 5 + rand() * 7;
-        const out = 2 + rand() * 4.5;
-        s.p.set(
-          [(rand() - 0.5) * 4, 1.6 + rand() * 0.6, TRAY_Z - 0.4 + (rand() - 0.5) * 1.2],
-          i * 3,
-        );
-        s.v.set([Math.cos(a) * out, up, Math.sin(a) * out * 0.6], i * 3);
-        s.r.set([rand() * 6, rand() * 6, rand() * 6], i * 3);
-        s.w.set([(rand() - 0.5) * 18, (rand() - 0.5) * 18, (rand() - 0.5) * 18], i * 3);
-      }
-    }
-    const dt = Math.min(1 / 30, Math.max(0, (now - s.last) / 1000));
-    s.last = now;
-    const age = (now - burst) / 1700;
-    for (let i = 0; i < SPRINKLES; i++) {
-      const j = i * 3;
-      s.v[j + 1] = s.v[j + 1]! - 26 * dt;
-      for (let a = 0; a < 3; a++) s.p[j + a] = s.p[j + a]! + s.v[j + a]! * dt;
-      if (s.p[j + 1]! < 0.05) {
-        s.p[j + 1] = 0.05;
-        s.v[j + 1] = Math.abs(s.v[j + 1]!) * 0.32;
-        s.v[j] = s.v[j]! * 0.6;
-        s.v[j + 2] = s.v[j + 2]! * 0.6;
-        for (let a = 0; a < 3; a++) s.w[j + a] = s.w[j + a]! * 0.5;
-      }
-      // Keep them on the felt.
-      const x = s.p[j]!;
-      if (x < TRAY.minX + 0.1 || x > TRAY.maxX - 0.1) s.v[j] = -s.v[j]! * 0.5;
-      const z = s.p[j + 2]!;
-      if (z < TRAY.minZ + 0.1 || z > TRAY.maxZ - 0.1) s.v[j + 2] = -s.v[j + 2]! * 0.5;
-      for (let a = 0; a < 3; a++) s.r[j + a] = s.r[j + a]! + s.w[j + a]! * dt;
-      dummy.position.set(s.p[j]!, s.p[j + 1]!, s.p[j + 2]!);
-      dummy.rotation.set(s.r[j]!, s.r[j + 1]!, s.r[j + 2]!);
-      dummy.scale.setScalar(age > 0.75 ? Math.max(0, 1 - (age - 0.75) / 0.25) : 1);
-      dummy.updateMatrix();
-      m.setMatrixAt(i, dummy.matrix);
-    }
-    m.instanceMatrix.needsUpdate = true;
+    // Develop quickly, hold, then wash out slowly.
+    const k = age < 0.2 ? age / 0.2 : age < 0.6 ? 1 : 1 - (age - 0.6) / 0.4;
+    (m.material as THREE.MeshBasicMaterial).opacity = 0.82 * k;
     m.visible = true;
     invalidate();
   });
 
   return (
-    <instancedMesh ref={mesh} args={[geometry, undefined, SPRINKLES]} visible={false} castShadow>
-      <Gloss roughness={0.35} clearcoat={0.8} />
-    </instancedMesh>
+    <mesh
+      ref={mesh}
+      position={[0, 0.006, cz]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      renderOrder={1}
+      visible={false}
+    >
+      <planeGeometry args={[hx * 2, hz * 2]} />
+      <meshBasicMaterial map={print} transparent depthWrite={false} opacity={0} />
+    </mesh>
   );
 }
 
@@ -671,12 +658,11 @@ export default function DiceScene(props: SceneProps) {
         roll={props.roll}
         hops={props.hops}
         colors={props.colors}
-        scene={scene}
         hover={props.hover}
         rests={props.rests}
       />
-      <Cup roll={props.roll} candy={props.candy} scene={scene} />
-      <Sprinkles roll={props.roll} candy={props.candy} colors={props.colors} />
+      <Exposure roll={props.roll} />
+      <Cup roll={props.roll} hue={props.hue} scene={scene} />
     </Canvas>
   );
 }

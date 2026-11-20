@@ -1,5 +1,5 @@
 import type { Box, GameSetup, Move, PlayStyle, RuleErrorCode } from '@rollhouse/rules';
-import type { FlavorId } from './flavors';
+import type { TintId } from './tints';
 
 /** Room and message names shared by the server, the web client and the smoke test. */
 export const HELLO_ROOM = 'hello';
@@ -68,8 +68,8 @@ export interface JoinOptions {
   /** discordSdk.instanceId, or any shared string outside Discord. */
   instanceId: string;
   session: string;
-  /** The flavor this device remembers picking. */
-  flavor?: FlavorId;
+  /** The tint this device remembers picking. */
+  tint?: TintId;
 }
 
 export const MIN_NAME_LENGTH = 1;
@@ -97,7 +97,7 @@ export interface Seat {
   /** At least one of this user's devices is in the room. */
   connected: boolean;
   /** Unique at the table. */
-  flavor: FlavorId;
+  tint: TintId;
 }
 
 export interface Lobby {
@@ -118,16 +118,16 @@ export const MSG_ROLL = 'roll';
 export const MSG_HOLD = 'hold';
 export const MSG_SCORE = 'score';
 export const MSG_UNDO = 'undo';
-export const MSG_FLAVOR = 'flavor';
+export const MSG_TINT = 'tint';
 
 export type SettingsIntent = Partial<LobbySettings>;
 export interface HoldIntent {
   die: number;
   held: boolean;
 }
-/** Before the start. Picking a flavor someone else has leaves yours as it was. */
-export interface FlavorIntent {
-  flavor: FlavorId;
+/** Before the start. Picking a tint someone else has leaves yours as it was. */
+export interface TintIntent {
+  tint: TintId;
 }
 export interface ScoreIntent {
   card: number;

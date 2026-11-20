@@ -22,7 +22,7 @@ export const SHELF_Y = 0.35;
  */
 export const FRAME = { minX: -5.2, maxX: 5.2, minZ: -4, maxZ: 3.25, maxY: 2.9, topMaxZ: 1.5 };
 
-/** The candy cup: its centre while upright over the back-left of the tray, and its shape. */
+/** The dice cup: its centre while upright over the back-left of the tray, and its shape. */
 export const CUP = { x: -3.05, y: 2.2, z: 0.4, radiusTop: 1.22, radiusBottom: 0.95, height: 1.8 };
 /** How far the cup tips to pour (about z; negative pours to the right). */
 export const POUR_TIP = -1.85;

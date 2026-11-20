@@ -4,3 +4,7 @@ dist
 coverage
 e2e/test-results
 e2e/playwright-report
+# Impeccable's installed skills, its working files, and the DESIGN.md it writes.
+.claude
+**/.impeccable
+apps/web/DESIGN.md

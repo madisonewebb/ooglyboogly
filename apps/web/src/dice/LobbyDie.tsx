@@ -1,13 +1,13 @@
 /**
- * One jelly die turning slowly beside the wordmark. Loaded lazily; it also
+ * One porcelain die turning slowly beside the wordmark. Loaded lazily; it also
  * warms up three.js before the game needs it. Holds still with reduced motion.
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { SCENE, THEMES, type ThemeName } from '../theme/palette';
-import { dieGeometry, jellyMaterial, pearlMaterial, pipGeometry } from './dieModel';
+import { THEMES, type ThemeName } from '../theme/palette';
+import { dieGeometry, glazeMaterial, pipGeometry, porcelainMaterial } from './dieModel';
 import { renderQuality } from './webgl';
 
 function Die({ theme, still }: { theme: ThemeName; still: boolean }) {
@@ -17,11 +17,11 @@ function Die({ theme, still }: { theme: ThemeName; still: boolean }) {
   const body = useMemo(dieGeometry, []);
   const pips = useMemo(pipGeometry, []);
   const mat = useMemo(
-    () => jellyMaterial(THEMES[theme].die, SCENE[theme].dieDeep, renderQuality() === 'high'),
+    () => porcelainMaterial(THEMES[theme].die, renderQuality() === 'high'),
     [theme],
   );
   const pearl = useMemo(
-    () => pearlMaterial(THEMES[theme].pip, renderQuality() === 'high'),
+    () => glazeMaterial(THEMES[theme].pip, renderQuality() === 'high'),
     [theme],
   );
 
