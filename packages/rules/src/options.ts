@@ -1,14 +1,5 @@
 import { isYatzy, jokerLowerValue, scoreBox, upperBoxFor } from './scoring';
-import {
-  BOXES,
-  type Box,
-  type Card,
-  type Die,
-  LOWER_BOXES,
-  MAX_YATZY_BONUSES,
-  UPPER_BOXES,
-  YATZY,
-} from './types';
+import { BOXES, type Box, type Card, type Die, LOWER_BOXES, UPPER_BOXES, YATZY } from './types';
 
 export interface BoxOption {
   box: Box;
@@ -38,8 +29,8 @@ export const isOpen = (card: Card, box: Box) => card.boxes[box] === undefined;
  *   1. the matching upper box, if open, is the only choice;
  *   2. otherwise any open lower box, at full value;
  *   3. otherwise a 0 in any open upper box.
- * The 100-point bonus needs a 50 in this card's Yatzy box, and each card has
- * room for at most three bonuses, like the three bonus boxes on a paper pad.
+ * The 100-point bonus needs a 50 in this card's Yatzy box, and there is no
+ * limit to how many a card earns, as in the official rules.
  */
 export function cardOptions(card: Card, dice: readonly Die[]): CardOptions {
   const open = BOXES.filter((b) => isOpen(card, b));
@@ -53,7 +44,7 @@ export function cardOptions(card: Card, dice: readonly Die[]): CardOptions {
     };
   }
 
-  const bonus = card.boxes.yatzy === YATZY && card.yatzyBonuses < MAX_YATZY_BONUSES;
+  const bonus = card.boxes.yatzy === YATZY;
   const matching = upperBoxFor(dice[0]!);
   let allowed: ReadonlySet<Box>;
   let value: (box: Box) => number;

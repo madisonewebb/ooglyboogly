@@ -59,13 +59,6 @@ export const SoundIcon = ({ muted }: { muted: boolean }) => (
   </Icon>
 );
 
-export const UndoIcon = () => (
-  <Icon width="1.1em" height="1.1em">
-    <path d="M9 14 4 9l5-5" />
-    <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
-  </Icon>
-);
-
 export const CheckIcon = () => (
   <Icon width="1em" height="1em" strokeWidth={3}>
     <path d="m5 12.5 4.5 4.5L19 7.5" />
