@@ -367,6 +367,18 @@ input:not([type]):focus {
   box-shadow: var(--shadow-sm);
 }
 
+/* At the table they sit inside the band: smaller, and centred in its height. */
+body:has(.screen.game) .corner {
+  top: 0.45rem;
+}
+
+body:has(.screen.game) .corner .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 0;
+  min-height: 0;
+}
+
 .corner .icon:hover:not(:disabled) {
   transform: translateY(-1px);
 }
@@ -1519,34 +1531,13 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   color: var(--quiet);
 }
 
-/* Ones to Sixes so far against the bonus line, until it turns into the +35 tag. */
+/* Ones to Sixes so far, out of 63, until it turns into the +35 tag. */
 .upper-progress {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   color: var(--quiet);
   font-weight: 700;
-}
-
-.upper-progress .meter {
-  width: 3rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: var(--rule);
-  overflow: hidden;
-}
-
-.upper-progress .meter span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--strong);
-  transition: width var(--dur-slow) var(--ease-out);
-}
-
-/* Narrow columns at a big table: just the count. */
-.pad-col:has(thead th:nth-child(5)) .upper-progress .meter {
-  display: none;
 }
 
 .bonus-boxes {
