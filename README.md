@@ -1,10 +1,10 @@
 # Oogly Boogly
 
-[![CI](https://img.shields.io/github/actions/workflow/status/madisonewebb/rollhouse/ci.yaml?branch=develop&label=CI)](https://github.com/madisonewebb/rollhouse/actions/workflows/ci.yaml?query=branch%3Adevelop)
-[![Staging](https://img.shields.io/github/actions/workflow/status/madisonewebb/rollhouse/deploy.yml?branch=develop&label=staging)](https://github.com/madisonewebb/rollhouse/actions/workflows/deploy.yml?query=branch%3Adevelop)
-[![Production](https://img.shields.io/github/actions/workflow/status/madisonewebb/rollhouse/deploy.yml?branch=main&label=production)](https://github.com/madisonewebb/rollhouse/actions/workflows/deploy.yml?query=branch%3Amain)
-[![Release](https://img.shields.io/github/v/release/madisonewebb/rollhouse?sort=semver)](https://github.com/madisonewebb/rollhouse/releases/latest)
-[![License: MIT](https://img.shields.io/github/license/madisonewebb/rollhouse)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/madisonewebb/ooglyboogly/ci.yaml?branch=develop&label=CI)](https://github.com/madisonewebb/ooglyboogly/actions/workflows/ci.yaml?query=branch%3Adevelop)
+[![Staging](https://img.shields.io/github/actions/workflow/status/madisonewebb/ooglyboogly/deploy.yml?branch=develop&label=staging)](https://github.com/madisonewebb/ooglyboogly/actions/workflows/deploy.yml?query=branch%3Adevelop)
+[![Production](https://img.shields.io/github/actions/workflow/status/madisonewebb/ooglyboogly/deploy.yml?branch=main&label=production)](https://github.com/madisonewebb/ooglyboogly/actions/workflows/deploy.yml?query=branch%3Amain)
+[![Release](https://img.shields.io/github/v/release/madisonewebb/ooglyboogly?sort=semver)](https://github.com/madisonewebb/ooglyboogly/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/madisonewebb/ooglyboogly)](LICENSE)
 
 A private five-dice game for the family, named for what Madi's grandma says when someone is one
 die away from a Yatzy. It's played as a Discord Activity. Each player fills 1 to 5
@@ -79,7 +79,7 @@ Fair dice: ESLint bans `Math.random` in `apps/server` and `packages/rules`.
 
 On every push to `develop` or `main`, `.github/workflows/deploy.yml`:
 
-1. Builds `ghcr.io/madisonewebb/rollhouse:<sha>` (linux/amd64) with the registry build cache.
+1. Builds `ghcr.io/madisonewebb/ooglyboogly:<sha>` (linux/amd64) with the registry build cache.
 2. Commits that tag to the private `home-lab` repo, in
    `argocd/applications/rollhouse-staging.yaml` or `rollhouse.yaml`
    (`spec.source.kustomize.images`). CI never commits to this repo.
