@@ -66,16 +66,16 @@ Fair dice: ESLint bans `Math.random` in `apps/server` and `packages/rules`.
 
 ## Deployment (GitOps)
 
-| Branch    | Environment | Namespace           | URL                                            |
-| --------- | ----------- | ------------------- | ---------------------------------------------- |
-| `develop` | staging     | `rollhouse-staging` | https://ooglyboogly-staging.castillocurios.com |
-| `main`    | prod        | `rollhouse`         | https://ooglyboogly.castillocurios.com         |
+| Branch    | Environment | Namespace             | URL                                            |
+| --------- | ----------- | --------------------- | ---------------------------------------------- |
+| `develop` | staging     | `ooglyboogly-staging` | https://ooglyboogly-staging.castillocurios.com |
+| `main`    | prod        | `ooglyboogly`         | https://ooglyboogly.castillocurios.com         |
 
 On every push to `develop` or `main`, `.github/workflows/deploy.yml`:
 
 1. Builds `ghcr.io/madisonewebb/rollhouse:<sha>` (linux/amd64) with the registry build cache.
 2. Commits that tag to the private `home-lab` repo, in
-   `argocd/applications/rollhouse-staging.yaml` or `rollhouse.yaml`
+   `argocd/applications/ooglyboogly-staging.yaml` or `ooglyboogly.yaml`
    (`spec.source.kustomize.images`). CI never commits to this repo.
 3. ArgoCD syncs the overlay from this repo (public, over HTTPS) with that image.
 4. Polls `/health` until it reports the new SHA (10-minute limit), then joins a game room over
@@ -96,10 +96,10 @@ The image is pushed with the workflow's `GITHUB_TOKEN`. The GHCR package must be
 
 Nginx Proxy Manager proxy hosts (both with Websockets Support on and a Let's Encrypt cert):
 
-| Host                                     | Forward to                                                |
-| ---------------------------------------- | --------------------------------------------------------- |
-| `ooglyboogly.castillocurios.com`         | `http://rollhouse.rollhouse.svc.cluster.local:80`         |
-| `ooglyboogly-staging.castillocurios.com` | `http://rollhouse.rollhouse-staging.svc.cluster.local:80` |
+| Host                                     | Forward to                                                    |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| `ooglyboogly.castillocurios.com`         | `http://ooglyboogly.ooglyboogly.svc.cluster.local:80`         |
+| `ooglyboogly-staging.castillocurios.com` | `http://ooglyboogly.ooglyboogly-staging.svc.cluster.local:80` |
 
 Advanced config on both, so idle game connections stay open:
 
@@ -112,9 +112,11 @@ DNS: A records for `ooglyboogly` and `ooglyboogly-staging` at Namecheap.
 
 ## Renaming
 
-The name and domain are each set in one place. The internal slug `rollhouse` (the `@rollhouse/*`
-packages, Kubernetes namespaces and service, the container image, the database file and the
-GitHub repo) stays as it is when the name players see changes.
+The name and domain are each set in one place. In the cluster everything is `ooglyboogly`: the
+namespaces (`ooglyboogly`, `ooglyboogly-staging`), the deployment, service, volume, config maps
+and secrets. The older slug `rollhouse` stays where renaming would mean moving data or breaking
+links: the `@rollhouse/*` packages, the container image, the database file, the NAS backup
+folders and SFTP user, and the GitHub repo.
 
 | What                 | Where                                              |
 | -------------------- | -------------------------------------------------- |
@@ -191,7 +193,7 @@ Generate a new ed25519 key and put the public half in `authorized_keys`. Then re
 namespaces:
 
 ```sh
-kubectl create secret generic rollhouse-litestream -n <namespace> \
+kubectl create secret generic ooglyboogly-litestream -n <namespace> \
   --from-file=id_ed25519=<key> --dry-run=client -o yaml \
   | kubeseal --kubeconfig /etc/rancher/k3s/k3s.yaml \
       --controller-namespace kube-system --controller-name sealed-secrets-controller \
