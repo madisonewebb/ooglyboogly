@@ -1,5 +1,11 @@
 # Oogly Boogly
 
+[![CI](https://img.shields.io/github/actions/workflow/status/madisonewebb/rollhouse/ci.yaml?branch=develop&label=CI)](https://github.com/madisonewebb/rollhouse/actions/workflows/ci.yaml?query=branch%3Adevelop)
+[![Staging](https://img.shields.io/github/actions/workflow/status/madisonewebb/rollhouse/deploy.yml?branch=develop&label=staging)](https://github.com/madisonewebb/rollhouse/actions/workflows/deploy.yml?query=branch%3Adevelop)
+[![Production](https://img.shields.io/github/actions/workflow/status/madisonewebb/rollhouse/deploy.yml?branch=main&label=production)](https://github.com/madisonewebb/rollhouse/actions/workflows/deploy.yml?query=branch%3Amain)
+[![Release](https://img.shields.io/github/v/release/madisonewebb/rollhouse?sort=semver)](https://github.com/madisonewebb/rollhouse/releases/latest)
+[![License: MIT](https://img.shields.io/github/license/madisonewebb/rollhouse)](LICENSE)
+
 A private five-dice game for the family, named for what Madi's grandma says when someone is one
 die away from a Yatzy. It's played as a Discord Activity. Each player fills 1 to 5
 scorecards at once. The server rolls every die (`crypto.randomInt`), and clients only send
