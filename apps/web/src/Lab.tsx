@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { DiceTray, type RollEvent } from './dice/DiceTray';
-import { FLAVORS } from './theme/palette';
+import { TINTS } from './theme/palette';
 import { unlockAudio } from './sound';
 
 const q = new URLSearchParams(location.search);
@@ -38,11 +38,11 @@ export function Lab() {
             rolling={rolling}
             onToggle={(i) => setHeld((h) => h.map((x, j) => (j === i ? !x : x)))}
             onSettled={(i) => setSettled(i)}
-            candy={FLAVORS.grape.candy}
+            hue={TINTS.heather.hue}
           />
           <div className="action-row">
             <input aria-label="Values" value={text} onChange={(e) => setText(e.target.value)} />
-            <button type="button" className="candy" onClick={() => go()}>
+            <button type="button" className="primary" onClick={() => go()}>
               Roll {tumble}
             </button>
             <button type="button" onClick={() => go(true)}>

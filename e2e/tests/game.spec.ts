@@ -58,11 +58,11 @@ for (const style of ['Take turns', 'Everyone at once'] as const) {
     await expect(page.getByText('Mom', { exact: true })).toBeVisible();
     await expect(mom.getByText(/Waiting for Madi to start/)).toBeVisible();
 
-    // Flavors are unique at the table: Mom can't take Madi's.
-    await expect(mom.getByRole('button', { name: /^Raspberry \(taken by Madi\)/ })).toBeDisabled();
-    await mom.getByRole('button', { name: 'Grape', exact: true }).first().click();
+    // Tints are unique at the table: Mom can't take Madi's.
+    await expect(mom.getByRole('button', { name: /^Rose \(taken by Madi\)/ })).toBeDisabled();
+    await mom.getByRole('button', { name: 'Heather', exact: true }).first().click();
     await expect(
-      page.getByRole('button', { name: /^Grape \(taken by Mom\)/ }).first(),
+      page.getByRole('button', { name: /^Heather \(taken by Mom\)/ }).first(),
     ).toBeDisabled();
 
     await page.getByRole('button', { name: '1', exact: true }).click();

@@ -2,21 +2,21 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useId } from 'react';
 import { MAX_CARDS, MAX_PLAYERS, MIN_CARDS } from '@rollhouse/rules';
 import {
-  FLAVOR_IDS,
-  type FlavorId,
+  TINT_IDS,
+  type TintId,
   type Lobby as LobbyState,
   type LobbySettings,
-  MSG_FLAVOR,
+  MSG_TINT,
   MSG_SETTINGS,
   MSG_START,
   type SettingsIntent,
 } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import { Brand } from '../Brand';
-import { flavorVars } from '../flavor';
-import { saveFlavor } from '../flavorPrefs';
+import { tintVars } from '../tint';
+import { saveTint } from '../tintPrefs';
 import { CheckIcon, CrownIcon } from '../icons';
-import { FLAVORS } from '../theme/palette';
+import { TINTS } from '../theme/palette';
 import { SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
 import type { Table } from '../useTable';
@@ -67,27 +67,27 @@ function Choice<T extends string | number | boolean>(props: {
   );
 }
 
-/** Eight candy swatches. Flavors someone else has are marked with their initial. */
-function FlavorPicker(props: {
+/** Eight tint swatches. Tints someone else has are marked with their initial. */
+function TintPicker(props: {
   label: string;
-  value: FlavorId;
-  takenBy: Map<FlavorId, string>;
-  onChange: (f: FlavorId) => void;
+  value: TintId;
+  takenBy: Map<TintId, string>;
+  onChange: (f: TintId) => void;
 }) {
   const { theme } = usePrefs();
   return (
     <fieldset className="choice">
       <legend className="sr-only">{props.label}</legend>
-      <div className="flavors">
-        {FLAVOR_IDS.map((id) => {
+      <div className="tints">
+        {TINT_IDS.map((id) => {
           const owner = props.takenBy.get(id);
           const on = props.value === id;
           return (
             <button
               key={id}
               type="button"
-              className="flavor"
-              style={flavorVars(id, theme)}
+              className="tint"
+              style={tintVars(id, theme)}
               aria-pressed={on}
               disabled={owner !== undefined}
               onClick={() => props.onChange(id)}
@@ -100,7 +100,7 @@ function FlavorPicker(props: {
               >
                 {on ? <CheckIcon /> : owner?.slice(0, 1).toUpperCase()}
               </motion.span>
-              {FLAVORS[id].name}
+              {TINTS[id].name}
               {owner && <span className="sr-only"> (taken by {owner})</span>}
             </button>
           );
@@ -113,11 +113,11 @@ function FlavorPicker(props: {
 export function Lobby({ lobby, table, userId, cdnBase }: Props) {
   const me = lobby.seats.find((seat) => seat.user.id === userId);
   const takenBy = new Map(
-    lobby.seats.filter((seat) => seat !== me).map((seat) => [seat.flavor, seat.user.name] as const),
+    lobby.seats.filter((seat) => seat !== me).map((seat) => [seat.tint, seat.user.name] as const),
   );
-  const pickFlavor = (flavor: FlavorId) => {
-    saveFlavor(flavor);
-    table.send(MSG_FLAVOR, { flavor });
+  const pickTint = (tint: TintId) => {
+    saveTint(tint);
+    table.send(MSG_TINT, { tint });
   };
   const isHost = lobby.hostId === userId;
   const host = lobby.seats.find((s) => s.user.id === lobby.hostId);
@@ -152,7 +152,7 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
                     transition={SPRING.pop}
                   >
                     <span className="seat-face">
-                      <Avatar user={seat.user} cdnBase={cdnBase} flavor={seat.flavor} />
+                      <Avatar user={seat.user} cdnBase={cdnBase} tint={seat.tint} />
                       {seat.user.id === lobby.hostId && (
                         <span className="crown" role="img" aria-label="host" title="Host">
                           <CrownIcon />
@@ -181,14 +181,9 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
 
           {me && (
             <section className="panel">
-              <h2>Your flavor</h2>
-              <p className="quiet">Your color for chips and the numbers on your pad.</p>
-              <FlavorPicker
-                label="Flavor"
-                value={me.flavor}
-                takenBy={takenBy}
-                onChange={pickFlavor}
-              />
+              <h2>Your color</h2>
+              <p className="quiet">It rings your picture and writes your scores.</p>
+              <TintPicker label="Color" value={me.tint} takenBy={takenBy} onChange={pickTint} />
             </section>
           )}
         </div>
@@ -238,7 +233,11 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
             )}
           </section>
           {isHost ? (
-            <button type="button" className="candy big start" onClick={() => table.send(MSG_START)}>
+            <button
+              type="button"
+              className="primary big start"
+              onClick={() => table.send(MSG_START)}
+            >
               Start game
             </button>
           ) : (

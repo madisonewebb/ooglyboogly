@@ -4,6 +4,7 @@ import { type AppConfig, BRAND_NAME } from '@rollhouse/shared';
 import { type Auth, getConfig, guestSignIn } from './api';
 import { Brand } from './Brand';
 import { Corner } from './Corner';
+import { PrintFilters } from './PrintFilters';
 import { discordSignIn, inDiscord } from './discord';
 import { Game } from './screens/Game';
 import { Lobby } from './screens/Lobby';
@@ -38,7 +39,7 @@ function guestAuth(session: string, user: Auth['user']): Auth {
 
 export function App() {
   // Browsers only start sound after a click or a key, so the first one anywhere
-  // (the lobby's Start, a flavor) turns it on, ready for the first turn's chime.
+  // (the lobby's Start, a tint) turns it on, ready for the first turn's chime.
   useEffect(() => {
     const opts = { capture: true, passive: true };
     addEventListener('pointerdown', unlockAudio, opts);
@@ -50,6 +51,7 @@ export function App() {
   }, []);
   return (
     <>
+      <PrintFilters />
       <Corner />
       <Boot />
     </>
@@ -156,7 +158,7 @@ function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
           autoComplete="nickname"
           onChange={(e) => setName(e.target.value)}
         />
-        <button type="submit" className="candy big">
+        <button type="submit" className="primary big">
           Sit down
         </button>
         {error && <p role="alert">{error}</p>}

@@ -37,8 +37,8 @@ interface Props {
   /** Click a die to hold or release it; null when the viewer can't. */
   onToggle: ((die: number) => void) | null;
   onSettled(index: number): void;
-  /** The roller's candy shade: the cup and the sprinkles. */
-  candy: string;
+  /** The roller's tint: the cup they shake. */
+  hue: string;
   rolling: boolean;
   /**
    * Roll is being held down (since `start`): the cup comes out and rattles
@@ -80,7 +80,7 @@ export function DiceTray({
   roll,
   onToggle,
   onSettled,
-  candy,
+  hue,
   rolling,
   shake = null,
 }: Props) {
@@ -255,7 +255,7 @@ export function DiceTray({
     hops,
     colors: THEMES[theme],
     scene: SCENE[theme],
-    candy,
+    hue,
     hover,
     rests: restsNow,
     onSlots: setSlots,
@@ -268,7 +268,7 @@ export function DiceTray({
       className={`dice-stage${flat ? ' flat' : ''}`}
       data-testid="dice-tray"
       onClick={skip}
-      style={{ ['--candy' as string]: candy, ['--stage-aspect' as string]: STAGE_ASPECT }}
+      style={{ ['--hue' as string]: hue, ['--stage-aspect' as string]: STAGE_ASPECT }}
     >
       {three && (
         <div className="scene">

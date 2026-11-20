@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 import { type GameState, playerTotal, type PlayerTotal, UPPER_BONUS } from '@rollhouse/rules';
 import type { Lobby } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
-import { Confetti } from '../Confetti';
-import { flavorOf, flavorVars } from '../flavor';
+import { Frond } from '../Frond';
+import { tintVars } from '../tint';
 import { CrownIcon } from '../icons';
 import { playCelebrate } from '../sound';
 import { SPRING } from '../theme/motion';
@@ -55,14 +55,14 @@ export function Results({ game, lobby, cdnBase }: Props) {
   const best = rows[0]?.totals.total ?? 0;
   const winners = rows.filter((r) => r.totals.total === best);
   const names = winners.map((r) => r.seat.user.name);
-  const candy = winners.map((r) => flavorOf(r.seat.flavor).candy);
 
   useEffect(() => playCelebrate(), []);
 
   return (
     <main className="screen results">
-      <div className="winner-banner">
-        <Confetti colors={[...candy, 'var(--butter)', 'var(--mint)']} count={56} />
+      <div className="winner-banner print">
+        <Frond seed={19} lean={-0.25} className="brand-frond left" />
+        <Frond seed={7} lean={0.2} className="brand-frond right" />
         <motion.h1
           className="wordmark"
           data-testid="winner"
@@ -80,7 +80,7 @@ export function Results({ game, lobby, cdnBase }: Props) {
             <motion.li
               key={seat.user.id}
               className={`panel standing${top ? ' top' : ''}`}
-              style={flavorVars(seat.flavor, theme) as MotionStyle}
+              style={tintVars(seat.tint, theme) as MotionStyle}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SPRING.soft, delay: 0.25 + rank * 0.12 }}
@@ -89,7 +89,7 @@ export function Results({ game, lobby, cdnBase }: Props) {
                 <span className="rank" aria-label={`Place ${rank + 1}`}>
                   {top ? <CrownIcon /> : rank + 1}
                 </span>
-                <Avatar user={seat.user} cdnBase={cdnBase} flavor={seat.flavor} />
+                <Avatar user={seat.user} cdnBase={cdnBase} tint={seat.tint} />
                 <strong className="standing-name">{seat.user.name}</strong>
                 <strong className="total">
                   <CountUp value={totals.total} delay={0.35 + rank * 0.12} />
