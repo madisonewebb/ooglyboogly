@@ -21,6 +21,7 @@ import {
   isGuestId,
   type TintId,
   isTint,
+  type Equipped,
   type ErrorMessage,
   type JoinOptions,
   type Lobby,
@@ -39,15 +40,32 @@ import {
   MSG_SNAPSHOT,
   MSG_START,
   MSG_UNDO,
+  MSG_BUY,
+  MSG_EQUIP,
+  MSG_GOAL,
   MSG_REACT,
   MSG_REACTION,
+  MSG_WALLET,
   isSticker,
+  packOfSticker,
   REACTION_COOLDOWN_MS,
   type ReactionMessage,
   type SessionUser,
   type Snapshot,
+  type WalletMessage,
 } from '@rollhouse/shared';
-import { getBalance, type PayoutRow, payOut } from '../db';
+import {
+  buyItem,
+  equipItem,
+  getBalance,
+  getEquipped,
+  getWallet,
+  ownsItem,
+  type PayoutRow,
+  payOut,
+  pinGoal,
+  type ShopResult,
+} from '../db';
 import { rollDice } from '../dice';
 import { verifySession } from '../session';
 
@@ -73,6 +91,8 @@ interface Member {
   sessions: Set<string>;
   /** Seats only; spectators keep the first free one, unused. */
   tint: TintId;
+  /** What this player has on. Read from the database when they sit down. */
+  equipped: Equipped;
 }
 
 const isObject = (m: unknown): m is Record<string, unknown> =>
@@ -183,13 +203,18 @@ export function createTableRoom(cfg: TableConfig) {
             this.seats.map((s) => s.tint),
             isTint(options?.tint) ? options.tint : null,
           );
-          member = { user, sessions: new Set(), tint };
+          member = { user, sessions: new Set(), tint, equipped: this.loadEquipped(user.id) };
           this.seats.push(member);
           if (!this.hostId) this.hostId = user.id;
         } else {
           member = this.spectators.find((s) => s.user.id === user.id);
           if (!member) {
-            member = { user, sessions: new Set(), tint: assignTint([]) };
+            member = {
+              user,
+              sessions: new Set(),
+              tint: assignTint([]),
+              equipped: this.loadEquipped(user.id),
+            };
             this.spectators.push(member);
           }
         }
@@ -307,12 +332,50 @@ export function createTableRoom(cfg: TableConfig) {
         });
       },
 
+      /*
+       * The shop. Each message names an item (never a price or a player): the
+       * server prices it from the catalog and acts for the signed-in user only.
+       * Whatever the outcome, the player's wallet is sent back so every one of
+       * their devices catches up.
+       */
+      [MSG_BUY]: (client: Client, intent: unknown) => {
+        this.shop(client, (userId) =>
+          buyItem(cfg.db!, userId, isObject(intent) ? intent['item'] : undefined),
+        );
+      },
+
+      [MSG_EQUIP]: (client: Client, intent: unknown) => {
+        const body = isObject(intent) ? intent : {};
+        // A seat's look is fixed when the game starts: the lobby is the only time to change it.
+        if (this.setup)
+          return this.sendError(client, 'STARTED', 'you can only change your look in the lobby');
+        this.shop(client, (userId, member) => {
+          const result = equipItem(cfg.db!, userId, body['slot'], body['item']);
+          if (result.ok) {
+            member.equipped = getEquipped(cfg.db!, userId);
+            this.broadcastLobby();
+          }
+          return result;
+        });
+      },
+
+      [MSG_GOAL]: (client: Client, intent: unknown) => {
+        this.shop(client, (userId) =>
+          pinGoal(cfg.db!, userId, isObject(intent) ? intent['item'] : undefined),
+        );
+      },
+
       // Anyone at the table, seated or watching, can send a sticker.
       [MSG_REACT]: (client: Client, intent: unknown) => {
         const member = this.memberOf(client);
         if (!member) return;
         if (!isObject(intent) || !isSticker(intent['sticker'])) {
           return this.sendError(client, 'BAD_INTENT', 'pick one of the stickers');
+        }
+        // A pack's stickers belong to whoever bought the pack.
+        const pack = packOfSticker(intent['sticker']);
+        if (pack && !(cfg.db && ownsItem(cfg.db, member.user.id, pack.id))) {
+          return this.sendError(client, 'NOT_OWNED', `${pack.name} unlocks that sticker`);
         }
         const now = Date.now();
         const userId = member.user.id;
@@ -337,6 +400,7 @@ export function createTableRoom(cfg: TableConfig) {
           user: s.user,
           connected: s.sessions.size > 0,
           tint: s.tint,
+          ...(Object.keys(s.equipped).length > 0 ? { equipped: s.equipped } : {}),
         })),
         hostId: this.hostId,
         settings: this.settings,
@@ -351,6 +415,62 @@ export function createTableRoom(cfg: TableConfig) {
       return { seats: this.settled!, balance: this.balances.get(id) ?? null };
     }
 
+    /** Whether this player may spend coins here: guests only where guest payouts are on. */
+    private canShop(userId: string): boolean {
+      return cfg.db !== null && (!isGuestId(userId) || cfg.guestPayouts);
+    }
+
+    private loadEquipped(userId: string): Equipped {
+      if (!cfg.db || !this.canShop(userId)) return {};
+      try {
+        return getEquipped(cfg.db, userId);
+      } catch (err) {
+        console.error(`could not read what ${userId} has on`, err);
+        return {};
+      }
+    }
+
+    /**
+     * One player's own account, as they see it. Never sent to anyone else. If the
+     * database cannot be read the table still works: the shop just shows closed.
+     */
+    private walletFor(userId: string): WalletMessage {
+      const empty = { balance: 0, owned: [], equipped: {}, goal: null };
+      if (!cfg.db || !this.canShop(userId)) return { ...empty, canBuy: false };
+      try {
+        return { ...getWallet(cfg.db, userId), canBuy: true };
+      } catch (err) {
+        console.error(`could not read the wallet of ${userId}`, err);
+        return { ...empty, canBuy: false };
+      }
+    }
+
+    /** Sends a player's wallet to every device of theirs at this table. */
+    private pushWallet(userId: string) {
+      for (const c of this.clients) {
+        if ((c.auth as SessionUser).id === userId) c.send(MSG_WALLET, this.walletFor(userId));
+      }
+    }
+
+    /** Runs one shop action for the sender, then sends their wallet back, win or lose. */
+    private shop(client: Client, act: (userId: string, member: Member) => ShopResult) {
+      const member = this.memberOf(client);
+      if (!member) return;
+      const { id } = member.user;
+      try {
+        if (!this.canShop(id)) {
+          this.sendError(client, 'SHOP_CLOSED', 'the shop is not open for you here');
+        } else {
+          const result = act(id, member);
+          if (!result.ok) this.sendError(client, result.code, result.message);
+        }
+      } catch (err) {
+        console.error(`shop action failed for ${id}`, err);
+        this.sendError(client, 'SHOP_CLOSED', 'the shop could not do that just now');
+      }
+      this.pushWallet(id);
+    }
+
     private sendSnapshot(client: Client) {
       const body: Snapshot = {
         lobby: this.lobby(),
@@ -359,6 +479,7 @@ export function createTableRoom(cfg: TableConfig) {
         version: cfg.version,
         you: client.auth as SessionUser,
         ...(this.settled ? { payout: this.payoutFor(client) } : {}),
+        wallet: this.walletFor((client.auth as SessionUser).id),
       };
       client.send(MSG_SNAPSHOT, body);
     }
@@ -437,6 +558,7 @@ export function createTableRoom(cfg: TableConfig) {
           this.settled = rows.map((r) => ({ userId: r.userId, coins: r.coins, ...r.breakdown }));
           for (const r of rows) this.balances.set(r.userId, getBalance(cfg.db, r.userId));
           for (const client of this.clients) client.send(MSG_PAYOUT, this.payoutFor(client));
+          for (const r of rows) this.pushWallet(r.userId);
         }
       } catch (err) {
         console.error(`payout failed for game ${this.gameId}`, err);

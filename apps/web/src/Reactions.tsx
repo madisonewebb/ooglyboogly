@@ -10,6 +10,7 @@ import {
   type ReactionMessage,
   STICKER_IDS,
   type StickerId,
+  STICKER_PACKS,
 } from '@rollhouse/shared';
 import babyYahtzee from './art/stickers/baby_yahtzee.webp';
 import cheering from './art/stickers/cheering_ghost.webp';
@@ -20,6 +21,13 @@ import sleeping from './art/stickers/sleeping_ghost.webp';
 import steamingGarbage from './art/stickers/steaming_garbage.webp';
 import stressed from './art/stickers/stressed_ghost.webp';
 import sunglasses from './art/stickers/sunglasses_ghost.webp';
+import broom from './art/stickers/packs/broom.svg';
+import cackle from './art/stickers/packs/cackle.svg';
+import foresaw from './art/stickers/packs/foresaw.svg';
+import mischief from './art/stickers/packs/mischief.svg';
+import moonMood from './art/stickers/packs/moonMood.svg';
+import ribbit from './art/stickers/packs/ribbit.svg';
+import { useWallet } from './shop/WalletContext';
 import { playPop } from './sound';
 import { usePrefs } from './theme/prefs';
 
@@ -33,7 +41,23 @@ export const STICKERS: Record<StickerId, { art: string; label: string }> = {
   dontShitOnOnes: { art: dontShitOnOnes, label: "Don't shit on ones" },
   steamingGarbage: { art: steamingGarbage, label: 'Steaming garbage' },
   stressed: { art: stressed, label: 'Stressed' },
+  // From the sticker packs in the shop. Placeholders until the Nano Banana art lands.
+  cackle: { art: cackle, label: 'Cackle' },
+  mischief: { art: mischief, label: 'Mischief' },
+  ribbit: { art: ribbit, label: 'Ribbit' },
+  foresaw: { art: foresaw, label: 'I foresaw this' },
+  moonMood: { art: moonMood, label: 'Moon mood' },
+  broom: { art: broom, label: 'Off I go' },
 };
+
+/**
+ * The stickers a player may send: the free ones, then each sticker pack they own,
+ * in the order the shop lists the packs. (The server checks this again.)
+ */
+export function stickersFor(owned: readonly string[] | undefined): StickerId[] {
+  const fromPacks = STICKER_PACKS.filter((p) => owned?.includes(p.id)).flatMap((p) => p.stickers);
+  return [...STICKER_IDS, ...fromPacks];
+}
 
 /** How long a sticker floats before it's gone. */
 const FLOAT_MS = 2600;
@@ -43,6 +67,7 @@ export function ReactionPicker({ send }: { send: (type: string, body: unknown) =
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
+  const stickers = stickersFor(useWallet()?.owned);
 
   useEffect(() => {
     if (!open) return;
@@ -78,7 +103,7 @@ export function ReactionPicker({ send }: { send: (type: string, body: unknown) =
       </button>
       {open && (
         <div className="sticker-tray" role="group" aria-label="Stickers">
-          {STICKER_IDS.map((id) => (
+          {stickers.map((id) => (
             <button
               key={id}
               type="button"

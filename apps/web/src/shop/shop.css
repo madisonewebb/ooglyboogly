@@ -1,0 +1,243 @@
+/*
+ * The shop and the lobby's coin panel. Colors come only from the theme
+ * variables, so the pairs the contrast test checks are the only ones used:
+ * text and quiet on the pad, and onStrong on strong. Rarity and card state are
+ * always written in words; borders and frames only decorate.
+ */
+
+.wallet-panel .balance,
+.shop-head .balance {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.balance .coin-icon,
+.balance svg,
+.price svg {
+  color: var(--strong);
+}
+
+.balance .amount {
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wallet-panel .shop-open {
+  align-self: flex-start;
+}
+
+/* ---------- The goal bar ---------- */
+
+.goal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.goal p {
+  margin: 0;
+}
+
+.goal-title {
+  font-family: var(--display);
+}
+
+.bar {
+  height: 0.8rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--rule);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--strong);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar-fill {
+    transition: width var(--dur-slow) var(--ease-out);
+  }
+}
+
+/* ---------- The shop screen ---------- */
+
+.screen.shop {
+  max-width: 62rem;
+}
+
+.shop-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+}
+
+.shop-head h2 {
+  margin: 0;
+  flex: 1;
+  font-family: var(--display);
+}
+
+.shop-section h3 {
+  margin: 0;
+  font-family: var(--display);
+}
+
+.shop-grid {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
+  gap: 0.9rem;
+}
+
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pad);
+}
+
+/* Rarer items get a heavier frame, never a louder color. */
+.shop-card[data-rarity='spooky'] {
+  border-color: var(--strong);
+}
+
+.shop-card[data-rarity='legendary'] {
+  border-color: var(--strong);
+  border-width: 3px;
+}
+
+.shop-card[data-state='soon'] {
+  border-style: dashed;
+}
+
+.shop-card h4 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.1rem;
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.2rem 0.6rem;
+}
+
+.rarity {
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  color: var(--quiet);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.card-blurb {
+  margin: 0;
+  flex: 1;
+  color: var(--quiet);
+}
+
+.price {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.confirm p {
+  width: 100%;
+  margin: 0;
+}
+
+/* ---------- Previews ---------- */
+
+.preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  height: 5.5rem;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+}
+
+.preview-pack img {
+  width: 4rem;
+  height: 4rem;
+}
+
+.preview-glyph {
+  color: var(--strong);
+}
+
+.shop-card[data-state='soon'] .preview-glyph {
+  opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shop-card {
+    transition: transform var(--dur) var(--ease-out);
+  }
+
+  .shop-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 34rem) {
+  .shop-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* What a player has on, under their name in the lobby's seat list. */
+.seat-look {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 400;
+}

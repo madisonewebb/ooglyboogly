@@ -2,7 +2,19 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { getBalance, openDatabase, payOut, recordBoot } from './db';
+import type { ShopEntry } from '@rollhouse/shared';
+import {
+  buyItem,
+  equipItem,
+  getBalance,
+  getEquipped,
+  getWallet,
+  openDatabase,
+  ownsItem,
+  payOut,
+  pinGoal,
+  recordBoot,
+} from './db';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -134,6 +146,239 @@ describe('payouts', () => {
   it('reports 0 for a player who has never earned', () => {
     const { db } = open();
     expect(getBalance(db, 'nobody')).toBe(0);
+    db.close();
+  });
+});
+
+describe('the shop', () => {
+  const breakdown = { finish: 10, win: 0, yatzy: 0 };
+  const open = (coins = 0) => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'rollhouse-db-'));
+    dirs.push(dir);
+    const db = openDatabase(dir);
+    if (coins > 0) payOut(db, 'g0', [{ userId: 'a', coins, breakdown }]);
+    return { dir, db };
+  };
+  /** A catalog whose items are all for sale, because the real ones are not yet. */
+  const forSale = (id: unknown): ShopEntry | undefined => {
+    const e: Record<string, ShopEntry> = {
+      bone: {
+        id: 'bone',
+        slot: 'diceSkin',
+        name: 'Bone',
+        rarity: 'common',
+        price: 40,
+        blurb: '',
+        available: true,
+      },
+      toad: {
+        id: 'toad',
+        slot: 'pet',
+        name: 'Toad',
+        rarity: 'common',
+        price: 60,
+        blurb: '',
+        available: true,
+      },
+    };
+    return typeof id === 'string' ? e[id] : undefined;
+  };
+  const fail = (code: string) => expect.objectContaining({ ok: false, code });
+  const table = (db: ReturnType<typeof open>['db'], name: string) =>
+    db.prepare(`SELECT * FROM ${name}`).all();
+
+  it('creates inventory, equipped and goals next to the coin tables', () => {
+    const { db } = open();
+    const names = (
+      db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all() as { name: string }[]
+    ).map((n) => n.name);
+    expect(names).toEqual(expect.arrayContaining(['wallets', 'inventory', 'equipped', 'goals']));
+    // Not the names an earlier, reverted coins version used.
+    expect(names).not.toContain('players');
+    expect(names).not.toContain('ledger');
+    db.close();
+  });
+
+  it('takes the catalog price, adds the item and records what was paid, in one go', () => {
+    const { db } = open(100);
+    expect(buyItem(db, 'a', 'cauldronCrew')).toEqual({ ok: true });
+    expect(getBalance(db, 'a')).toBe(60);
+    expect(ownsItem(db, 'a', 'cauldronCrew')).toBe(true);
+    expect(table(db, 'inventory')).toEqual([
+      expect.objectContaining({ user_id: 'a', item_id: 'cauldronCrew', price_paid: 40 }),
+    ]);
+    // A pet costs its own tier, from the catalog.
+    expect(buyItem(db, 'a', 'toad', forSale)).toEqual({ ok: true });
+    expect(getBalance(db, 'a')).toBe(0);
+    db.close();
+  });
+
+  it('never charges twice for the same item, however often it is retried', () => {
+    const { db } = open(200);
+    expect(buyItem(db, 'a', 'cauldronCrew')).toEqual({ ok: true });
+    for (let i = 0; i < 3; i++)
+      expect(buyItem(db, 'a', 'cauldronCrew')).toEqual(fail('ALREADY_OWNED'));
+    expect(getBalance(db, 'a')).toBe(160);
+    expect(table(db, 'inventory')).toHaveLength(1);
+    expect(db.isTransaction).toBe(false);
+    db.close();
+  });
+
+  it('refuses a purchase the player cannot afford, and changes nothing', () => {
+    const { db } = open(39);
+    expect(buyItem(db, 'a', 'cauldronCrew')).toEqual(fail('NOT_ENOUGH_COINS'));
+    expect(getBalance(db, 'a')).toBe(39);
+    expect(table(db, 'inventory')).toEqual([]);
+    // Someone who never earned has no wallet row at all.
+    expect(buyItem(db, 'nobody', 'cauldronCrew')).toEqual(fail('NOT_ENOUGH_COINS'));
+    expect(table(db, 'wallets')).toHaveLength(1);
+    db.close();
+  });
+
+  it('can spend exactly everything, down to zero, but not below', () => {
+    const { db } = open(40);
+    expect(buyItem(db, 'a', 'cauldronCrew')).toEqual({ ok: true });
+    expect(getBalance(db, 'a')).toBe(0);
+    expect(buyItem(db, 'a', 'moonlitCharms')).toEqual(fail('NOT_ENOUGH_COINS'));
+    expect(getBalance(db, 'a')).toBe(0);
+    db.close();
+  });
+
+  it('only sells what the catalog lists, and only what is available', () => {
+    const { db } = open(1000);
+    expect(buyItem(db, 'a', 'free-gold')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(buyItem(db, 'a', 42)).toEqual(fail('UNKNOWN_ITEM'));
+    expect(buyItem(db, 'a', { id: 'bone', price: 0 })).toEqual(fail('UNKNOWN_ITEM'));
+    // Coming soon: in the catalog, not for sale.
+    expect(buyItem(db, 'a', 'bone')).toEqual(fail('NOT_AVAILABLE'));
+    expect(getBalance(db, 'a')).toBe(1000);
+    expect(table(db, 'inventory')).toEqual([]);
+    db.close();
+  });
+
+  it('rolls back the deduction when recording the item fails', () => {
+    const { db } = open(100);
+    // Break the second step of the purchase, after the coins have been taken.
+    db.exec('DROP TABLE goals');
+    expect(() => buyItem(db, 'a', 'cauldronCrew')).toThrow();
+    expect(getBalance(db, 'a')).toBe(100);
+    expect(table(db, 'inventory')).toEqual([]);
+    expect(db.isTransaction).toBe(false);
+    db.close();
+  });
+
+  it('keeps the wallet check constraint as a second guard', () => {
+    const { db } = open(10);
+    expect(() => db.exec("UPDATE wallets SET coins = coins - 11 WHERE user_id = 'a'")).toThrow();
+    db.close();
+  });
+
+  it('equips an owned item in its slot, replacing the one there, and unequips', () => {
+    const { db } = open(1000);
+    buyItem(db, 'a', 'bone', forSale);
+    buyItem(db, 'a', 'toad', forSale);
+    db.prepare("INSERT INTO inventory VALUES ('a', 'obsidian', 40, 'now')").run();
+    expect(equipItem(db, 'a', 'diceSkin', 'bone')).toEqual({ ok: true });
+    expect(equipItem(db, 'a', 'pet', 'toad')).toEqual({ ok: true });
+    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'bone', pet: 'toad' });
+    // One item per slot.
+    expect(equipItem(db, 'a', 'diceSkin', 'obsidian')).toEqual({ ok: true });
+    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'obsidian', pet: 'toad' });
+    expect(table(db, 'equipped')).toHaveLength(2);
+    expect(equipItem(db, 'a', 'pet', null)).toEqual({ ok: true });
+    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'obsidian' });
+    // Taking off an empty slot is fine.
+    expect(equipItem(db, 'a', 'brew', null)).toEqual({ ok: true });
+    db.close();
+  });
+
+  it('refuses to equip what is not owned, not in that slot, or not real', () => {
+    const { db } = open(100);
+    buyItem(db, 'a', 'toad', forSale);
+    expect(equipItem(db, 'a', 'diceSkin', 'bone')).toEqual(fail('NOT_OWNED'));
+    expect(equipItem(db, 'a', 'diceSkin', 'toad')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(equipItem(db, 'a', 'pet', 'cauldronCrew')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(equipItem(db, 'a', 'pet', 7)).toEqual(fail('UNKNOWN_ITEM'));
+    expect(equipItem(db, 'a', 'hat', 'toad')).toEqual(fail('BAD_INTENT'));
+    // Someone else's item is not yours.
+    expect(equipItem(db, 'b', 'pet', 'toad')).toEqual(fail('NOT_OWNED'));
+    expect(getEquipped(db, 'a')).toEqual({});
+    db.close();
+  });
+
+  it('ignores an equipped row whose item has left the catalog', () => {
+    const { db } = open();
+    db.prepare("INSERT INTO equipped VALUES ('a', 'pet', 'dragon')").run();
+    db.prepare("INSERT INTO equipped VALUES ('a', 'brew', 'swamp')").run();
+    expect(getEquipped(db, 'a')).toEqual({ brew: 'swamp' });
+    db.close();
+  });
+
+  it('pins one goal at a time, clears it, and clears it when it is bought', () => {
+    const { db } = open(100);
+    expect(pinGoal(db, 'a', 'cauldronCrew')).toEqual({ ok: true });
+    expect(getWallet(db, 'a').goal).toBe('cauldronCrew');
+    expect(pinGoal(db, 'a', 'moonlitCharms')).toEqual({ ok: true });
+    expect(getWallet(db, 'a').goal).toBe('moonlitCharms');
+    expect(table(db, 'goals')).toHaveLength(1);
+    // Buying something else leaves the goal alone; buying the goal ends it.
+    buyItem(db, 'a', 'cauldronCrew');
+    expect(getWallet(db, 'a').goal).toBe('moonlitCharms');
+    buyItem(db, 'a', 'moonlitCharms');
+    expect(getWallet(db, 'a').goal).toBeNull();
+    expect(pinGoal(db, 'a', null)).toEqual({ ok: true });
+    db.close();
+  });
+
+  it('only pins things that are real, for sale and not yet owned', () => {
+    const { db } = open(100);
+    buyItem(db, 'a', 'cauldronCrew');
+    expect(pinGoal(db, 'a', 'cauldronCrew')).toEqual(fail('ALREADY_OWNED'));
+    expect(pinGoal(db, 'a', 'bone')).toEqual(fail('NOT_AVAILABLE'));
+    expect(pinGoal(db, 'a', 'nope')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(getWallet(db, 'a').goal).toBeNull();
+    db.close();
+  });
+
+  it('describes a whole account, and an empty one', () => {
+    const { db } = open(100);
+    buyItem(db, 'a', 'cauldronCrew');
+    pinGoal(db, 'a', 'moonlitCharms');
+    expect(getWallet(db, 'a')).toEqual({
+      balance: 60,
+      owned: ['cauldronCrew'],
+      equipped: {},
+      goal: 'moonlitCharms',
+    });
+    expect(getWallet(db, 'nobody')).toEqual({ balance: 0, owned: [], equipped: {}, goal: null });
+    db.close();
+  });
+
+  it('keeps purchases, equipment and goals across a restart', () => {
+    const { dir, db } = open(100);
+    buyItem(db, 'a', 'cauldronCrew');
+    db.prepare("INSERT INTO inventory VALUES ('a', 'swamp', 40, 'now')").run();
+    equipItem(db, 'a', 'brew', 'swamp');
+    pinGoal(db, 'a', 'moonlitCharms');
+    db.close();
+    const again = openDatabase(dir);
+    expect(getWallet(again, 'a')).toEqual({
+      balance: 60,
+      owned: expect.arrayContaining(['cauldronCrew', 'swamp']),
+      equipped: { brew: 'swamp' },
+      goal: 'moonlitCharms',
+    });
+    again.close();
+  });
+
+  it('cannot overspend across two connections to one file', () => {
+    // Two connections to one file, as during a deploy overlap; each purchase re-reads the balance.
+    const { dir, db } = open(40);
+    const other = openDatabase(dir);
+    const results = [buyItem(db, 'a', 'cauldronCrew'), buyItem(other, 'a', 'moonlitCharms')];
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    expect(getBalance(db, 'a')).toBe(0);
+    other.close();
     db.close();
   });
 });
