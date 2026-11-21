@@ -456,6 +456,9 @@ function Dice({
 /** Cast iron: black and dark grey, whoever's turn it is. */
 const IRON = { body: '#2A2A2F', inside: '#101013', trim: '#45454C' };
 
+/** The lip's radius: a little wider than CUP.radiusTop, with a thin rim, so spilling dice clear it. */
+const LIP = CUP.radiusTop + 0.07;
+
 function Cup({ roll }: Pick<SceneProps, 'roll'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
@@ -471,7 +474,7 @@ function Cup({ roll }: Pick<SceneProps, 'roll'>) {
       new THREE.Vector2(1.3, -0.1 * k),
       new THREE.Vector2(1.31, 0.22 * k),
       new THREE.Vector2(1.25, 0.62 * k),
-      new THREE.Vector2(CUP.radiusTop, h),
+      new THREE.Vector2(LIP, h),
     ]).getPoints(28);
     return new THREE.LatheGeometry(profile, 56);
   }, []);
@@ -521,7 +524,7 @@ function Cup({ roll }: Pick<SceneProps, 'roll'>) {
         />
       </mesh>
       <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[CUP.radiusTop, 0.12, 14, 56]} />
+        <torusGeometry args={[LIP, 0.06, 14, 56]} />
         <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
       </mesh>
       {[-1, 1].map((side) => (
