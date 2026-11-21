@@ -451,14 +451,8 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
   const rest = restPos(die, plan.held[die] ?? false);
 
   if (rank < 0) {
-    // Held: wiggle while the others roll, then join any celebration.
-    let quat = plan.before?.[die] ?? restQuat(value);
-    if (!plan.reduced && now < t.physEnd) {
-      quat = mul(
-        fromAxisAngle(Z, Math.sin(((now - plan.start) / 1000) * Math.PI * 10) * 0.07),
-        quat,
-      );
-    }
+    // Held: stays perfectly still while the others roll, then joins any celebration.
+    const quat = plan.before?.[die] ?? restQuat(value);
     return celebrate(plan, t, die, now, {
       pos: rest,
       quat,
