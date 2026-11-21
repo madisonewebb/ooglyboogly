@@ -92,15 +92,16 @@ export const BREWS: readonly Item[] = [
 
 /** Spec 04 owns the available flags of the next two lists. */
 export const PETS: readonly Item[] = [
-  item('pet', 'toad', 'Toad', 'common', 'Sits on the rim and croaks at good rolls.'),
-  item('pet', 'blackCat', 'Black Cat', 'spooky', 'Watches the dice, and swats at a bust.'),
-  item('pet', 'bat', 'Bat', 'spooky', 'Hangs from the rim and flaps when you score.'),
+  item('pet', 'toad', 'Toad', 'common', 'Sits on the rim and croaks at good rolls.', true),
+  item('pet', 'blackCat', 'Black Cat', 'spooky', 'Watches the dice, and swats at a bust.', true),
+  item('pet', 'bat', 'Bat', 'spooky', 'Hangs from the rim and flaps when you score.', true),
   item(
     'pet',
     'ghostCheerleader',
     'Ghost Cheerleader',
     'legendary',
     'Cheers every score, wildly on a Yatzy.',
+    true,
   ),
 ];
 
@@ -111,6 +112,7 @@ export const CELEBRATIONS: readonly Item[] = [
     'Ghost Parade',
     'spooky',
     'A line of little ghosts marches across on a Yatzy.',
+    true,
   ),
 ];
 

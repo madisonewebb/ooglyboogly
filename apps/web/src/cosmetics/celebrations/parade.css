@@ -1,0 +1,107 @@
+/*
+ * The Ghost Parade: a line of little ghosts walks across the whole screen.
+ * Pure CSS motion (a walk and a bob per ghost). Fixed over everything, no clicks.
+ */
+.parade {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.parade-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9vh;
+  height: clamp(4.25rem, 11vw, 7rem);
+}
+
+.parade-ghost {
+  --size: clamp(3.5rem, 9vw, 6rem);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--size) * var(--scale, 1));
+  aspect-ratio: 1;
+  /* Starts off the left edge, ends off the right. */
+  translate: -20vw 0;
+  animation: parade-walk 4600ms linear var(--delay) both;
+}
+
+.parade-bob {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0.3rem 0.4rem color-mix(in srgb, var(--shadow) 40%, transparent))
+    drop-shadow(0 0 1.5px color-mix(in srgb, var(--on-band) 80%, transparent));
+  animation: parade-bob var(--bob) ease-in-out var(--bob-offset) infinite;
+}
+
+.parade-strip {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: auto;
+  translate: -100% 0;
+  filter: drop-shadow(0 0.3rem 0.4rem color-mix(in srgb, var(--shadow) 40%, transparent));
+  animation: parade-strip-walk 6000ms linear both;
+}
+
+@keyframes parade-walk {
+  from {
+    translate: -20vw 0;
+  }
+  to {
+    translate: 115vw 0;
+  }
+}
+
+@keyframes parade-strip-walk {
+  from {
+    translate: -100% 0;
+  }
+  to {
+    translate: calc(100vw + 100%) 0;
+  }
+}
+
+@keyframes parade-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg) scale(1, 1);
+  }
+  25% {
+    transform: translateY(-14%) rotate(0deg) scale(0.97, 1.04);
+  }
+  50% {
+    transform: translateY(0) rotate(2deg) scale(1.04, 0.96);
+  }
+  75% {
+    transform: translateY(-9%) rotate(0deg) scale(0.98, 1.03);
+  }
+}
+
+/* Reduced motion: no marching. The ghosts stand in a row for a moment, then go. */
+.parade.still .parade-ghost {
+  animation: none;
+  /* Spread the line across the middle of the screen, centred on the fourth ghost. */
+  left: calc(50% + (var(--slot) - 3) * min(7rem, 13vw));
+  margin-left: calc(var(--size) / -2);
+  translate: 0 0;
+}
+
+.parade.still .parade-bob {
+  animation: none;
+}
+
+.parade.still .parade-strip {
+  animation: none;
+  left: 50%;
+  translate: -50% 0;
+  max-width: 90vw;
+  height: auto;
+}

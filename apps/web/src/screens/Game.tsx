@@ -19,8 +19,11 @@ import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { BrandBar } from '../Brand';
 import { Avatar } from '../Avatar';
 import { ReactionFloats, ReactionPicker } from '../Reactions';
+import { GhostParade } from '../cosmetics/celebrations/GhostParade';
 import { devCosmetics } from '../cosmetics/devCosmetics';
 import { resolveEquipped } from '../cosmetics/look';
+import { PetLayer } from '../cosmetics/pets/PetLayer';
+import { usePetStage } from '../cosmetics/pets/usePetStage';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
 import { CheckIcon, DieGlyph } from '../icons';
@@ -170,6 +173,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const rollsLeft = ROLLS_PER_TURN - turn.rolls;
   const canAct = seat !== null && active.includes(seat);
   const myTray = trayPlayer === seat && canAct;
+  const petStage = usePetStage(game, lobby, trayPlayer);
 
   // Your turn starting (the first one too) gets a little chime and a pulse on your face.
   const myTurn = turns ? up === seat : canAct;
@@ -442,17 +446,26 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
               <ReactionPicker send={table.send} />
             </div>
 
-            <DiceTray
-              values={dice ?? [null, null, null, null, null]}
-              held={turn.held}
-              roll={roll}
-              rolling={rolling}
-              onToggle={toggle}
-              onSettled={onSettled}
-              hue={tintOf(trayTint).hue}
-              shake={myTray ? shake : null}
-              equipped={resolveEquipped(lobby.seats[trayPlayer]?.equipped, devCosmetics())}
-            />
+            <div className="pet-anchor">
+              <DiceTray
+                values={dice ?? [null, null, null, null, null]}
+                held={turn.held}
+                roll={roll}
+                rolling={rolling}
+                onToggle={toggle}
+                onSettled={onSettled}
+                hue={tintOf(trayTint).hue}
+                shake={myTray ? shake : null}
+                equipped={resolveEquipped(lobby.seats[trayPlayer]?.equipped, devCosmetics())}
+              />
+              <PetLayer
+                pet={petStage.pet.pet}
+                owner={petStage.pet.owner}
+                pose={petStage.pet.pose}
+                nonce={petStage.pet.nonce}
+                reduced={reducedMotion}
+              />
+            </div>
 
             <div className="tray-actions">
               <AnimatePresence mode="popLayout" initial={false}>
@@ -701,6 +714,15 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
           </section>
         </div>
       </main>
+      {petStage.parade && (
+        <GhostParade
+          key={petStage.parade.id}
+          id={petStage.parade.id}
+          name={name(petStage.parade.player)}
+          reduced={reducedMotion}
+          onDone={petStage.endParade}
+        />
+      )}
     </>
   );
 }

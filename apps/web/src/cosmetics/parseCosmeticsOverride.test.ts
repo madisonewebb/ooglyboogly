@@ -37,4 +37,10 @@ describe('parseCosmeticsOverride', () => {
       celebration: 'ghostParade',
     });
   });
+
+  it('skips malformed pairs and wrong-slot ids, then reads the next valid one', () => {
+    expect(parseCosmeticsOverride('?cosmetics=hat:toad,pet:ghostParade,pet,:,pet:bat')).toEqual({
+      pet: 'bat',
+    });
+  });
 });
