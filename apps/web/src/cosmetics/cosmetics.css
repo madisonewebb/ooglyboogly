@@ -1,0 +1,26 @@
+/* The dice lab's skin and brew pickers (development only). */
+.lab-cosmetics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: end;
+  padding: 10px 4px;
+}
+
+.lab-cosmetics label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.lab-cosmetics .lab-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lab-cosmetics select {
+  min-height: 40px;
+  padding: 0 10px;
+  font: inherit;
+}

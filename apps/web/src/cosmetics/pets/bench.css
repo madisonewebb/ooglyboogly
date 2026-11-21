@@ -1,0 +1,56 @@
+/* The dev bench's gallery: every pet in every pose, side by side. */
+.pet-bench.screen.game {
+  display: grid;
+  gap: 1.5rem;
+  height: auto;
+}
+
+.pet-bench .table-layout {
+  grid-template-columns: minmax(0, 34rem);
+  height: 30rem;
+}
+
+.bench-row {
+  flex-wrap: wrap;
+}
+
+.bench-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+  padding: 0 1rem 2rem;
+}
+
+.bench-set {
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: var(--pad);
+  border: 1px solid var(--rule);
+}
+
+.bench-set h2 {
+  margin: 0 0 0.5rem;
+  font-family: Fredoka, sans-serif;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.bench-poses {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bench-poses figure {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  color: var(--quiet);
+}
+
+.bench-sprite {
+  width: 4.5rem;
+  height: 4.5rem;
+  filter: drop-shadow(0 0 1.5px color-mix(in srgb, var(--on-band) 85%, transparent));
+}

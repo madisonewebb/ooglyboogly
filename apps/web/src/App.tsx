@@ -9,6 +9,7 @@ import { Game } from './screens/Game';
 import { Lobby } from './screens/Lobby';
 import { Results } from './screens/Results';
 import { errorText } from './errors';
+import { WalletContext } from './shop/WalletContext';
 import { unlockAudio } from './sound';
 import { store } from './storage';
 import { DURATION, EASE_OUT, SCREEN } from './theme/motion';
@@ -181,7 +182,7 @@ function TableScreen({ auth }: { auth: Auth }) {
   const screen = !lobby ? 'joining' : !game ? 'lobby' : game.finished ? 'results' : 'game';
 
   return (
-    <>
+    <WalletContext.Provider value={table.wallet}>
       <AnimatePresence>
         {connection === 'reconnecting' && (
           <motion.p key="re" className="banner" {...BANNER}>
@@ -227,6 +228,6 @@ function TableScreen({ auth }: { auth: Auth }) {
           )}
         </Screen>
       </AnimatePresence>
-    </>
+    </WalletContext.Provider>
   );
 }

@@ -1,4 +1,6 @@
+import type { Equipped } from '@rollhouse/shared';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lookOf } from '../cosmetics/look';
 import { SCHEMES } from '../theme/palette';
 import { usePrefs } from '../theme/prefs';
 import { playCelebrate, playHop, playImpact, playRattle, playSettle } from '../sound';
@@ -46,6 +48,8 @@ interface Props {
    * until the roll arrives, which then picks up from the shake.
    */
   shake?: { start: number } | null;
+  /** What the player whose tray this is has on: their dice skin and cauldron brew. */
+  equipped?: Equipped | undefined;
 }
 
 const PIP_SPOTS: Record<number, number[]> = {
@@ -84,6 +88,7 @@ export function DiceTray({
   hue,
   rolling,
   shake = null,
+  equipped,
 }: Props) {
   const { prefs, theme, reducedMotion } = usePrefs();
   const three = hasWebGL();
@@ -259,6 +264,7 @@ export function DiceTray({
     hue,
     hover,
     rests: restsNow,
+    look: { ...lookOf(equipped), reduced: reducedMotion },
     onSlots: setSlots,
   };
   // Flat layout without WebGL, and while the 3D scene loads.

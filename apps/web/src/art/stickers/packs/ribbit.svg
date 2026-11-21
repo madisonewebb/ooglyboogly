@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<title>Ribbit</title>
+<g stroke="#F7F1E3" stroke-width="8" stroke-linejoin="round" fill="#7FB88A">
+<ellipse cx="64" cy="76" rx="48" ry="36"/><circle cx="38" cy="40" r="17"/><circle cx="90" cy="40" r="17"/>
+</g>
+<ellipse cx="64" cy="76" rx="48" ry="36" fill="#7FB88A"/><circle cx="38" cy="40" r="17" fill="#7FB88A"/><circle cx="90" cy="40" r="17" fill="#7FB88A"/>
+<circle cx="38" cy="40" r="10" fill="#F7F1E3"/><circle cx="90" cy="40" r="10" fill="#F7F1E3"/>
+<circle cx="40" cy="42" r="5" fill="#2A2440"/><circle cx="88" cy="42" r="5" fill="#2A2440"/>
+<path d="M30 84q34 24 68 0" stroke="#2A2440" stroke-width="4" fill="none" stroke-linecap="round"/>
+<circle cx="52" cy="66" r="4" fill="#5E9A6B"/><circle cx="78" cy="62" r="5" fill="#5E9A6B"/><circle cx="92" cy="74" r="3.5" fill="#5E9A6B"/>
+<path d="M44 22l8-12 4 10z" fill="#3B2A5A"/>
+</svg>

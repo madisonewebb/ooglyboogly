@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<title>I foresaw this</title>
+<g stroke="#F7F1E3" stroke-width="8" stroke-linejoin="round" fill="#5B4690">
+<circle cx="64" cy="54" r="40"/><path d="M34 92h60l10 22H24z"/>
+</g>
+<path d="M34 92h60l10 22H24z" fill="#3B2A5A"/>
+<circle cx="64" cy="54" r="40" fill="#8E6BD1"/>
+<circle cx="64" cy="54" r="40" fill="url(#g)"/>
+<defs><radialGradient id="g" cx="35%" cy="30%"><stop offset="0" stop-color="#F7F1E3" stop-opacity=".75"/><stop offset=".5" stop-color="#C9B6F2" stop-opacity=".2"/><stop offset="1" stop-color="#3B2A5A" stop-opacity=".35"/></radialGradient></defs>
+<path d="M50 52l5 5 11-12M80 36l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" stroke="#F7F1E3" stroke-width="0" fill="#F7F1E3"/>
+<ellipse cx="64" cy="52" rx="18" ry="11" fill="#F7F1E3"/><circle cx="64" cy="52" r="7" fill="#2A2440"/><circle cx="67" cy="49" r="2.4" fill="#F7F1E3"/>
+</svg>
