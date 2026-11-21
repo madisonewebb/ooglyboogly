@@ -598,13 +598,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                                   </motion.span>
                                 ) : (
                                   <span className="upper-progress" aria-hidden="true">
-                                    <span className="meter">
-                                      <span
-                                        style={{
-                                          width: `${Math.min(100, (upper / UPPER_BONUS_THRESHOLD) * 100)}%`,
-                                        }}
-                                      />
-                                    </span>
                                     <span className="count">
                                       {upper}/{UPPER_BONUS_THRESHOLD}
                                     </span>
