@@ -479,68 +479,41 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   font-weight: 700;
 }
 
-/* The wordmark on a plum plate, with the die turning beside the name. */
+/* The banner: the ghost over the clouds with the name, as the header of sign-in and the lobby. */
 .brand {
   display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  justify-content: center;
-  column-gap: 0.6rem;
-  padding: 1.1rem 2rem 1.2rem;
+  justify-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.brand-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2.4 / 1;
+  object-fit: cover;
+  object-position: 50% 42%;
   border-radius: var(--radius-lg);
   background: var(--band);
-  color: var(--on-band);
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 30rem) {
-  .brand {
-    padding-inline: 1rem;
-  }
-
-  .brand .brand-die {
-    width: 3.6rem;
-    height: 3.6rem;
-  }
+.centered .brand {
+  width: min(34rem, 100%);
 }
 
-.brand-die {
-  grid-row: span 2;
-  display: block;
-  width: 5.5rem;
-  height: 5.5rem;
-}
-
-.brand-flat {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  padding: 1.1rem;
-  rotate: -12deg;
-}
-
-.brand-flat .flat-die {
-  padding: 0.45rem;
-  border-radius: 0.8rem;
-}
-
-.brand-flat .flat-die .pip {
-  width: 0.45rem;
-  height: 0.45rem;
-}
-
-.brand .wordmark {
-  font-size: clamp(2.3rem, 8.5vw, 3.4rem);
-  line-height: 1.05;
-  color: var(--on-band);
+/* The lobby is wide, so the banner becomes a strip that keeps the name and the ghost. */
+.lobby .brand-banner {
+  aspect-ratio: 3.3 / 1;
+  object-position: 50% 45%;
 }
 
 .tagline {
   margin: 0;
-  color: color-mix(in srgb, var(--on-band) 82%, transparent);
+  color: var(--quiet);
   font-weight: 700;
-  text-align: left;
+  text-align: center;
 }
 
 /* ---------- Avatars and tints ---------- */
@@ -630,11 +603,6 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
 .lobby {
   max-width: 64rem;
   padding: 0.75rem 1.25rem 1.25rem;
-}
-
-.lobby .brand-die {
-  width: 4.75rem;
-  height: 4.75rem;
 }
 
 .lobby h2 .count {
@@ -832,6 +800,13 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   /* Bleeds to the window's edges. */
   box-shadow: 0 0 0 100vmax var(--band);
   clip-path: inset(0 -100vmax);
+}
+
+/* The wordmark art in the band, its glow fading into the plum. */
+.band-wordmark {
+  display: block;
+  height: 2.8rem;
+  width: auto;
 }
 
 .topbar .wordmark {

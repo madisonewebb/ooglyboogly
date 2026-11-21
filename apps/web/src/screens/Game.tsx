@@ -17,6 +17,7 @@ import {
   YATZY_BONUS,
 } from '@rollhouse/rules';
 import { BRAND_NAME, type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
+import wordmark from '../art/wordmark.webp';
 import { Avatar } from '../Avatar';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
@@ -412,7 +413,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
       <header className="topbar">
-        <span className="wordmark small">{BRAND_NAME}</span>
+        <img className="band-wordmark" src={wordmark} alt={BRAND_NAME} width={396} height={128} />
       </header>
 
       <div className="table-layout">
