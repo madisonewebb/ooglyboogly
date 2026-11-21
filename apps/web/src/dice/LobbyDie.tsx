@@ -81,7 +81,8 @@ export default function LobbyDie(props: { theme: ThemeName; scheme: SchemeId; st
       frameloop={still || software ? 'demand' : 'always'}
       dpr={software ? 1 : [1, 2]}
       gl={{ antialias: true, alpha: true }}
-      camera={{ fov: 30, position: [0, 0, 3.3] }}
+      // Far enough back that a corner of the turning cube never leaves the canvas.
+      camera={{ fov: 30, position: [0, 0, 4.2] }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.NeutralToneMapping;
       }}

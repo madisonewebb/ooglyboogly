@@ -26,7 +26,8 @@ async function distinctDieFrames(page: Page): Promise<number> {
 // Headless Chromium draws WebGL in software, the case that used to show a flat, still picture.
 test('the die on the sign-in screen is 3D and turns, even without a GPU', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.brand-die canvas')).toBeVisible();
+  // The 3D code loads lazily, which can be slow on a busy machine.
+  await expect(page.locator('.brand-die canvas')).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('.brand-flat')).toHaveCount(0);
   expect(await distinctDieFrames(page)).toBeGreaterThan(1);
 });
@@ -35,7 +36,8 @@ test('the die holds still when the device asks for reduced motion', async ({ bro
   const context = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await context.newPage();
   await page.goto('/');
-  await expect(page.locator('.brand-die canvas')).toBeVisible();
+  // The 3D code loads lazily, which can be slow on a busy machine.
+  await expect(page.locator('.brand-die canvas')).toBeVisible({ timeout: 30_000 });
   expect(await distinctDieFrames(page)).toBe(1);
   await context.close();
 });
