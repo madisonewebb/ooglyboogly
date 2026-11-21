@@ -19,14 +19,14 @@
 
 ## Standards Evidence Table (Required)
 
-| Source File                         | Read      | Standards Extracted                                                                           | Conflicts |
-| ----------------------------------- | --------- | --------------------------------------------------------------------------------------------- | --------- |
-| `docs/specs/shop-roadmap.md`        | yes       | File ownership, `available` flags, look and feel, gates, port 8092, no push, no Math.random   | none      |
-| `/home/madi/CLAUDE.md`              | yes       | Valheim notes only; unrelated                                                                 | none      |
-| `Taskfile.yml`                      | yes       | `lint`, `typecheck`, `test`, `build`, `e2e` through `task`                                    | none      |
-| `docs/specs/01-.../` documents      | yes       | Layout of spec, tasks, audit, proofs, validation                                              | none      |
-| `vitest.config.ts`                  | yes       | Tests beside code; 100% coverage only on `packages/rules`                                     | none      |
-| Memory: no candy theme              | yes       | Light feminine touch only; no candy look                                                      | none      |
+| Source File                    | Read | Standards Extracted                                                                         | Conflicts |
+| ------------------------------ | ---- | ------------------------------------------------------------------------------------------- | --------- |
+| `docs/specs/shop-roadmap.md`   | yes  | File ownership, `available` flags, look and feel, gates, port 8092, no push, no Math.random | none      |
+| `/home/madi/CLAUDE.md`         | yes  | Valheim notes only; unrelated                                                               | none      |
+| `Taskfile.yml`                 | yes  | `lint`, `typecheck`, `test`, `build`, `e2e` through `task`                                  | none      |
+| `docs/specs/01-.../` documents | yes  | Layout of spec, tasks, audit, proofs, validation                                            | none      |
+| `vitest.config.ts`             | yes  | Tests beside code; 100% coverage only on `packages/rules`                                   | none      |
+| Memory: no candy theme         | yes  | Light feminine touch only; no candy look                                                    | none      |
 
 ## Findings
 

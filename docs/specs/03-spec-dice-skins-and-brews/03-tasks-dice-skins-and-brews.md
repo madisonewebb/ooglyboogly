@@ -4,25 +4,25 @@ Spec: `03-spec-dice-skins-and-brews.md`
 
 ## Relevant Files
 
-| File                                                           | Why It Is Relevant                                                                 |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `packages/shared/src/catalog.ts`                               | Only the nine `available` flags change.                                            |
+| File                                                              | Why It Is Relevant                                                              |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `packages/shared/src/catalog.ts`                                  | Only the nine `available` flags change.                                         |
 | `apps/web/src/cosmetics/parseCosmeticsOverride.ts` and `.test.ts` | New. Pure parser of `?cosmetics=`.                                              |
-| `apps/web/src/cosmetics/devCosmetics.ts`                       | New. Gate (dev or `VITE_LAB=1`) and cached override.                               |
-| `apps/web/src/cosmetics/look.ts` and `look.test.ts`            | New. Seat to look, override resolution, catalog parity tests.                      |
-| `apps/web/src/cosmetics/skins/skins.ts`                        | New. Skin ids, colors and features, `skinOf`.                                      |
-| `apps/web/src/cosmetics/skins/skinRig.ts`                      | New. Builds the five dice's materials and animates them per frame.                 |
-| `apps/web/src/cosmetics/skins/skinTextures.ts`                 | New. Small canvas textures (grain, glow, glint star).                              |
-| `apps/web/src/cosmetics/brews/brews.ts`                        | New. Brew ids, colors, particle layers, `brewOf`.                                  |
-| `apps/web/src/cosmetics/brews/particles.ts`                    | New. The GPU particle shader and the small CPU star points.                        |
-| `apps/web/src/cosmetics/brews/Brew.tsx`                        | New. Liquid and particles inside the cauldron, and the comet.                      |
-| `apps/web/src/cosmetics/cosmetics.css`                         | New. Lab picker styles.                                                            |
-| `apps/web/src/dice/dieModel.ts`                                | Gains `domeGeometry` (pipGeometry built on it, unchanged output).                  |
-| `apps/web/src/dice/DiceScene.tsx`                              | `look` prop; `Dice` uses the rig; `Cup` hosts the brew; a comet at scene level.    |
-| `apps/web/src/dice/DiceTray.tsx`                               | `equipped` prop turned into `look`.                                                |
-| `apps/web/src/screens/Game.tsx`                                | One line passing the tray player's `equipped`.                                     |
-| `apps/web/src/Lab.tsx`                                         | Skin and brew pickers, Yatzy button, hold-cauldron toggle, override.               |
-| `docs/specs/03-spec-dice-skins-and-brews/03-proofs/`           | Proof markdown and screenshots.                                                    |
+| `apps/web/src/cosmetics/devCosmetics.ts`                          | New. Gate (dev or `VITE_LAB=1`) and cached override.                            |
+| `apps/web/src/cosmetics/look.ts` and `look.test.ts`               | New. Seat to look, override resolution, catalog parity tests.                   |
+| `apps/web/src/cosmetics/skins/skins.ts`                           | New. Skin ids, colors and features, `skinOf`.                                   |
+| `apps/web/src/cosmetics/skins/skinRig.ts`                         | New. Builds the five dice's materials and animates them per frame.              |
+| `apps/web/src/cosmetics/skins/skinTextures.ts`                    | New. Small canvas textures (grain, glow, glint star).                           |
+| `apps/web/src/cosmetics/brews/brews.ts`                           | New. Brew ids, colors, particle layers, `brewOf`.                               |
+| `apps/web/src/cosmetics/brews/particles.ts`                       | New. The GPU particle shader and the small CPU star points.                     |
+| `apps/web/src/cosmetics/brews/Brew.tsx`                           | New. Liquid and particles inside the cauldron, and the comet.                   |
+| `apps/web/src/cosmetics/cosmetics.css`                            | New. Lab picker styles.                                                         |
+| `apps/web/src/dice/dieModel.ts`                                   | Gains `domeGeometry` (pipGeometry built on it, unchanged output).               |
+| `apps/web/src/dice/DiceScene.tsx`                                 | `look` prop; `Dice` uses the rig; `Cup` hosts the brew; a comet at scene level. |
+| `apps/web/src/dice/DiceTray.tsx`                                  | `equipped` prop turned into `look`.                                             |
+| `apps/web/src/screens/Game.tsx`                                   | One line passing the tray player's `equipped`.                                  |
+| `apps/web/src/Lab.tsx`                                            | Skin and brew pickers, Yatzy button, hold-cauldron toggle, override.            |
+| `docs/specs/03-spec-dice-skins-and-brews/03-proofs/`              | Proof markdown and screenshots.                                                 |
 
 ### Notes
 
