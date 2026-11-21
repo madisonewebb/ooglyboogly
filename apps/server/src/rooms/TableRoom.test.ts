@@ -547,6 +547,31 @@ describe('coin payouts', () => {
     expect(payouts(db).map((r) => [r.user_id, r.coins])).toEqual([['u-Madi', 1]]);
   });
 
+  it('keeps balances across a server restart', async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'rollhouse-pay-'));
+    dirs.push(dir);
+    const first = openDatabase(dir);
+    await withDb(first);
+    const a = await join('Madi');
+    await startGame(a, [], { cardsPerPlayer: 1 });
+    await playOut([a]);
+    expect(getBalance(first, 'u-Madi')).toBe(1);
+    await t!.close();
+    t = undefined;
+    first.close();
+
+    // A new server on the same data directory, as after a deploy or a crash.
+    const second = openDatabase(dir);
+    dbs.push(second);
+    await withDb(second);
+    expect(getBalance(second, 'u-Madi')).toBe(1);
+    const again = await join('Madi', 'inst-2');
+    await startGame(again, [], { cardsPerPlayer: 1 });
+    await playOut([again]);
+    expect(getBalance(second, 'u-Madi')).toBe(2);
+    expect(payouts(second)).toHaveLength(2);
+  });
+
   it('tells every client what was earned, and each their own balance', async () => {
     const db = openDb();
     await withDb(db);

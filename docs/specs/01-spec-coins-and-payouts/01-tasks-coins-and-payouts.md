@@ -118,7 +118,7 @@ Covers Spec Unit 3. Players see what they earned, including after a reconnect.
 - [x] 3.8 Add the matching styles in `styles.css`, using existing palette tokens. If a new text and background pairing is introduced, add it to `palette.test.ts`.
 - [x] 3.9 Capture the Results screenshot (3 cards, two guests, light and dark if easy) into the proofs folder.
 
-### [ ] 4.0 End-to-end proof, restart persistence and release readiness
+### [x] 4.0 End-to-end proof, restart persistence and release readiness
 
 Closes the spec. It proves the whole path in the real client and leaves the branch ready for a pull request into `develop`.
 
@@ -132,7 +132,7 @@ Closes the spec. It proves the whole path in the real client and leaves the bran
 #### 4.0 Tasks
 
 - [x] 4.1 Create `e2e/tests/coins.spec.ts`. Reuse the `sitDown` and `playTurn` helpers from `game.spec.ts` (move them to a shared helper file if that is the simplest way), set 1 card, play to the end with two guests, and assert each player sees a `+N coins` line, with the winner's amount higher, and that the winner banner is visible before the coin line (so Results showing first and coins arriving after is covered). Run the same test again with reduced motion emulated and assert the coin line is visible straight away. Confirm e2e runs with guest login on, and that the existing Results assertions in `game.spec.ts` still pass.
-- [ ] 4.2 Add the restart-persistence server test using `startTestServer` twice with the same temporary database path (add a database option to `test-server.ts` if needed), then check the balance with `getBalance`.
-- [ ] 4.3 Add a short "Coins" section to `README.md`: the earnings table, the solo rule, that only finished games pay, and where the code lives (`packages/rules/src/payout.ts`, `apps/server/src/db.ts`).
-- [ ] 4.4 Run `task lint`, `task typecheck`, `task test`, `task build` and `task e2e`, and save a one-screen summary of the results to `docs/specs/01-spec-coins-and-payouts/01-proofs/ci-parity.txt`.
-- [ ] 4.5 Commit in conventional-commit steps (rules, server, web, e2e and docs), leaving out the unrelated working-tree edits, and open a pull request into `develop`.
+- [x] 4.2 Add the restart-persistence server test using `startTestServer` twice with the same temporary database path (add a database option to `test-server.ts` if needed), then check the balance with `getBalance`.
+- [x] 4.3 Add a short "Coins" section to `README.md`: the earnings table, the solo rule, that only finished games pay, and where the code lives (`packages/rules/src/payout.ts`, `apps/server/src/db.ts`).
+- [x] 4.4 Run `task lint`, `task typecheck`, `task test`, `task build` and `task e2e`, and save a one-screen summary of the results to `docs/specs/01-spec-coins-and-payouts/01-proofs/ci-parity.txt`.
+- [x] 4.5 Commit in conventional-commit steps (rules, server, web, e2e and docs), leaving out the unrelated working-tree edits, and open a pull request into `develop`.

@@ -61,6 +61,26 @@ manifests/       kustomize base + staging/prod overlays
 
 Fair dice: ESLint bans `Math.random` in `apps/server` and `packages/rules`.
 
+## Coins
+
+Players earn coins by finishing games, and more by winning. The server pays once, when the last
+move of a game lands; clients only display it. Amounts are for a 3-card game and scale with the
+card count (cards ÷ 3, to the nearest coin), so a 1-card game pays a third and a 5-card game
+five thirds.
+
+| Event (3 cards)                     | Coins               |
+| ----------------------------------- | ------------------- |
+| Finish a game                       | 10                  |
+| Win (a tie splits it, rounded down) | +10                 |
+| Score a Yatzy (once per game)       | +3                  |
+| A game played alone, finished       | 1, and nothing else |
+
+Only finished games pay, to seated players only. Guests earn coins only where `GUEST_LOGIN` is on
+(local dev and e2e). Coins are recorded in the `wallets` and `payouts` tables of the game database
+(`apps/server/src/db.ts`); the amounts live in `packages/rules/src/payout.ts`. The balance table is
+`wallets`, not `players`: an earlier version of coins was reverted and may have left a differently
+shaped `players` table in some databases.
+
 ## Branches and releases
 
 - Feature branches open PRs into `develop`. `main` only receives merges from `develop`.
