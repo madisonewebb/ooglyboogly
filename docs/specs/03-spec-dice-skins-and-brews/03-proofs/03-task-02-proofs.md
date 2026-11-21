@@ -29,13 +29,13 @@ This task draws the five dice in the skin of the player whose tray is shown. `Ga
 
 ## Artifact: The five skins
 
-| Skin | Settled roll |
-| ---- | ------------ |
-| Bone | ![Bone](img/skin-bone.png) |
-| Obsidian | ![Obsidian](img/skin-obsidian.png) |
-| Moonstone | ![Moonstone](img/skin-moonstone.png) |
-| Googly Eyes | ![Googly](img/skin-googly.png) |
-| Gilded | ![Gilded](img/skin-gilded.png) |
+| Skin        | Settled roll                         |
+| ----------- | ------------------------------------ |
+| Bone        | ![Bone](img/skin-bone.png)           |
+| Obsidian    | ![Obsidian](img/skin-obsidian.png)   |
+| Moonstone   | ![Moonstone](img/skin-moonstone.png) |
+| Googly Eyes | ![Googly](img/skin-googly.png)       |
+| Gilded      | ![Gilded](img/skin-gilded.png)       |
 
 **What it proves:** Every skin draws in the real tray, with pips readable against the body.
 

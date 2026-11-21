@@ -19,13 +19,13 @@ The screenshot is `?lab&cosmetics=diceSkin:googly,brew:swamp`: the pickers read 
 
 ## Gate results
 
-| Command                    | Result                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------- |
-| `task lint`                | exit 0                                                                          |
-| `task typecheck`           | exit 0                                                                          |
-| `task test`                | exit 0; 30 files, 402 tests; `packages/rules` at 100% in all four measures       |
-| `task build`               | exit 0                                                                          |
-| `E2E_PORT=8092 task e2e`   | exit 0 (see the validation report for the count)                                |
+| Command                  | Result                                                                     |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `task lint`              | exit 0                                                                     |
+| `task typecheck`         | exit 0                                                                     |
+| `task test`              | exit 0; 30 files, 402 tests; `packages/rules` at 100% in all four measures |
+| `task build`             | exit 0                                                                     |
+| `E2E_PORT=8092 task e2e` | exit 0 (see the validation report for the count)                           |
 
 ## Performance notes
 

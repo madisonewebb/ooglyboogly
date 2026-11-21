@@ -25,12 +25,12 @@ This task fills the cauldron with the roller's brew: a liquid surface in the bre
 
 ## Artifact: The four brews
 
-| Brew | Cauldron out |
-| ---- | ------------ |
-| Swamp | ![Swamp](img/brew-swamp.png) |
+| Brew        | Cauldron out                            |
+| ----------- | --------------------------------------- |
+| Swamp       | ![Swamp](img/brew-swamp.png)            |
 | Violet Murk | ![Violet Murk](img/brew-violetMurk.png) |
-| Witchfire | ![Witchfire](img/brew-witchfire.png) |
-| Starwater | ![Starwater](img/brew-starwater.png) |
+| Witchfire   | ![Witchfire](img/brew-witchfire.png)    |
+| Starwater   | ![Starwater](img/brew-starwater.png)    |
 
 **What it proves:** Each brew's liquid and particles draw in the cauldron, with the dice still visible.
 
