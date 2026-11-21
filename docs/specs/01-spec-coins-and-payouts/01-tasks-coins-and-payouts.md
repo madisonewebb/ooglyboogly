@@ -68,7 +68,7 @@ Covers Spec Unit 1. No server, database or UI: this is the one place the coin nu
 - [x] 1.8 Add the bounds property to `properties.test.ts`: for random finished games, every amount is at least 0 and the total is at most `seats × finish + finish + seats × cards`.
 - [x] 1.9 Run `task test` and confirm 100% coverage for `payout.ts`, then `task lint` and `task typecheck`. Save the coverage line to `docs/specs/01-spec-coins-and-payouts/01-proofs/rules-coverage.txt`.
 
-### [ ] 2.0 Persistent balances and one idempotent payout per finished game
+### [x] 2.0 Persistent balances and one idempotent payout per finished game
 
 Covers Spec Unit 2. The server writes the payout; nothing a client sends can.
 
@@ -81,15 +81,15 @@ Covers Spec Unit 2. The server writes the payout; nothing a client sends can.
 
 #### 2.0 Tasks
 
-- [ ] 2.1 In `apps/server/src/db.ts`, add `CREATE TABLE IF NOT EXISTS` for `players (user_id TEXT PRIMARY KEY, coins INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)` and `payouts (game_id TEXT NOT NULL, user_id TEXT NOT NULL, coins INTEGER NOT NULL, breakdown TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (game_id, user_id))` to the existing startup `exec`.
-- [ ] 2.2 Add `payOut(db, gameId, rows: { userId; coins; breakdown }[]): boolean`. Inside `BEGIN IMMEDIATE … COMMIT` (with `ROLLBACK` on error), `INSERT … ON CONFLICT DO NOTHING` each payout row; for rows that were actually inserted, upsert the player and add the coins. Return whether anything was paid.
-- [ ] 2.3 Add `getBalance(db, userId): number` (0 when the player has no row).
-- [ ] 2.4 Extend `db.test.ts`: tables exist, a payout raises balances and writes rows, repeating the same `payOut` leaves both unchanged, a failing row rolls everything back, and a closed-and-reopened database keeps the balance.
-- [ ] 2.5 Extend `TableConfig` in `TableRoom.ts` with `db: DatabaseSync | null` and `guestPayouts: boolean`. In `app.ts` pass `db` through `ServerDeps` and set `guestPayouts` from `config.guestLogin`; in `index.ts` pass the database it already opens. With `db: null` (existing tests) payouts are skipped.
-- [ ] 2.6 In the `MSG_START` handler, create `this.gameId = randomUUID()` next to `this.setup`. Add `private paid = false`.
-- [ ] 2.7 In `apply`, after a move is accepted, if `this.game.finished && !this.paid`, set `paid = true` and call a new `settlePayout()`. Make `settlePayout` call `computePayouts`, map each player index to `this.seats[i].user.id`, drop guest ids (`guest-…`) unless `cfg.guestPayouts`, and call `payOut`. Keep the result on the room for task 3.0. Wrap the whole settlement in a `try` and `catch` that logs the error and leaves the game finished with no payout, so a database failure can never stop Results from reaching players; if it fails, leave `paid` set so the same game is not retried half-way.
-- [ ] 2.8 Extend `TableRoom.test.ts`: a full 2-player game pays both seats once with the winner bonus, every payout row carries a UUID `game_id`, and a second game at the same table gets a different one; a spectator gets nothing; a guest is skipped with `guestPayouts: false` (no payout row and no `players` row is created) and paid with `true`; an unfinished game writes no rows; a seat with no connected devices at the end is still paid; no client message can change a balance (send a bogus message and check nothing changed); and a database that throws during settlement still leaves the game finished, sends no coin message, and logs the error.
-- [ ] 2.9 Run a local dev game (`task dev`, two guest browsers on one `?table=`), then run the `sqlite3` query and save the output (guest ids only) to the proofs folder.
+- [x] 2.1 In `apps/server/src/db.ts`, add `CREATE TABLE IF NOT EXISTS` for `players (user_id TEXT PRIMARY KEY, coins INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)` and `payouts (game_id TEXT NOT NULL, user_id TEXT NOT NULL, coins INTEGER NOT NULL, breakdown TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (game_id, user_id))` to the existing startup `exec`.
+- [x] 2.2 Add `payOut(db, gameId, rows: { userId; coins; breakdown }[]): boolean`. Inside `BEGIN IMMEDIATE … COMMIT` (with `ROLLBACK` on error), `INSERT … ON CONFLICT DO NOTHING` each payout row; for rows that were actually inserted, upsert the player and add the coins. Return whether anything was paid.
+- [x] 2.3 Add `getBalance(db, userId): number` (0 when the player has no row).
+- [x] 2.4 Extend `db.test.ts`: tables exist, a payout raises balances and writes rows, repeating the same `payOut` leaves both unchanged, a failing row rolls everything back, and a closed-and-reopened database keeps the balance.
+- [x] 2.5 Extend `TableConfig` in `TableRoom.ts` with `db: DatabaseSync | null` and `guestPayouts: boolean`. In `app.ts` pass `db` through `ServerDeps` and set `guestPayouts` from `config.guestLogin`; in `index.ts` pass the database it already opens. With `db: null` (existing tests) payouts are skipped.
+- [x] 2.6 In the `MSG_START` handler, create `this.gameId = randomUUID()` next to `this.setup`. Add `private paid = false`.
+- [x] 2.7 In `apply`, after a move is accepted, if `this.game.finished && !this.paid`, set `paid = true` and call a new `settlePayout()`. Make `settlePayout` call `computePayouts`, map each player index to `this.seats[i].user.id`, drop guest ids (`guest-…`) unless `cfg.guestPayouts`, and call `payOut`. Keep the result on the room for task 3.0. Wrap the whole settlement in a `try` and `catch` that logs the error and leaves the game finished with no payout, so a database failure can never stop Results from reaching players; if it fails, leave `paid` set so the same game is not retried half-way.
+- [x] 2.8 Extend `TableRoom.test.ts`: a full 2-player game pays both seats once with the winner bonus, every payout row carries a UUID `game_id`, and a second game at the same table gets a different one; a spectator gets nothing; a guest is skipped with `guestPayouts: false` (no payout row and no `players` row is created) and paid with `true`; an unfinished game writes no rows; a seat with no connected devices at the end is still paid; no client message can change a balance (send a bogus message and check nothing changed); and a database that throws during settlement still leaves the game finished, sends no coin message, and logs the error.
+- [x] 2.9 Run a local dev game (`task dev`, two guest browsers on one `?table=`), then run the `sqlite3` query and save the output (guest ids only) to the proofs folder.
 
 ### [ ] 3.0 Payout message, snapshot field and the Results screen coin line
 

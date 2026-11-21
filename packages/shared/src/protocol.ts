@@ -210,8 +210,11 @@ export interface ReactionMessage {
 /** One sticker per person this often, at most; extras are dropped quietly. */
 export const REACTION_COOLDOWN_MS = 1200;
 
+/** Guest sessions (local dev and e2e only) have ids starting with "guest-". */
+export const isGuestId = (id: string): boolean => id.startsWith('guest-');
+
 /** Discord CDN avatar URL. Inside Discord, `cdnBase` is the /discord-cdn URL mapping. */
 export function avatarUrl(user: SessionUser, cdnBase: string, size = 64): string | null {
-  if (user.avatar === null || user.id.startsWith('guest-')) return null;
+  if (user.avatar === null || isGuestId(user.id)) return null;
   return `${cdnBase}/avatars/${user.id}/${user.avatar}.png?size=${size}`;
 }

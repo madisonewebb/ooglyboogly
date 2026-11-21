@@ -1,7 +1,9 @@
-import { randomInt } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
+import type { DatabaseSync } from 'node:sqlite';
 import { type Client, Room, ServerError } from '@colyseus/core';
 import {
   BOXES,
+  computePayouts,
   createGame,
   type GameSetup,
   type GameState,
@@ -16,6 +18,7 @@ import {
   assignTint,
   DEFAULT_SETTINGS,
   type ErrorCode,
+  isGuestId,
   type TintId,
   isTint,
   type ErrorMessage,
@@ -42,6 +45,7 @@ import {
   type SessionUser,
   type Snapshot,
 } from '@rollhouse/shared';
+import { type PayoutRow, payOut } from '../db';
 import { rollDice } from '../dice';
 import { verifySession } from '../session';
 
@@ -52,6 +56,10 @@ export interface TableConfig {
   emptyTimeoutMs: number;
   /** Seconds a dropped connection may resume with its old session. */
   reconnectSeconds: number;
+  /** Where coins are recorded. Null pays nothing (tests that do not care). */
+  db: DatabaseSync | null;
+  /** Guests earn coins too. Only for local dev and e2e, where guest login is on. */
+  guestPayouts: boolean;
 }
 
 export const EMPTY_TIMEOUT_MS = 15 * 60 * 1000;
@@ -134,6 +142,10 @@ export function createTableRoom(cfg: TableConfig) {
     setup: GameSetup | null = null;
     game: GameState | null = null;
     moves: Move[] = [];
+    /** Names this game in the payouts table. Made when the host starts it. */
+    gameId = '';
+    /** Set once the game's payout has been tried, so it is never tried twice. */
+    private paid = false;
     private emptyTimer: { clear(): void } | null = null;
     /** When each user last sent a sticker, for the cooldown. */
     private lastReaction = new Map<string, number>();
@@ -249,6 +261,7 @@ export function createTableRoom(cfg: TableConfig) {
         };
         this.game = createGame(setup);
         this.setup = setup;
+        this.gameId = randomUUID();
         for (const c of this.clients) this.sendSnapshot(c);
       },
 
@@ -389,6 +402,28 @@ export function createTableRoom(cfg: TableConfig) {
       // Which recorded tumble to play. Drawn after the dice, and only for looks.
       if (move.type === 'roll') message.tumble = randomInt(0, 2 ** 30);
       this.broadcast(MSG_MOVE, message);
+      if (this.game.finished) this.settlePayout();
+    }
+
+    /**
+     * Pays the finished game's coins. The server alone does this, from its own
+     * copy of the game: no client message can start or change a payout. It
+     * runs once, and if recording fails the game still ends normally with no
+     * coins rather than taking the table down with it.
+     */
+    private settlePayout() {
+      if (this.paid || !cfg.db) return;
+      this.paid = true;
+      try {
+        const rows: PayoutRow[] = computePayouts(this.game!).flatMap((p) => {
+          const { user } = this.seats[p.player]!;
+          if (isGuestId(user.id) && !cfg.guestPayouts) return [];
+          return [{ userId: user.id, coins: p.total, breakdown: p.breakdown }];
+        });
+        payOut(cfg.db, this.gameId, rows);
+      } catch (err) {
+        console.error(`payout failed for game ${this.gameId}`, err);
+      }
     }
 
     private armEmptyTimer() {
