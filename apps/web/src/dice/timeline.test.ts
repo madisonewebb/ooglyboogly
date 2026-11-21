@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import {
   AXES,
   CUP,
-  CUP_REST,
   decodeTumbles,
   FACE_AXIS,
   PATHS_PER_COUNT,
@@ -119,7 +118,7 @@ describe('a roll', () => {
     expect(mid.pos).toEqual(restPos(0, false));
     expect(mid.opacity).toBeGreaterThan(0);
     expect(mid.opacity).toBeLessThan(1);
-    expect(cupAt(r, r.start + 100).moving).toBe(false);
+    expect(cupAt(r, r.start + 100).visible).toBe(false);
     expect(rollSounds(r)).toEqual([]);
   });
 
@@ -144,15 +143,8 @@ describe('a roll', () => {
     const t = timing(r);
     expect(cupAt(r, (t.shakeStart + t.shakeEnd) / 2).visible).toBe(true);
     expect(cupAt(r, t.physStart + 60).tip).toBeLessThan(POUR_TIP * 0.8);
-    // Between rolls it sits beside the tray, upright and small.
-    for (const rest of [cupAt(r, t.cupGone + 1), cupAt(null, 0), cupAt(r, r.start - 1)]) {
-      expect(rest.visible).toBe(true);
-      expect(rest.moving).toBe(false);
-      expect(rest.pos).toEqual([CUP_REST.x, CUP_REST.y, CUP_REST.z]);
-      expect(rest.tip).toBe(0);
-      expect(rest.scale).toBe(CUP_REST.scale);
-    }
-    expect(cupAt(r, (t.shakeStart + t.shakeEnd) / 2).moving).toBe(true);
+    expect(cupAt(r, t.cupGone + 1).visible).toBe(false);
+    expect(cupAt(null, 0).visible).toBe(false);
   });
 
   it('makes a sound for every collision and a drumroll pop per die', () => {

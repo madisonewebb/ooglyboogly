@@ -23,7 +23,6 @@ import {
 import {
   AXES,
   CUP,
-  CUP_REST,
   DIE_SIZE,
   type DieTrack,
   FACE_AXIS,
@@ -79,8 +78,6 @@ export interface Pose {
 
 export interface CupPose {
   visible: boolean;
-  /** On its way somewhere: the scene keeps drawing frames while this is true. */
-  moving: boolean;
   pos: Vec3;
   /** Rotation about z: the pour plus the rattle. Negative tips to the right. */
   tip: number;
@@ -89,7 +86,7 @@ export interface CupPose {
 }
 
 const BASE = {
-  cupIn: 300,
+  cupIn: 160,
   /** The rattle starts this far into the cup's arrival, as it lands. */
   shakeLead: 0.6,
   scoop: 200,
@@ -97,7 +94,7 @@ const BASE = {
   shake: 560,
   pour: 200,
   linger: 120,
-  away: 360,
+  away: 240,
   tidy: 210,
   stagger: 50,
   pop: 160,
@@ -383,35 +380,24 @@ function fromCup(cup: CupPose, local: Vec3): Vec3 {
   return [cup.pos[0] + x * c - y * s, cup.pos[1] + x * s + y * c, cup.pos[2] + z];
 }
 
-const mix = (a: number, b: number, u: number) => a + (b - a) * u;
-
-/** The cauldron at rest, beside the tray. */
-const REST: CupPose = {
-  visible: true,
-  moving: false,
-  pos: [CUP_REST.x, CUP_REST.y, CUP_REST.z],
-  tip: 0,
-  scale: CUP_REST.scale,
-  opacity: 1,
-};
-
 export function cupAt(plan: RollPlan | null, now: number): CupPose {
-  const home = REST;
+  const home: CupPose = {
+    visible: false,
+    pos: [CUP.x, CUP.y + 1.2, CUP.z],
+    tip: 0,
+    scale: 0.7,
+    opacity: 0,
+  };
   if (!plan || plan.reduced || plan.free.length === 0) return home;
   const t = timing(plan);
   const k = plan.speed;
   if (now < plan.start || now >= t.cupGone) return home;
-  // In: hops over from its place beside the tray, with a little overshoot.
+  // In: drops into place with a little overshoot.
   const inU = clamp01((now - plan.start) / (BASE.cupIn * k));
   const settle = easeOutBack(inU);
-  const hop = Math.sin(Math.PI * inU) * 1.1;
-  let pos: Vec3 = [
-    mix(CUP_REST.x, CUP.x, settle),
-    mix(CUP_REST.y, CUP.y, settle) + hop,
-    mix(CUP_REST.z, CUP.z, settle),
-  ];
-  let scale = mix(CUP_REST.scale, 1, settle);
-  const opacity = 1;
+  let pos: Vec3 = [CUP.x, CUP.y + (1 - settle) * 1.2, CUP.z];
+  let scale = 0.7 + 0.3 * settle;
+  let opacity = clamp01(inU * 2.5);
   let tip = 0;
   if (now >= t.shakeStart && now < t.shakeEnd) {
     // Slow, heavy sloshes, four a second, easing in and out; a held shake also sways.
@@ -420,29 +406,21 @@ export function cupAt(plan: RollPlan | null, now: number): CupPose {
     const wave = Math.sin((s / 1000) * Math.PI * 2 * 4);
     const sway = Math.sin((s / 1000) * Math.PI * 2 * 1.3) * Math.min(1, s / 600);
     tip = (wave * 0.26 + sway * 0.12) * env;
-    // Still settling in as the rattle starts.
-    pos = [
-      pos[0] + (wave * 0.16 + sway * 0.18) * env,
-      pos[1] + Math.abs(wave) * 0.12 * env,
-      pos[2],
-    ];
+    // Still finishing its drop as the rattle starts.
+    pos = [CUP.x + (wave * 0.16 + sway * 0.18) * env, pos[1] + Math.abs(wave) * 0.12 * env, CUP.z];
   } else if (now >= t.shakeEnd) {
     const pourU = clamp01((now - t.shakeEnd) / (BASE.pour * k));
     tip = POUR_TIP * easeInOut(pourU);
     const leave = t.cupGone - BASE.away * k;
     if (now >= leave) {
-      // Back to its place beside the tray, upright again.
       const u = easeInOut(clamp01((now - leave) / (BASE.away * k)));
-      tip = POUR_TIP * (1 - u);
-      pos = [
-        mix(CUP.x, CUP_REST.x, u),
-        mix(CUP.y, CUP_REST.y, u) + Math.sin(Math.PI * u) * 0.9,
-        mix(CUP.z, CUP_REST.z, u),
-      ];
-      scale = mix(1, CUP_REST.scale, u);
+      tip = POUR_TIP * (1 - u * 0.6);
+      pos = [CUP.x - u * 0.8, CUP.y + u * 1.6, CUP.z];
+      scale = 1 - u * 0.15;
+      opacity = 1 - u;
     }
   }
-  return { visible: true, moving: true, pos, tip, scale, opacity };
+  return { visible: opacity > 0.01, pos, tip, scale, opacity };
 }
 
 /** A free die inside the cup, rattling along with it and sliding to the mouth as it tips. */
@@ -473,8 +451,14 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
   const rest = restPos(die, plan.held[die] ?? false);
 
   if (rank < 0) {
-    // Held: stays perfectly still while the others roll, then joins any celebration.
-    const quat = plan.before?.[die] ?? restQuat(value);
+    // Held: wiggle while the others roll, then join any celebration.
+    let quat = plan.before?.[die] ?? restQuat(value);
+    if (!plan.reduced && now < t.physEnd) {
+      quat = mul(
+        fromAxisAngle(Z, Math.sin(((now - plan.start) / 1000) * Math.PI * 10) * 0.07),
+        quat,
+      );
+    }
     return celebrate(plan, t, die, now, {
       pos: rest,
       quat,

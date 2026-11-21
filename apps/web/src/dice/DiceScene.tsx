@@ -28,7 +28,7 @@ import {
   timing,
 } from './timeline';
 import type { Quat } from './quat';
-import { CUP, CUP_REST, SHELF_Y, SHELF_Z, SLOT_X, TRAY, TRAY_Z } from './tumbleFormat';
+import { CUP, SHELF_Y, SHELF_Z, SLOT_X, TRAY, TRAY_Z } from './tumbleFormat';
 
 export interface SlotRect {
   /** Centre, as a fraction of the canvas width and height. */
@@ -47,8 +47,6 @@ export interface SceneProps {
   scene: SceneTokens;
   /** The roller's tint, for the cup. */
   hue: string;
-  /** The cauldron's look; the default is black iron. */
-  cauldron?: CauldronStyle;
   /** The die under the pointer, which lifts a little. */
   hover: number | null;
   /** How each die lies at rest, so they stay put between rolls. */
@@ -279,29 +277,6 @@ function groundTexture() {
   });
 }
 
-/** A soft shadow under the cauldron where it rests beside the tray. */
-function CauldronShadow() {
-  const map = useMemo(
-    () =>
-      canvasTexture(128, 128, (g) => {
-        const grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
-        grad.addColorStop(0, 'rgba(4,14,32,0.5)');
-        grad.addColorStop(1, 'rgba(4,14,32,0)');
-        g.fillStyle = grad;
-        g.fillRect(0, 0, 128, 128);
-      }),
-    [],
-  );
-  useEffect(() => () => map.dispose(), [map]);
-  const size = 3.6 * CUP_REST.scale * 1.4;
-  return (
-    <mesh position={[CUP_REST.x, -0.43, CUP_REST.z]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[size, size]} />
-      <meshBasicMaterial map={map} transparent depthWrite={false} />
-    </mesh>
-  );
-}
-
 function Tray({ scene }: { scene: SceneTokens }) {
   const hx = (TRAY.maxX - TRAY.minX) / 2;
   const hz = (TRAY.maxZ - TRAY.minZ) / 2;
@@ -479,39 +454,24 @@ function Dice({
 }
 
 /** Cast iron: black and dark grey, whoever's turn it is. */
-/**
- * The visible mouth is wider than CUP.radiusTop (which only places the spawn
- * point), so dice spilling out clear the lip instead of clipping through it.
- */
-const MOUTH = 1.45;
+const IRON = { body: '#2A2A2F', inside: '#101013', trim: '#45454C' };
 
-/** How the cauldron looks. Cosmetic only, so a shop can sell other looks later. */
-export interface CauldronStyle {
-  body: string;
-  inside: string;
-  /** The rim, handles and feet. */
-  trim: string;
-}
-
-/** Cast iron: black and dark grey. */
-export const IRON: CauldronStyle = { body: '#2A2A2F', inside: '#101013', trim: '#45454C' };
-
-function Cup({ roll, style }: { roll: SceneProps['roll']; style: CauldronStyle }) {
+function Cup({ roll }: Pick<SceneProps, 'roll'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const shell = useMemo(() => {
-    // A round-bellied cauldron: a wide mouth at the cup's height, so the
-    // recorded pour still lines up.
+    // A round-bellied cauldron: the belly bulges past the mouth, which stays
+    // at CUP's radius and height so the recorded pour still lines up.
     const h = CUP.height / 2;
     const k = CUP.height / 1.8;
     const profile = new THREE.SplineCurve([
       new THREE.Vector2(0.001, -h),
       new THREE.Vector2(0.7, -h),
       new THREE.Vector2(1.05, -0.62 * k),
-      new THREE.Vector2(1.32, -0.1 * k),
-      new THREE.Vector2(1.38, 0.22 * k),
-      new THREE.Vector2(1.42, 0.62 * k),
-      new THREE.Vector2(MOUTH, h),
+      new THREE.Vector2(1.3, -0.1 * k),
+      new THREE.Vector2(1.31, 0.22 * k),
+      new THREE.Vector2(1.25, 0.62 * k),
+      new THREE.Vector2(CUP.radiusTop, h),
     ]).getPoints(28);
     return new THREE.LatheGeometry(profile, 56);
   }, []);
@@ -534,18 +494,18 @@ function Cup({ roll, style }: { roll: SceneProps['roll']; style: CauldronStyle }
       }
       m.opacity = c.opacity;
     }
-    if (c.moving) invalidate();
+    if (c.visible) invalidate();
   });
 
   const keep = (m: THREE.Material | null) => {
     if (m && !materials.current.includes(m)) materials.current.push(m);
   };
   return (
-    <group ref={group}>
+    <group ref={group} visible={false}>
       <mesh geometry={shell} castShadow>
         <Gloss
           ref={keep}
-          color={style.body}
+          color={IRON.body}
           roughness={0.5}
           clearcoat={0.35}
           clearcoatRoughness={0.4}
@@ -555,19 +515,19 @@ function Cup({ roll, style }: { roll: SceneProps['roll']; style: CauldronStyle }
       <mesh geometry={shell}>
         <meshStandardMaterial
           ref={keep}
-          color={style.inside}
+          color={IRON.inside}
           roughness={0.7}
           side={THREE.BackSide}
         />
       </mesh>
       <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[MOUTH, 0.07, 14, 56]} />
-        <Gloss ref={keep} color={style.trim} roughness={0.45} />
+        <torusGeometry args={[CUP.radiusTop, 0.12, 14, 56]} />
+        <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
       </mesh>
       {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * 1.5, 0.08, 0]} castShadow>
+        <mesh key={side} position={[side * 1.38, 0.08, 0]} castShadow>
           <torusGeometry args={[0.2, 0.065, 10, 24]} />
-          <Gloss ref={keep} color={style.trim} roughness={0.45} />
+          <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
         </mesh>
       ))}
       {[0, 1, 2].map((i) => {
@@ -579,7 +539,7 @@ function Cup({ roll, style }: { roll: SceneProps['roll']; style: CauldronStyle }
             castShadow
           >
             <sphereGeometry args={[0.17, 14, 10]} />
-            <Gloss ref={keep} color={style.trim} roughness={0.45} />
+            <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
           </mesh>
         );
       })}
@@ -636,8 +596,7 @@ export default function DiceScene(props: SceneProps) {
         hover={props.hover}
         rests={props.rests}
       />
-      <Cup roll={props.roll} style={props.cauldron ?? IRON} />
-      <CauldronShadow />
+      <Cup roll={props.roll} />
     </Canvas>
   );
 }
