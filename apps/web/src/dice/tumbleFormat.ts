@@ -20,10 +20,15 @@ export const SHELF_Y = 0.35;
  * headroom up to maxY for a hop, a Yatzy jump and the cup. Nothing rises over
  * the front of the tray, so the headroom only reaches forward to topMaxZ.
  */
-export const FRAME = { minX: -5.2, maxX: 5.2, minZ: -4, maxZ: 3.25, maxY: 2.9, topMaxZ: 1.5 };
+export const FRAME = { minX: -7.4, maxX: 5.2, minZ: -4, maxZ: 3.25, maxY: 2.9, topMaxZ: 1.5 };
 
 /** The dice cup: its centre while upright over the back-left of the tray, and its shape. */
 export const CUP = { x: -3.05, y: 2.2, z: 0.4, radiusTop: 1.22, radiusBottom: 0.95, height: 1.8 };
+/**
+ * Where the cauldron sits while nobody is rolling: on the table to the left of
+ * the tray, smaller than when it is in use. Only the look moves; the pour above does not.
+ */
+export const CUP_REST = { x: -6.05, y: 0.34, z: 0.4, scale: 0.7 };
 /** How far the cup tips to pour (about z; negative pours to the right). */
 export const POUR_TIP = -1.85;
 /** The cup's tip when the first die leaves it: where the recorder spawns the dice. */
