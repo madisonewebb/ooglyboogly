@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<title>Cackle</title>
+<g stroke="#F7F1E3" stroke-width="8" stroke-linejoin="round" fill="#3B2A5A">
+<path d="M24 52h80c4 34-14 60-40 60S20 86 24 52z"/>
+<rect x="18" y="44" width="92" height="14" rx="7"/>
+</g>
+<path d="M24 52h80c4 34-14 60-40 60S20 86 24 52z" fill="#3B2A5A"/>
+<rect x="18" y="44" width="92" height="14" rx="7" fill="#5B4690"/>
+<circle cx="40" cy="30" r="9" fill="#A8E0A0"/><circle cx="66" cy="20" r="12" fill="#7FB88A"/><circle cx="90" cy="32" r="8" fill="#A8E0A0"/>
+<path d="M44 74q8-9 16 0M70 74q8-9 16 0" stroke="#F7F1E3" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M46 88q18 18 38 0z" fill="#F7F1E3"/>
+<path d="M30 112l-6 10M98 112l6 10" stroke="#3B2A5A" stroke-width="6" stroke-linecap="round"/>
+</svg>

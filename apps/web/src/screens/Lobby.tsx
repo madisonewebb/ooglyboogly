@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { MAX_CARDS, MAX_PLAYERS, MIN_CARDS } from '@rollhouse/rules';
 import {
   TINT_IDS,
@@ -16,6 +16,10 @@ import { BrandBar, Welcome } from '../Brand';
 import { tintVars } from '../tint';
 import { saveTint } from '../tintPrefs';
 import { CheckIcon, CrownIcon } from '../icons';
+import { Shop } from '../shop/Shop';
+import { lookLine } from '../shop/shopView';
+import { useWallet } from '../shop/WalletContext';
+import { WalletPanel } from '../shop/WalletPanel';
 import { TINTS } from '../theme/palette';
 import { SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
@@ -111,6 +115,8 @@ function TintPicker(props: {
 }
 
 export function Lobby({ lobby, table, userId, cdnBase }: Props) {
+  const wallet = useWallet();
+  const [shopOpen, setShopOpen] = useState(false);
   const me = lobby.seats.find((seat) => seat.user.id === userId);
   const takenBy = new Map(
     lobby.seats.filter((seat) => seat !== me).map((seat) => [seat.tint, seat.user.name] as const),
@@ -125,6 +131,9 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
   const set = (change: SettingsIntent) => table.send(MSG_SETTINGS, change);
   const cards = Array.from({ length: MAX_CARDS - MIN_CARDS + 1 }, (_, i) => MIN_CARDS + i);
   const open = MAX_PLAYERS - lobby.seats.length;
+
+  if (shopOpen)
+    return <Shop wallet={wallet} send={table.send} onClose={() => setShopOpen(false)} />;
 
   return (
     <>
@@ -160,7 +169,12 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
                           </span>
                         )}
                       </span>
-                      <span className="seat-name">{seat.user.name}</span>
+                      <span className="seat-name">
+                        {seat.user.name}
+                        {lookLine(seat.equipped) && (
+                          <span className="seat-look quiet">{lookLine(seat.equipped)}</span>
+                        )}
+                      </span>
                       <span className="seat-tags">
                         {seat.user.id === userId && <span className="badge">you</span>}
                         {!seat.connected && <span className="badge">away</span>}
@@ -180,6 +194,7 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
               )}
             </section>
 
+            <WalletPanel wallet={wallet} onShop={() => setShopOpen(true)} />
             {me && (
               <section className="panel">
                 <h2>Your color</h2>

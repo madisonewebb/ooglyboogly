@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+<title>Off I go</title>
+<g stroke="#F7F1E3" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+<path d="M16 100L100 36" fill="none"/><path d="M92 28l24 8-8 24z" fill="#E8C06A"/>
+</g>
+<path d="M16 100L100 36" stroke="#8A5A3C" stroke-width="7" stroke-linecap="round"/>
+<path d="M84 30l32 4-6 30z" fill="#C9954A"/>
+<path d="M96 36l16 2M92 44l16 0M88 52l14-2" stroke="#8A5A3C" stroke-width="3" stroke-linecap="round"/>
+<path d="M18 112h30M10 94h22M30 122h20" stroke="#C9B6F2" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+<path d="M60 30l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5zM30 56l2 4.5 4.5 2-4.5 2-2 4.5-2-4.5-4.5-2 4.5-2z" fill="#E88DB2"/>
+</svg>

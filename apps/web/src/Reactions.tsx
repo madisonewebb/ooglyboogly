@@ -20,6 +20,12 @@ import sleeping from './art/stickers/sleeping_ghost.webp';
 import steamingGarbage from './art/stickers/steaming_garbage.webp';
 import stressed from './art/stickers/stressed_ghost.webp';
 import sunglasses from './art/stickers/sunglasses_ghost.webp';
+import broom from './art/stickers/packs/broom.svg';
+import cackle from './art/stickers/packs/cackle.svg';
+import foresaw from './art/stickers/packs/foresaw.svg';
+import mischief from './art/stickers/packs/mischief.svg';
+import moonMood from './art/stickers/packs/moonMood.svg';
+import ribbit from './art/stickers/packs/ribbit.svg';
 import { playPop } from './sound';
 import { usePrefs } from './theme/prefs';
 
@@ -33,6 +39,13 @@ export const STICKERS: Record<StickerId, { art: string; label: string }> = {
   dontShitOnOnes: { art: dontShitOnOnes, label: "Don't shit on ones" },
   steamingGarbage: { art: steamingGarbage, label: 'Steaming garbage' },
   stressed: { art: stressed, label: 'Stressed' },
+  // From the sticker packs in the shop. Placeholders until the Nano Banana art lands.
+  cackle: { art: cackle, label: 'Cackle' },
+  mischief: { art: mischief, label: 'Mischief' },
+  ribbit: { art: ribbit, label: 'Ribbit' },
+  foresaw: { art: foresaw, label: 'I foresaw this' },
+  moonMood: { art: moonMood, label: 'Moon mood' },
+  broom: { art: broom, label: 'Off I go' },
 };
 
 /** How long a sticker floats before it's gone. */
