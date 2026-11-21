@@ -171,6 +171,45 @@ export interface ErrorMessage {
   message: string;
 }
 
+/* ---------- Reactions ---------- */
+
+/**
+ * Stickers anyone at the table can send during a game. Each one floats up
+ * over the dice tray on every screen, with the sender's name.
+ */
+export const STICKER_IDS = [
+  'cheering',
+  'heart',
+  'sunglasses',
+  'sleeping',
+  'babyYahtzee',
+  'ooglyBoogly',
+  'dontShitOnOnes',
+  'steamingGarbage',
+  'stressed',
+] as const;
+export type StickerId = (typeof STICKER_IDS)[number];
+
+export const isSticker = (v: unknown): v is StickerId =>
+  (STICKER_IDS as readonly unknown[]).includes(v);
+
+/** Client → server: send a sticker. */
+export const MSG_REACT = 'react';
+export interface ReactIntent {
+  sticker: StickerId;
+}
+
+/** Server → every client: someone sent a sticker. `id` counts up per table. */
+export const MSG_REACTION = 'reaction';
+export interface ReactionMessage {
+  id: number;
+  userId: string;
+  sticker: StickerId;
+}
+
+/** One sticker per person this often, at most; extras are dropped quietly. */
+export const REACTION_COOLDOWN_MS = 1200;
+
 /** Discord CDN avatar URL. Inside Discord, `cdnBase` is the /discord-cdn URL mapping. */
 export function avatarUrl(user: SessionUser, cdnBase: string, size = 64): string | null {
   if (user.avatar === null || user.id.startsWith('guest-')) return null;

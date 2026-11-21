@@ -17,6 +17,9 @@ import {
   MSG_SNAPSHOT,
   MSG_START,
   MSG_UNDO,
+  MSG_REACT,
+  MSG_REACTION,
+  type ReactionMessage,
   type SessionUser,
   type Snapshot,
   TABLE_ROOM,
@@ -45,6 +48,7 @@ class Player {
   lobby: Lobby | null = null;
   moves: Move[] = [];
   errors: ErrorMessage[] = [];
+  reactions: ReactionMessage[] = [];
   /** The tumble seed of each roll message, in order. */
   tumbles: (number | undefined)[] = [];
   constructor(
@@ -63,6 +67,7 @@ class Player {
       if (m.move.type === 'roll') this.tumbles.push(m.tumble);
     });
     room.onMessage(MSG_ERROR, (e: ErrorMessage) => this.errors.push(e));
+    room.onMessage(MSG_REACTION, (r: ReactionMessage) => this.reactions.push(r));
   }
 
   get game(): GameState {
@@ -263,6 +268,24 @@ describe('table room', () => {
     // After the start, tints are locked.
     await startGame(a, [b2, c, d], {});
     expect(await a.expectError(MSG_TINT, { tint: 'primrose' })).toBe('STARTED');
+  });
+
+  it('sends a sticker to everyone at the table, one per person per cooldown', async () => {
+    t = await startTestServer();
+    const a = await join('Madi');
+    const b = await join('Mom');
+    a.room.send(MSG_REACT, { sticker: 'ooglyBoogly' });
+    await until(() => a.reactions.length === 1 && b.reactions.length === 1, 'the sticker');
+    expect(b.reactions[0]).toEqual({ id: 1, userId: 'u-Madi', sticker: 'ooglyBoogly' });
+
+    // A second one straight away is dropped; someone else's still goes through.
+    a.room.send(MSG_REACT, { sticker: 'heart' });
+    b.room.send(MSG_REACT, { sticker: 'steamingGarbage' });
+    await until(() => a.reactions.length === 2, "Mom's sticker");
+    await new Promise((r) => setTimeout(r, 100));
+    expect(a.reactions.map((r) => r.sticker)).toEqual(['ooglyBoogly', 'steamingGarbage']);
+
+    expect(await a.expectError(MSG_REACT, { sticker: 'confetti' })).toBe('BAD_INTENT');
   });
 
   it('seats late arrivals as spectators who cannot act', async () => {
