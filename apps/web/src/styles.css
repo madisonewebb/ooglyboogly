@@ -1020,7 +1020,12 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   outline-offset: 2px;
 }
 
-/* Flat dice: no WebGL, or while the 3D scene loads. */
+/* While the 3D scene loads the buttons stay put but nothing is drawn. */
+.dice-stage.loading .die-buttons {
+  visibility: hidden;
+}
+
+/* Flat dice: no WebGL. */
 .dice-stage.flat .die-buttons {
   position: absolute;
   inset: 0;

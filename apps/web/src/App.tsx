@@ -87,7 +87,11 @@ function Boot() {
 
   switch (boot.stage) {
     case 'loading':
-      return <Centered>Signing in…</Centered>;
+      return (
+        <Centered>
+          <p className="joining">Signing in…</p>
+        </Centered>
+      );
     case 'outside':
       return (
         <Centered>
