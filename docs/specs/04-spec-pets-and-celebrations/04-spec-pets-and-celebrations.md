@@ -78,7 +78,7 @@ Oogly Boogly players will be able to buy and wear a pet and a Yatzy celebration 
 
 - The system shall, when a Yatzy event happens for a player whose `equipped.celebration` is `ghostParade`, march a line of little ghosts across the whole screen, on every client, once, then remove it from the page.
 - The system shall keep the existing Yatzy `Sparkles` and the sticker floats working at the same time.
-- The system shall, with reduced motion, show the ghosts standing still, fading in and out, and announce the Yatzy politely to screen readers either way.
+- The system shall, with reduced motion, show the ghosts standing in a row for about three seconds, with no marching or bobbing, and announce the Yatzy politely to screen readers either way.
 - The system shall let the latest parade win if a second one starts while the first plays.
 
 **Proof Artifacts:**

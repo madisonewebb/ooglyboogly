@@ -427,7 +427,7 @@ function GhostBody({
       />
       <ellipse cx="46" cy="54" rx="6" ry="9" fill={INK} />
       <ellipse cx="74" cy="54" rx="6" ry="9" fill={INK} />
-      <ellipse cx="60" cy="74" rx="6" ry="7" fill="#4A2A3C" />
+      <path d="M51 68 Q60 84 69 68 Z" fill="#4A2A3C" {...STROKE} strokeWidth={2.5} />
       <Cheeks y={68} dx={28} r={5} />
       {hat === 'witch' && (
         <g>

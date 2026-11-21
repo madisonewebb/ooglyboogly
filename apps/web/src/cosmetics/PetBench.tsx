@@ -2,12 +2,13 @@
  * A development-only bench for pets and the Ghost Parade (`?pets` on the dev
  * server or in a VITE_LAB=1 build): pick a pet, trigger every pose or the
  * parade, and see the whole set side by side. Keys: 1 idle, 2 happy, 3 sad,
- * 4 cheer, P parade. URL: ?pets&cosmetics=pet:bat,celebration:ghostParade
- * &pose=sad&hold=1 (hold: stay in the pose instead of settling back to idle).
+ * 4 cheer, P parade. URL: ?pets&cosmetics=pet:bat&pose=sad&hold=1 (hold: stay
+ * in the pose instead of settling back to idle) and &parade=1 (start the parade).
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { itemById } from '@rollhouse/shared';
 import { DiceTray } from '../dice/DiceTray';
+import { GhostParade } from './celebrations/GhostParade';
 import { usePrefs } from '../theme/prefs';
 import { TINTS } from '../theme/palette';
 import { devOverride } from './devOverride';
@@ -39,6 +40,9 @@ export function PetBench() {
   );
   const [nonce, setNonce] = useState(0);
   const hold = q.get('hold') === '1';
+  // The Ghost Parade: 0 is off, anything else is the id of the one playing.
+  const [parade, setParade] = useState(q.get('parade') === '1' ? 1 : 0);
+  const endParade = useCallback(() => setParade(0), []);
 
   const react = (next: PetPose) => {
     setPose(next);
@@ -56,6 +60,7 @@ export function PetBench() {
     const onKey = (e: KeyboardEvent) => {
       const next = KEYS[e.key];
       if (next) react(next);
+      else if (e.key === 'p' || e.key === 'P') setParade((n) => n + 1);
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
@@ -96,6 +101,9 @@ export function PetBench() {
                 {p} <kbd aria-hidden="true">{i + 1}</kbd>
               </button>
             ))}
+            <button type="button" onClick={() => setParade((n) => n + 1)}>
+              Ghost parade <kbd aria-hidden="true">P</kbd>
+            </button>
           </div>
         </section>
       </div>
@@ -116,6 +124,15 @@ export function PetBench() {
           </div>
         ))}
       </section>
+      {parade > 0 && (
+        <GhostParade
+          key={parade}
+          id={parade}
+          name="Madi"
+          reduced={reducedMotion}
+          onDone={endParade}
+        />
+      )}
     </main>
   );
 }
