@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { MoonIcon, SlidersIcon, SoundIcon, SunIcon } from './icons';
 import { setVolume } from './sound';
+import { SCHEME_IDS, SCHEMES } from './theme/palette';
 import { POP_IN } from './theme/motion';
 import { type TextSize, usePrefs } from './theme/prefs';
 
@@ -88,6 +89,21 @@ export function Corner() {
             style={{ transformOrigin: 'top right' }}
             {...POP_IN}
           >
+            <fieldset className="choice">
+              <legend>Colors</legend>
+              <div className="segmented">
+                {SCHEME_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={prefs.scheme === id}
+                    onClick={() => set({ scheme: id })}
+                  >
+                    {SCHEMES[id].name}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <fieldset className="choice">
               <legend>Text size</legend>
               <div className="segmented">

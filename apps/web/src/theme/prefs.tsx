@@ -1,11 +1,13 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { type ThemeName, themeCss } from './palette';
+import { DEFAULT_SCHEME, isScheme, type SchemeId, type ThemeName, themeCss } from './palette';
 
 export type ThemePref = 'system' | ThemeName;
 export type TextSize = 'regular' | 'large' | 'xl';
 
 export interface Prefs {
   theme: ThemePref;
+  /** The overall color scheme. */
+  scheme: SchemeId;
   textSize: TextSize;
   /** Rolls play at about half length. */
   fastRolls: boolean;
@@ -15,6 +17,7 @@ export interface Prefs {
 
 export const DEFAULT_PREFS: Prefs = {
   theme: 'system',
+  scheme: DEFAULT_SCHEME,
   textSize: 'regular',
   fastRolls: false,
   volume: 0.8,
@@ -38,6 +41,7 @@ export function loadPrefs(): Prefs {
       // Before the volume slider, sound was on or off.
       if (saved.volume === undefined && saved.sound === false) saved.volume = 0;
       delete saved.sound;
+      if (!isScheme(saved.scheme)) delete saved.scheme;
       return { ...DEFAULT_PREFS, ...saved };
     }
   } catch {
@@ -98,6 +102,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const html = document.documentElement;
     html.dataset['theme'] = theme;
+    html.dataset['scheme'] = prefs.scheme;
     html.style.fontSize = TEXT_SCALE[prefs.textSize];
     document
       .querySelector('meta[name="theme-color"]')
@@ -105,7 +110,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
         'content',
         getComputedStyle(html).getPropertyValue('--band').trim() || '#2A2440',
       );
-  }, [theme, prefs.textSize]);
+  }, [theme, prefs.scheme, prefs.textSize]);
 
   const value = useMemo<PrefsContext>(
     () => ({

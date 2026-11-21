@@ -1,3 +1,5 @@
+import { TINT_IDS, type TintId } from '@rollhouse/shared';
+
 /**
  * The Rollhouse palette: Lavender evening. Dark plum with lavender and a pink
  * accent for the evening calls it's mostly played on, and a lavender daytime
@@ -7,6 +9,13 @@
  */
 
 export type ThemeName = 'light' | 'dark';
+
+/** The overall color scheme, chosen in settings. Lavender is the original. */
+export const SCHEME_IDS = ['lavender', 'ocean', 'moss'] as const;
+export type SchemeId = (typeof SCHEME_IDS)[number];
+export const DEFAULT_SCHEME: SchemeId = 'lavender';
+export const isScheme = (v: unknown): v is SchemeId =>
+  (SCHEME_IDS as readonly unknown[]).includes(v);
 
 export interface Tokens {
   /** Page background. */
@@ -42,7 +51,7 @@ export interface Tokens {
   shadow: string;
 }
 
-export const THEMES: Record<ThemeName, Tokens> = {
+const LAVENDER: Record<ThemeName, Tokens> = {
   // Daytime: pale lavender and white, plum ink.
   light: {
     bg: '#F6F3FB',
@@ -98,7 +107,7 @@ export interface SceneTokens {
   light: number;
 }
 
-export const SCENE: Record<ThemeName, SceneTokens> = {
+const LAVENDER_SCENE: Record<ThemeName, SceneTokens> = {
   light: {
     felt: '#5D4FA3',
     rim: '#E6E0F3',
@@ -117,17 +126,136 @@ export const SCENE: Record<ThemeName, SceneTokens> = {
   },
 };
 
-export const TINT_IDS = [
-  'rose',
-  'seaglass',
-  'marigold',
-  'fern',
-  'heather',
-  'primrose',
-  'poppy',
-  'walnut',
-] as const;
-export type TintId = (typeof TINT_IDS)[number];
+const OCEAN: Record<ThemeName, Tokens> = {
+  light: {
+    bg: '#F0F6F9',
+    pad: '#FFFFFF',
+    rule: '#D3E3EA',
+    text: '#17303D',
+    quiet: '#4F6877',
+    accent: '#F2A38C',
+    onAccent: '#17303D',
+    strong: '#1F6E9C',
+    onStrong: '#FFFFFF',
+    option: '#DDEEF5',
+    onOption: '#17303D',
+    band: '#17303D',
+    onBand: '#EFF6F9',
+    die: '#FFFFFF',
+    pip: '#1F6E9C',
+    shadow: '#0B1A22',
+  },
+  dark: {
+    bg: '#0D1A22',
+    pad: '#142631',
+    rule: '#2D4858',
+    text: '#EAF4F8',
+    quiet: '#A5C0CE',
+    accent: '#F4B29E',
+    onAccent: '#10212B',
+    strong: '#8CCBEB',
+    onStrong: '#10212B',
+    option: '#2C5468',
+    onOption: '#EAF4F8',
+    band: '#0A1820',
+    onBand: '#EAF4F8',
+    die: '#F4F8FA',
+    pip: '#1F6E9C',
+    shadow: '#03080B',
+  },
+};
+
+const OCEAN_SCENE: Record<ThemeName, SceneTokens> = {
+  light: {
+    felt: '#2F6F8F',
+    rim: '#DCEAF1',
+    shelf: '#C9DDE8',
+    seat: '#B2CEDD',
+    cupInside: '#17303D',
+    light: 1,
+  },
+  dark: {
+    felt: '#235068',
+    rim: '#35617A',
+    shelf: '#2F5870',
+    seat: '#274A5F',
+    cupInside: '#0A1820',
+    light: 0.9,
+  },
+};
+
+const MOSS: Record<ThemeName, Tokens> = {
+  light: {
+    bg: '#F3F6EF',
+    pad: '#FFFFFF',
+    rule: '#DCE5D3',
+    text: '#25301F',
+    quiet: '#5B6A52',
+    accent: '#E8A05A',
+    onAccent: '#25301F',
+    strong: '#3F7A3A',
+    onStrong: '#FFFFFF',
+    option: '#E4EEDB',
+    onOption: '#25301F',
+    band: '#25301F',
+    onBand: '#F3F6EF',
+    die: '#FFFFFF',
+    pip: '#3F7A3A',
+    shadow: '#141B10',
+  },
+  dark: {
+    bg: '#171F15',
+    pad: '#212B1E',
+    rule: '#37462F',
+    text: '#EFF5EA',
+    quiet: '#B1C3A6',
+    accent: '#F0B87A',
+    onAccent: '#171F15',
+    strong: '#A5D79A',
+    onStrong: '#171F15',
+    option: '#3B5233',
+    onOption: '#EFF5EA',
+    band: '#0F150E',
+    onBand: '#EFF5EA',
+    die: '#F6F8F3',
+    pip: '#3F7A3A',
+    shadow: '#040603',
+  },
+};
+
+const MOSS_SCENE: Record<ThemeName, SceneTokens> = {
+  light: {
+    felt: '#4B7A47',
+    rim: '#E1EADA',
+    shelf: '#D0DEC6',
+    seat: '#BCD0AE',
+    cupInside: '#25301F',
+    light: 1,
+  },
+  dark: {
+    felt: '#35542F',
+    rim: '#46623F',
+    shelf: '#3E5A37',
+    seat: '#334C2D',
+    cupInside: '#0F150E',
+    light: 0.9,
+  },
+};
+
+export const SCHEMES: Record<
+  SchemeId,
+  { name: string; themes: Record<ThemeName, Tokens>; scene: Record<ThemeName, SceneTokens> }
+> = {
+  lavender: { name: 'Lavender', themes: LAVENDER, scene: LAVENDER_SCENE },
+  ocean: { name: 'Ocean', themes: OCEAN, scene: OCEAN_SCENE },
+  moss: { name: 'Moss', themes: MOSS, scene: MOSS_SCENE },
+};
+
+/** The original lavender scheme. */
+export const THEMES = LAVENDER;
+export const SCENE = LAVENDER_SCENE;
+
+export { TINT_IDS, type TintId };
 
 export interface Tint {
   name: string;
@@ -146,6 +274,8 @@ export const TINTS: Record<TintId, Tint> = {
   primrose: { name: 'Primrose', hue: '#E6CB45', ink: { light: '#7E6C11', dark: '#E6CB45' } },
   poppy: { name: 'Poppy', hue: '#E8613C', ink: { light: '#C83D18', dark: '#E96A47' } },
   walnut: { name: 'Walnut', hue: '#A0714E', ink: { light: '#8F6546', dark: '#B48765' } },
+  cornflower: { name: 'Cornflower', hue: '#5B8DEF', ink: { light: '#2F5FC4', dark: '#6F9BF0' } },
+  orchid: { name: 'Orchid', hue: '#C055B8', ink: { light: '#A02E98', dark: '#CF6FC8' } },
 };
 
 /** Every [text, surface] pairing the UI uses. All must reach 4.5:1. */
@@ -180,14 +310,15 @@ export function contrast(a: string, b: string): number {
 
 const kebab = (s: string) => s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
 
-/** The CSS variables for both themes, keyed on <html data-theme>. */
+/** The CSS variables for every scheme and theme, keyed on <html data-scheme data-theme>. Lavender needs no data-scheme. */
 export function themeCss(): string {
-  return (Object.keys(THEMES) as ThemeName[])
-    .map((name) => {
-      const vars = Object.entries(THEMES[name])
+  return SCHEME_IDS.flatMap((id) =>
+    (Object.keys(THEMES) as ThemeName[]).map((name) => {
+      const vars = Object.entries(SCHEMES[id].themes[name])
         .map(([k, v]) => `--${kebab(k)}:${v};`)
         .join('');
-      return `:root[data-theme='${name}']{${vars}color-scheme:${name};}`;
-    })
-    .join('\n');
+      const scheme = id === DEFAULT_SCHEME ? '' : `[data-scheme='${id}']`;
+      return `:root${scheme}[data-theme='${name}']{${vars}color-scheme:${name};}`;
+    }),
+  ).join('\n');
 }

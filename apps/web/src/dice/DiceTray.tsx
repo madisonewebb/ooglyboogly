@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SCENE, THEMES } from '../theme/palette';
+import { SCHEMES } from '../theme/palette';
 import { usePrefs } from '../theme/prefs';
 import { playCelebrate, playHop, playImpact, playRattle, playSettle } from '../sound';
 import { Sparkles } from '../Sparkles';
@@ -57,7 +57,7 @@ const PIP_SPOTS: Record<number, number[]> = {
   6: [0, 2, 3, 5, 6, 8],
 };
 
-/** A flat jelly die, for screens without WebGL and while the 3D scene loads. */
+/** A flat die, for screens without WebGL. */
 export function FlatFace({ value }: { value: number | null }) {
   return (
     <span className="flat-die" aria-hidden="true">
@@ -254,19 +254,21 @@ export function DiceTray({
     held,
     roll: plan ?? pending,
     hops,
-    colors: THEMES[theme],
-    scene: SCENE[theme],
+    colors: SCHEMES[prefs.scheme].themes[theme],
+    scene: SCHEMES[prefs.scheme].scene[theme],
     hue,
     hover,
     rests: restsNow,
     onSlots: setSlots,
   };
-  // Flat dice without WebGL, and while the 3D scene loads.
+  // Flat layout without WebGL, and while the 3D scene loads.
   const flat = !three || !slots;
+  // While the scene loads, show nothing rather than a flash of blank flat dice.
+  const loading = three && !slots;
 
   return (
     <div
-      className={`dice-stage${flat ? ' flat' : ''}`}
+      className={`dice-stage${flat ? ' flat' : ''}${loading ? ' loading' : ''}`}
       data-testid="dice-tray"
       onClick={skip}
       style={{ ['--hue' as string]: hue, ['--stage-aspect' as string]: STAGE_ASPECT }}
@@ -316,7 +318,7 @@ export function DiceTray({
                   : { order: isHeld ? i : 10 + i }
               }
             >
-              {flat && <FlatFace value={rolling && !isHeld ? null : value} />}
+              {!three && <FlatFace value={rolling && !isHeld ? null : value} />}
             </button>
           );
         })}
