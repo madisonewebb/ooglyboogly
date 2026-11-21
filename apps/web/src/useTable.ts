@@ -9,6 +9,8 @@ import {
   MSG_ERROR,
   MSG_LOBBY,
   MSG_MOVE,
+  MSG_REACTION,
+  type ReactionMessage,
   MSG_SNAPSHOT,
   type Snapshot,
   TABLE_ROOM,
@@ -38,6 +40,8 @@ export interface Table {
   seat: number | null;
   error: ErrorMessage | null;
   lastRoll: LiveRoll | null;
+  /** Stickers sent in this session, newest last (only the last few are kept). */
+  reactions: ReactionMessage[];
   clearError(): void;
   send(type: string, body?: unknown): void;
   rejoin(): void;
@@ -75,6 +79,7 @@ export function useTable(auth: Auth): Table {
   const [attempt, setAttempt] = useState(0);
   const [lostReason, setLostReason] = useState<string | null>(null);
   const [lastRoll, setLastRoll] = useState<LiveRoll | null>(null);
+  const [reactions, setReactions] = useState<ReactionMessage[]>([]);
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
@@ -114,6 +119,9 @@ export function useTable(auth: Auth): Table {
             );
           }
         });
+        room.onMessage(MSG_REACTION, (r: ReactionMessage) =>
+          setReactions((prev) => [...prev.slice(-11), r]),
+        );
         room.onMessage(MSG_ERROR, (e: ErrorMessage) => setError(e));
         room.onDrop(() => setConnection('reconnecting'));
         room.onReconnect(() => setConnection('open'));
@@ -155,6 +163,7 @@ export function useTable(auth: Auth): Table {
     seat,
     error,
     lastRoll,
+    reactions,
     clearError: useCallback(() => setError(null), []),
     send,
     rejoin: useCallback(() => setAttempt((n) => n + 1), []),

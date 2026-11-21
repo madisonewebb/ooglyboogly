@@ -16,7 +16,9 @@ import {
   YATZY_BONUS,
 } from '@rollhouse/rules';
 import { BRAND_NAME, type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
+import wordmark from '../art/wordmark.webp';
 import { Avatar } from '../Avatar';
+import { ReactionFloats, ReactionPicker } from '../Reactions';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
 import { CheckIcon, DieGlyph } from '../icons';
@@ -394,7 +396,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
       <header className="topbar">
-        <span className="wordmark small">{BRAND_NAME}</span>
+        <img className="band-wordmark" src={wordmark} alt={BRAND_NAME} width={396} height={128} />
       </header>
 
       <div className="table-layout">
@@ -434,6 +436,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 ))}
               </span>
             ) : null}
+            <ReactionPicker send={table.send} />
           </div>
 
           <DiceTray
@@ -523,6 +526,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             </AnimatePresence>
             <p className="hint quiet">{hint || ' '}</p>
           </div>
+          <ReactionFloats reactions={table.reactions} lobby={lobby} />
         </section>
 
         <section
@@ -598,13 +602,6 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                                   </motion.span>
                                 ) : (
                                   <span className="upper-progress" aria-hidden="true">
-                                    <span className="meter">
-                                      <span
-                                        style={{
-                                          width: `${Math.min(100, (upper / UPPER_BONUS_THRESHOLD) * 100)}%`,
-                                        }}
-                                      />
-                                    </span>
                                     <span className="count">
                                       {upper}/{UPPER_BONUS_THRESHOLD}
                                     </span>

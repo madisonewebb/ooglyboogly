@@ -34,6 +34,11 @@ import {
   MSG_SNAPSHOT,
   MSG_START,
   MSG_UNDO,
+  MSG_REACT,
+  MSG_REACTION,
+  isSticker,
+  REACTION_COOLDOWN_MS,
+  type ReactionMessage,
   type SessionUser,
   type Snapshot,
 } from '@rollhouse/shared';
@@ -130,6 +135,9 @@ export function createTableRoom(cfg: TableConfig) {
     game: GameState | null = null;
     moves: Move[] = [];
     private emptyTimer: { clear(): void } | null = null;
+    /** When each user last sent a sticker, for the cooldown. */
+    private lastReaction = new Map<string, number>();
+    private reactions = 0;
 
     override onCreate(options: Partial<JoinOptions>) {
       const id = options?.instanceId;
@@ -278,6 +286,21 @@ export function createTableRoom(cfg: TableConfig) {
           card: intent['card'] as number,
           box: intent['box'] as (typeof BOXES)[number],
         });
+      },
+
+      // Anyone at the table, seated or watching, can send a sticker.
+      [MSG_REACT]: (client: Client, intent: unknown) => {
+        const member = this.memberOf(client);
+        if (!member) return;
+        if (!isObject(intent) || !isSticker(intent['sticker'])) {
+          return this.sendError(client, 'BAD_INTENT', 'pick one of the stickers');
+        }
+        const now = Date.now();
+        const userId = member.user.id;
+        if (now - (this.lastReaction.get(userId) ?? -Infinity) < REACTION_COOLDOWN_MS) return;
+        this.lastReaction.set(userId, now);
+        const body: ReactionMessage = { id: ++this.reactions, userId, sticker: intent['sticker'] };
+        this.broadcast(MSG_REACTION, body);
       },
 
       [MSG_UNDO]: (client: Client) => {
