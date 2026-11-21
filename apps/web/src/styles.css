@@ -518,12 +518,23 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
   height: 100%;
 }
 
+/* Without a GPU the die is flat, so it rocks and bobs instead of turning. */
 .brand-flat {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  rotate: -12deg;
+  animation: rock 3.2s var(--ease-in-out) infinite;
+}
+
+@keyframes rock {
+  0%,
+  100% {
+    transform: translateY(0.1rem) rotate(-14deg);
+  }
+  50% {
+    transform: translateY(-0.15rem) rotate(14deg);
+  }
 }
 
 .brand-text {
@@ -550,12 +561,12 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
   animation: bob 2.4s var(--ease-in-out) infinite;
 }
 
-.bounce.pink {
-  /* Pink, deepened so the big letters hold 3:1 on the page. */
+.bounce.first {
+  /* The accent, deepened so the big letters hold 3:1 on the page. */
   color: color-mix(in srgb, var(--accent) 86%, var(--text));
 }
 
-.bounce.violet {
+.bounce.second {
   color: var(--strong);
 }
 
@@ -571,8 +582,13 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bounce {
+  .bounce,
+  .brand-flat {
     animation: none;
+  }
+
+  .brand-flat {
+    rotate: -12deg;
   }
 }
 

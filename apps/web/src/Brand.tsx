@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BRAND_NAME } from '@rollhouse/shared';
 import wordmark from './art/wordmark.webp';
 import { FlatFace } from './dice/DiceTray';
-import { hasWebGL, renderQuality } from './dice/webgl';
+import { hasWebGL } from './dice/webgl';
 import { usePrefs } from './theme/prefs';
 
 const LobbyDie = lazy(() => import('./dice/LobbyDie'));
@@ -32,21 +32,21 @@ function BouncyName() {
     ));
   return (
     <p className="brand-title" aria-hidden="true">
-      <span className="word">{letters(first, 0, 'pink')}</span>{' '}
-      <span className="word">{letters(second, first.length, 'violet')}</span>
+      <span className="word">{letters(first, 0, 'first')}</span>{' '}
+      <span className="word">{letters(second, first.length, 'second')}</span>
     </p>
   );
 }
 
-/** A die turning beside the bouncing name, under the band. */
+/** A die turning beside the bouncing name, under the band. Flat only where there is no WebGL at all. */
 export function Welcome({ tagline = true }: { tagline?: boolean }) {
-  const { theme, reducedMotion } = usePrefs();
+  const { prefs, theme, reducedMotion } = usePrefs();
   return (
     <div className="brand">
       <span className="brand-die" aria-hidden="true">
-        {hasWebGL() && renderQuality() === 'high' ? (
+        {hasWebGL() ? (
           <Suspense fallback={null}>
-            <LobbyDie theme={theme} still={reducedMotion} />
+            <LobbyDie theme={theme} scheme={prefs.scheme} still={reducedMotion} />
           </Suspense>
         ) : (
           <span className="brand-flat">
