@@ -9,6 +9,7 @@ import {
   cardTotal,
   type GameState,
   isPlayerDone,
+  isYatzy,
   ROLLS_PER_TURN,
   upperBoxFor,
   UPPER_BONUS,
@@ -26,6 +27,8 @@ import { DURATION, EASE_OUT, SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
 import type { Table } from '../useTable';
 import { PAD_PANEL_ID, padTabId, PadTabs } from './PadTabs';
+import type { TankHandle } from '../tank/Tank';
+import { TableTanks } from '../tank/TableTanks';
 
 interface Props {
   game: GameState;
@@ -167,6 +170,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const canAct = seat !== null && active.includes(seat);
   const myTray = trayPlayer === seat && canAct;
 
+  const tank = useRef<TankHandle>(null);
+
   // Your turn starting (the first one too) gets a little chime and a pulse on your face.
   const myTurn = turns ? up === seat : canAct;
   const [turnPulse, setTurnPulse] = useState(0);
@@ -178,7 +183,12 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
     setTurnPulse((n) => n + 1);
     // After the last player's score pop has had its moment.
     const id = setTimeout(playTurn, 350);
-    return () => clearTimeout(id);
+    // Your tank comes up above the dice, and your fish swim to the glass to see you.
+    const fish = setTimeout(() => tank.current?.welcome(), 700);
+    return () => {
+      clearTimeout(id);
+      clearTimeout(fish);
+    };
   }, [myTurn]);
 
   // Only rolls that arrive while this tray is showing animate.
@@ -193,6 +203,14 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
       : null;
   const [settled, setSettled] = useState(-1);
   const rolling = roll !== null && roll.index > settled;
+
+  // A Yatzy in the tray sets the fish in the tank above it darting about, as the dice land.
+  const yatzyRoll = roll && dice && isYatzy(dice) ? roll.index : null;
+  useEffect(() => {
+    if (yatzyRoll === null) return;
+    const id = setTimeout(() => tank.current?.celebrate(), 900);
+    return () => clearTimeout(id);
+  }, [yatzyRoll]);
   const onSettled = useCallback((index: number) => setSettled((s) => Math.max(s, index)), []);
 
   const player = game.players[viewed]!;
@@ -435,6 +453,19 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
               </span>
             ) : null}
           </div>
+
+          {trayUser && (
+            <TableTanks
+              ref={tank}
+              watching={{ id: trayUser.id, name: trayUser.name }}
+              you={
+                seat !== null && trayPlayer !== seat && lobby.seats[seat]
+                  ? { id: lobby.seats[seat].user.id, name: lobby.seats[seat].user.name }
+                  : null
+              }
+              evening={false}
+            />
+          )}
 
           <DiceTray
             values={dice ?? [null, null, null, null, null]}
