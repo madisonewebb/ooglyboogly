@@ -23,6 +23,8 @@ export const isPetId = (v: unknown): v is PetId => (PET_IDS as readonly unknown[
 
 export const POSES = ['idle', 'happy', 'sad', 'cheer'] as const;
 export type PetPose = (typeof POSES)[number];
+/** The poses a reaction puts a pet in; idle is where it settles back to. */
+export type ReactionPose = Exclude<PetPose, 'idle'>;
 
 /** The poses each pet has art for. Only the legendary one has a Yatzy cheer. */
 export const PET_POSES: Record<PetId, readonly PetPose[]> = {
@@ -112,7 +114,7 @@ const ANYTHING: readonly Box[] = ['threeKind', ...SHOWY, 'yatzy'];
  * - a score of 0 (a bust): sad; any other score: happy
  * Undo, and an ordinary roll, leave the pet as it is.
  */
-export function petMood(event: PetEvent): PetPose | null {
+export function petMood(event: PetEvent): ReactionPose | null {
   if (isYatzyEvent(event)) return 'cheer';
   if (event.kind === 'undo') return null;
   if (event.kind === 'score') return event.value === 0 ? 'sad' : 'happy';
@@ -127,7 +129,7 @@ export function petMood(event: PetEvent): PetPose | null {
 }
 
 /** How long a reaction lasts before the pet settles back to idle, in ms. */
-export const REACTION_MS: Record<Exclude<PetPose, 'idle'>, number> = {
+export const REACTION_MS: Record<ReactionPose, number> = {
   happy: 1800,
   sad: 2200,
   cheer: 3400,
