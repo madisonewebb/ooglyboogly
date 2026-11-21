@@ -30,14 +30,19 @@ import {
   MSG_SNAPSHOT,
   MSG_START,
   MSG_UNDO,
+  MSG_BUY,
+  MSG_EQUIP,
+  MSG_GOAL,
   MSG_REACT,
   MSG_REACTION,
+  MSG_WALLET,
   type ReactionMessage,
   type SessionUser,
   type Snapshot,
   TABLE_ROOM,
+  type WalletMessage,
 } from '@rollhouse/shared';
-import { getBalance, openDatabase } from '../db';
+import { getBalance, openDatabase, payOut } from '../db';
 import { signSession } from '../session';
 import { startTestServer, TEST_SECRET, type TestServer } from '../test-server';
 import { mergeSettings } from './TableRoom';
@@ -65,6 +70,9 @@ class Player {
   reactions: ReactionMessage[] = [];
   /** The latest payout message, once the game has been paid. */
   payout: PayoutMessage | null = null;
+  /** This player's own account: from the snapshot, then every wallet message. */
+  wallet: WalletMessage | null = null;
+  wallets = 0;
   /** The tumble seed of each roll message, in order. */
   tumbles: (number | undefined)[] = [];
   constructor(
@@ -75,6 +83,11 @@ class Player {
       this.snapshot = s;
       this.lobby = s.lobby;
       this.moves = [...s.moves];
+      this.wallet = s.wallet ?? null;
+    });
+    room.onMessage(MSG_WALLET, (w: WalletMessage) => {
+      this.wallet = w;
+      this.wallets++;
     });
     room.onMessage(MSG_LOBBY, (l: Lobby) => (this.lobby = l));
     room.onMessage(MSG_MOVE, (m: MoveMessage) => {
@@ -654,4 +667,341 @@ describe('coin payouts', () => {
     expect((await join('Late')).snapshot!.payout).toBeUndefined();
     expect(error).toHaveBeenCalledWith(expect.stringMatching(/payout failed/), expect.anything());
   });
+});
+
+describe('the shop', () => {
+  const dirs: string[] = [];
+  const dbs: DatabaseSync[] = [];
+  afterEach(() => {
+    for (const db of dbs.splice(0)) {
+      try {
+        db.close();
+      } catch {
+        // a test closed it on purpose
+      }
+    }
+    for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
+  });
+  const breakdown = { finish: 10, win: 0, yatzy: 0 };
+  /** A database where `u-Madi` has earned `coins`. */
+  const openDb = (coins = 100) => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'rollhouse-shop-'));
+    dirs.push(dir);
+    const db = openDatabase(dir);
+    dbs.push(db);
+    if (coins > 0) payOut(db, 'seed', [{ userId: 'u-Madi', coins, breakdown }]);
+    return db;
+  };
+  const withDb = async (db: DatabaseSync, table: object = {}, env: NodeJS.ProcessEnv = {}) => {
+    t = await startTestServer(env, { db, table });
+  };
+  const own = (db: DatabaseSync, userId: string, itemId: string) =>
+    db.prepare("INSERT INTO inventory VALUES (?, ?, 40, 'seed')").run(userId, itemId);
+
+  /** Sends a shop message and waits for the wallet (and any error) that answers it. */
+  async function shop(p: Player, type: string, body?: unknown) {
+    const wallets = p.wallets;
+    const errors = p.errors.length;
+    p.room.send(type, body);
+    await until(() => p.wallets > wallets, `${type} to be answered`);
+    return { wallet: p.wallet!, error: p.errors.length > errors ? p.errors.at(-1)! : null };
+  }
+
+  it('sends each player their own wallet when they join', async () => {
+    const db = openDb(100);
+    own(db, 'u-Madi', 'cauldronCrew');
+    await withDb(db);
+    const a = await join('Madi');
+    const b = await join('Mom');
+    expect(a.wallet).toEqual({
+      balance: 100,
+      owned: ['cauldronCrew'],
+      equipped: {},
+      goal: null,
+      canBuy: true,
+    });
+    expect(b.wallet).toEqual({ balance: 0, owned: [], equipped: {}, goal: null, canBuy: true });
+  });
+
+  it('buys at the catalog price, whatever price the client claims', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const a = await join('Madi');
+    const { wallet, error } = await shop(a, MSG_BUY, { item: 'cauldronCrew', price: 1, user: 'x' });
+    expect(error).toBeNull();
+    expect(wallet).toMatchObject({ balance: 60, owned: ['cauldronCrew'] });
+    expect(getBalance(db, 'u-Madi')).toBe(60);
+  });
+
+  it('never charges twice for a retry, and says so', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const a = await join('Madi');
+    await shop(a, MSG_BUY, { item: 'cauldronCrew' });
+    for (let i = 0; i < 2; i++) {
+      const { wallet, error } = await shop(a, MSG_BUY, { item: 'cauldronCrew' });
+      expect(error?.code).toBe('ALREADY_OWNED');
+      expect(wallet.balance).toBe(60);
+    }
+    expect(getBalance(db, 'u-Madi')).toBe(60);
+  });
+
+  it('refuses what is coming soon, unknown, unaffordable or malformed', async () => {
+    const db = openDb(50);
+    await withDb(db);
+    const a = await join('Madi');
+    const codes: string[] = [];
+    for (const body of [
+      { item: 'bone' },
+      { item: 'ghostCheerleader' },
+      { item: 'nothing' },
+      { item: 5 },
+      {},
+      'cauldronCrew',
+      null,
+    ]) {
+      codes.push((await shop(a, MSG_BUY, body)).error!.code);
+    }
+    expect(codes).toEqual([
+      'NOT_AVAILABLE',
+      'NOT_AVAILABLE',
+      'UNKNOWN_ITEM',
+      'UNKNOWN_ITEM',
+      'UNKNOWN_ITEM',
+      'UNKNOWN_ITEM',
+      'UNKNOWN_ITEM',
+    ]);
+    await shop(a, MSG_BUY, { item: 'cauldronCrew' });
+    const poor = await shop(a, MSG_BUY, { item: 'moonlitCharms' });
+    expect(poor.error?.code).toBe('NOT_ENOUGH_COINS');
+    expect(getBalance(db, 'u-Madi')).toBe(10);
+  });
+
+  it('tells every device of a player, and nobody else', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const phone = await join('Madi', 'inst-1', 'u-Madi');
+    const laptop = await join('Madi', 'inst-1', 'u-Madi');
+    const mom = await join('Mom');
+    const before = mom.wallets;
+    await shop(phone, MSG_BUY, { item: 'cauldronCrew' });
+    await until(() => laptop.wallet?.balance === 60, 'the second device to hear');
+    expect(laptop.wallet!.owned).toEqual(['cauldronCrew']);
+    expect(mom.wallets).toBe(before);
+    expect(mom.wallet!.balance).toBe(0);
+    // Nothing in the lobby carries a balance or inventory.
+    expect(JSON.stringify(mom.lobby)).not.toContain('cauldronCrew');
+  });
+
+  it('acts only for the signed-in player, never a user named in the message', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const a = await join('Madi');
+    const mom = await join('Mom');
+    const { error } = await shop(mom, MSG_BUY, { item: 'cauldronCrew', userId: 'u-Madi' });
+    expect(error?.code).toBe('NOT_ENOUGH_COINS');
+    expect(getBalance(db, 'u-Madi')).toBe(100);
+    const eq = await shop(mom, MSG_EQUIP, { slot: 'diceSkin', item: 'bone', userId: 'u-Madi' });
+    expect(eq.error?.code).toBe('NOT_OWNED');
+    expect(a.wallet!.balance).toBe(100);
+  });
+
+  it('refuses a guest unless guest payouts are on, and a table with no database', async () => {
+    const db = openDb(0);
+    await withDb(db, { guestPayouts: false });
+    const g = await join('Gia', 'inst-1', 'guest-1');
+    expect(g.wallet).toMatchObject({ canBuy: false, balance: 0 });
+    payOut(db, 'seed', [{ userId: 'guest-1', coins: 100, breakdown }]);
+    const { error } = await shop(g, MSG_BUY, { item: 'cauldronCrew' });
+    expect(error?.code).toBe('SHOP_CLOSED');
+    expect(getBalance(db, 'guest-1')).toBe(100);
+    expect((await shop(g, MSG_GOAL, { item: 'cauldronCrew' })).error?.code).toBe('SHOP_CLOSED');
+    await t!.close();
+
+    // Where guests are paid (dev and e2e), they can shop.
+    t = await startTestServer({}, { db, table: { guestPayouts: true } });
+    const g2 = await join('Gia', 'inst-2', 'guest-1');
+    expect(g2.wallet).toMatchObject({ canBuy: true, balance: 100 });
+    expect((await shop(g2, MSG_BUY, { item: 'cauldronCrew' })).error).toBeNull();
+    await t.close();
+
+    t = await startTestServer();
+    const none = await join('Madi');
+    expect(none.wallet).toEqual({ balance: 0, owned: [], equipped: {}, goal: null, canBuy: false });
+    expect((await shop(none, MSG_BUY, { item: 'cauldronCrew' })).error?.code).toBe('SHOP_CLOSED');
+  });
+
+  it('equips and unequips an owned item, and the whole table sees it', async () => {
+    const db = openDb(0);
+    own(db, 'u-Madi', 'bone');
+    own(db, 'u-Madi', 'toad');
+    await withDb(db);
+    const a = await join('Madi');
+    const b = await join('Mom');
+    expect(b.lobby!.seats[0]).not.toHaveProperty('equipped');
+
+    const on = await shop(a, MSG_EQUIP, { slot: 'diceSkin', item: 'bone' });
+    expect(on.error).toBeNull();
+    expect(on.wallet.equipped).toEqual({ diceSkin: 'bone' });
+    await until(() => b.lobby!.seats[0]!.equipped?.diceSkin === 'bone', 'Mom to see it');
+    await shop(a, MSG_EQUIP, { slot: 'pet', item: 'toad' });
+    await until(() => b.lobby!.seats[0]!.equipped?.pet === 'toad', 'the pet');
+    expect(b.lobby!.seats[1]).not.toHaveProperty('equipped');
+
+    await shop(a, MSG_EQUIP, { slot: 'diceSkin', item: null });
+    await until(() => b.lobby!.seats[0]!.equipped?.diceSkin === undefined, 'it to come off');
+    expect(b.lobby!.seats[0]!.equipped).toEqual({ pet: 'toad' });
+
+    // It is remembered: a new connection sits down wearing it.
+    await a.room.leave();
+    await until(() => b.lobby!.seats.length === 1, 'Madi to leave');
+    const again = await join('Madi');
+    expect(again.lobby!.seats.find((s) => s.user.id === 'u-Madi')!.equipped).toEqual({
+      pet: 'toad',
+    });
+    expect(again.wallet!.equipped).toEqual({ pet: 'toad' });
+  });
+
+  it('refuses to equip what you do not own, in the wrong slot, or that does not exist', async () => {
+    const db = openDb(0);
+    own(db, 'u-Madi', 'toad');
+    await withDb(db);
+    const a = await join('Madi');
+    const codes: string[] = [];
+    for (const body of [
+      { slot: 'diceSkin', item: 'bone' },
+      { slot: 'diceSkin', item: 'toad' },
+      { slot: 'diceSkin', item: 'ghost' },
+      { slot: 'hat', item: 'toad' },
+      { item: 'toad' },
+      'toad',
+    ]) {
+      codes.push((await shop(a, MSG_EQUIP, body)).error!.code);
+    }
+    expect(codes).toEqual([
+      'NOT_OWNED',
+      'UNKNOWN_ITEM',
+      'UNKNOWN_ITEM',
+      'BAD_INTENT',
+      'BAD_INTENT',
+      'BAD_INTENT',
+    ]);
+    expect(a.wallet!.equipped).toEqual({});
+  });
+
+  it('only lets you change your look in the lobby', async () => {
+    const db = openDb(0);
+    own(db, 'u-Madi', 'bone');
+    await withDb(db);
+    const a = await join('Madi');
+    await shop(a, MSG_EQUIP, { slot: 'diceSkin', item: 'bone' });
+    await startGame(a, [], { cardsPerPlayer: 1 });
+    expect(await a.expectError(MSG_EQUIP, { slot: 'diceSkin', item: null })).toBe('STARTED');
+    // The look the seat started with is still the one the table sees.
+    expect(a.lobby!.seats[0]!.equipped).toEqual({ diceSkin: 'bone' });
+    expect(getEquippedRow(db)).toEqual([{ slot: 'diceSkin', item_id: 'bone' }]);
+  });
+
+  it('keeps the look a seat started with, even if its player reconnects', async () => {
+    const db = openDb(0);
+    own(db, 'u-Madi', 'bone');
+    await withDb(db);
+    const a = await join('Madi');
+    await shop(a, MSG_EQUIP, { slot: 'diceSkin', item: 'bone' });
+    await startGame(a, [], { cardsPerPlayer: 1 });
+    await a.room.leave();
+    const back = await join('Madi');
+    expect(back.lobby!.seats[0]!.equipped).toEqual({ diceSkin: 'bone' });
+  });
+
+  it('pins a goal, follows it to another device, and clears it when bought', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const a = await join('Madi');
+    expect((await shop(a, MSG_GOAL, { item: 'moonlitCharms' })).wallet.goal).toBe('moonlitCharms');
+    const other = await join('Madi', 'inst-2', 'u-Madi');
+    expect(other.wallet!.goal).toBe('moonlitCharms');
+    expect((await shop(a, MSG_GOAL, { item: 'bone' })).error?.code).toBe('NOT_AVAILABLE');
+    expect((await shop(a, MSG_GOAL, {})).error?.code).toBe('UNKNOWN_ITEM');
+    expect((await shop(a, MSG_BUY, { item: 'moonlitCharms' })).wallet.goal).toBeNull();
+    expect((await shop(a, MSG_GOAL, { item: 'moonlitCharms' })).error?.code).toBe('ALREADY_OWNED');
+    expect((await shop(a, MSG_GOAL, { item: 'cauldronCrew' })).wallet.goal).toBe('cauldronCrew');
+    expect((await shop(a, MSG_GOAL, { item: null })).wallet.goal).toBeNull();
+  });
+
+  it('lets a watcher shop for themselves but not be seen wearing anything', async () => {
+    const db = openDb(100);
+    own(db, 'u-Eve', 'bone');
+    await withDb(db);
+    const a = await join('Madi');
+    await startGame(a, [], { cardsPerPlayer: 1 });
+    const eve = await join('Eve', 'inst-1', 'u-Eve');
+    expect((await shop(eve, MSG_BUY, { item: 'cauldronCrew' })).error?.code).toBe(
+      'NOT_ENOUGH_COINS',
+    );
+    expect(eve.lobby!.spectators.map((u) => u.name)).toEqual(['Eve']);
+  });
+
+  it('takes pack stickers only from the player who owns the pack', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const a = await join('Madi');
+    const b = await join('Mom');
+    // A pack sticker without the pack is refused, and nobody sees it.
+    expect(await sendSticker(a, 'ribbit')).toBe('NOT_OWNED');
+    expect(b.reactions).toEqual([]);
+    // A default sticker is free.
+    expect(await sendSticker(a, 'cheering')).toBeNull();
+
+    await shop(a, MSG_BUY, { item: 'cauldronCrew' });
+    await new Promise((r) => setTimeout(r, 1300));
+    expect(await sendSticker(a, 'ribbit')).toBeNull();
+    await until(() => b.reactions.some((r) => r.sticker === 'ribbit'), 'Mom to see ribbit');
+    // The other pack is still locked, and Mom, who owns nothing, cannot send ribbit.
+    await new Promise((r) => setTimeout(r, 1300));
+    expect(await sendSticker(a, 'broom')).toBe('NOT_OWNED');
+    expect(await sendSticker(b, 'ribbit')).toBe('NOT_OWNED');
+  });
+
+  it('refuses pack stickers where there is no database', async () => {
+    t = await startTestServer();
+    const a = await join('Madi');
+    expect(await sendSticker(a, 'ribbit')).toBe('NOT_OWNED');
+  });
+
+  it('sends the new balance after a game pays out', async () => {
+    const db = openDb(0);
+    await withDb(db);
+    const a = await join('Madi');
+    await startGame(a, [], { cardsPerPlayer: 1 });
+    const before = a.wallets;
+    for (let turn = 0; turn < 13; turn++) await playTurn(a);
+    await until(() => a.wallets > before, 'the wallet after the payout');
+    expect(a.wallet!.balance).toBe(getBalance(db, 'u-Madi'));
+    expect(a.wallet!.balance).toBeGreaterThan(0);
+  });
+
+  it('answers with an error, not a crash, when the database fails', async () => {
+    const db = openDb(100);
+    await withDb(db);
+    const a = await join('Madi');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    db.exec('DROP TABLE inventory');
+    const { error } = await shop(a, MSG_BUY, { item: 'cauldronCrew' });
+    expect(error?.code).toBe('SHOP_CLOSED');
+    expect(getBalance(db, 'u-Madi')).toBe(100);
+    vi.restoreAllMocks();
+  });
+
+  /** Sends a sticker and returns the error code, or null when it was accepted. */
+  async function sendSticker(p: Player, sticker: string): Promise<string | null> {
+    const errors = p.errors.length;
+    p.room.send(MSG_REACT, { sticker });
+    await new Promise((r) => setTimeout(r, 120));
+    return p.errors.length > errors ? p.errors.at(-1)!.code : null;
+  }
+
+  function getEquippedRow(db: DatabaseSync) {
+    return db.prepare('SELECT slot, item_id FROM equipped').all();
+  }
 });
