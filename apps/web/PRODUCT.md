@@ -23,8 +23,7 @@ night and staying in it between turns because watching is pleasant, not only pla
 
 It is made for one family, not a market. The server rolls every die with a secure random source and
 every screen plays the same recorded physical tumble, so the dice feel real and nobody can doubt
-them. Planned: a persistent personal aquarium bought with game winnings, shown to the whole table on
-its owner's turn.
+them.
 
 ## Operating Context
 
@@ -46,10 +45,6 @@ its owner's turn.
 - The whole score pad must fit a laptop window without scrolling.
 - Up to 8 seats; each seat has a unique player color, chosen in the lobby and shown on avatars, the
   pad's numbers and the dice cup.
-- Planned feature (agreed, not built): coins earned by every player from each game, stored
-  server-side per Discord account, spent in a shop on semi-realistic freshwater fish, plants and
-  decor for a personal aquarium. You always see your own tank; on a player's turn everyone sees
-  that player's tank.
 
 ## Brand Commitments
 
@@ -62,7 +57,6 @@ its owner's turn.
 - The chosen look is "Lavender evening", picked from rendered mockups of the real screens:
   modern and clean, dark plum with lavender and a pink accent (plus a lavender daytime theme),
   rounded headings. New looks are judged on rendered screens, never on descriptions alone.
-- The aquarium fish are semi-realistic real species, not cartoons.
 
 ## Evidence on Hand
 

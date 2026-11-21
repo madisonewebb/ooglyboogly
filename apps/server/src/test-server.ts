@@ -24,9 +24,7 @@ export async function startTestServer(
     SESSION_SECRET: TEST_SECRET,
     ...env,
   });
-  const server = createGameServer({ ...config, port: 0 }, deps);
-  // Tests must not trap the runner's signals.
-  server.options.gracefullyShutdown = false;
+  const server = createGameServer({ ...config, port: 0 }, { gracefullyShutdown: false, ...deps });
   await server.listen(0);
   const http = (server.transport as unknown as { server: HttpServer }).server;
   const baseUrl = `http://127.0.0.1:${(http.address() as AddressInfo).port}`;
