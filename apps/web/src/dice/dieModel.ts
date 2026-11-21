@@ -44,10 +44,20 @@ const PIPS: Record<number, [number, number][]> = {
 
 export const dieGeometry = () => new RoundedBoxGeometry(1, 1, 1, 5, 0.16);
 
-/** Glaze: a very low dome per pip, pooled just proud of each face. */
-export function pipGeometry(): THREE.BufferGeometry {
-  const dome = new THREE.SphereGeometry(0.09, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-  dome.scale(1, 0.2, 1);
+/**
+ * A low dome at every pip spot of every face, merged into one geometry:
+ * `radius` wide, flattened to `flat` of a sphere's height, its base `lift` out
+ * from the die's centre. With `faceNormal`, each vertex also carries its face's
+ * outward normal (`aFaceN`), which the googly eyes' pupils slide along.
+ */
+export function domeGeometry(
+  radius: number,
+  flat: number,
+  lift: number,
+  faceNormal = false,
+): THREE.BufferGeometry {
+  const dome = new THREE.SphereGeometry(radius, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+  dome.scale(1, flat, 1);
   const parts: THREE.BufferGeometry[] = [];
   for (let v = 1; v <= 6; v++) {
     const n = new THREE.Vector3(...AXES[FACE_AXIS[v]!]!);
@@ -59,15 +69,28 @@ export function pipGeometry(): THREE.BufferGeometry {
       g.applyQuaternion(face);
       const p = n
         .clone()
-        .multiplyScalar(0.496)
+        .multiplyScalar(lift)
         .addScaledVector(u, a * 0.25)
         .addScaledVector(w, b * 0.25);
       g.translate(p.x, p.y, p.z);
+      if (faceNormal) {
+        const count = g.getAttribute('position').count;
+        g.setAttribute(
+          'aFaceN',
+          new THREE.Float32BufferAttribute(
+            Array.from({ length: count }, () => [n.x, n.y, n.z]).flat(),
+            3,
+          ),
+        );
+      }
       parts.push(g);
     }
   }
   return mergeGeometries(parts)!;
 }
+
+/** Glaze: a very low dome per pip, pooled just proud of each face. */
+export const pipGeometry = (): THREE.BufferGeometry => domeGeometry(0.09, 0.2, 0.496);
 
 /**
  * Glazed porcelain: an opaque white body under a glassy clear coat. Without
