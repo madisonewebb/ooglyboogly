@@ -1,11 +1,11 @@
 import { animate, motion, type MotionStyle, useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { type GameState, playerTotal, type PlayerTotal, UPPER_BONUS } from '@rollhouse/rules';
-import type { Lobby } from '@rollhouse/shared';
+import { type CoinsEarned, coinsEarned, type Lobby } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import { Sparkles } from '../Sparkles';
 import { tintOf, tintVars } from '../tint';
-import { CrownIcon } from '../icons';
+import { CoinIcon, CrownIcon } from '../icons';
 import { playCelebrate } from '../sound';
 import { SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
@@ -14,6 +14,10 @@ interface Props {
   game: GameState;
   lobby: Lobby;
   cdnBase: string;
+  /** Your seat, or null when watching. */
+  seat: number | null;
+  /** Your saved coins, updated when the game pays out; null for guests. */
+  coins: number | null;
 }
 
 /** "Upper bonus +35", saying which cards earned it when there's more than one; null if none did. */
@@ -43,7 +47,62 @@ function CountUp({ value, delay }: { value: number; delay: number }) {
   return <>{shown}</>;
 }
 
-export function Results({ game, lobby, cdnBase }: Props) {
+/** What this game paid you, line by line, and what you now have for the aquarium shop. */
+function Earnings({
+  earned,
+  coins,
+  delay,
+}: {
+  earned: CoinsEarned;
+  coins: number | null;
+  delay: number;
+}) {
+  const lines: [string, number][] = (
+    [
+      ['Finished the game', earned.finish],
+      ['Your score', earned.score],
+      ['Won', earned.win],
+      ['Yatzys', earned.yatzys],
+      ['Upper bonus', earned.upperBonuses],
+    ] as [string, number][]
+  ).filter(([, n]) => n > 0);
+  return (
+    <motion.section
+      className="panel earnings"
+      aria-label="Coins"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...SPRING.soft, delay }}
+    >
+      <p className="earned-total">
+        <CoinIcon />
+        <strong>
+          +<CountUp value={earned.total} delay={delay + 0.1} />
+        </strong>
+        <span>coins</span>
+      </p>
+      <ul className="earned-lines">
+        {lines.map(([label, n]) => (
+          <li key={label}>
+            <span>{label}</span>
+            <span>+{n}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="quiet">
+        {coins === null ? (
+          "Guests' coins aren't saved."
+        ) : (
+          <>
+            You have <strong>{coins}</strong> coins for the aquarium shop.
+          </>
+        )}
+      </p>
+    </motion.section>
+  );
+}
+
+export function Results({ game, lobby, cdnBase, seat, coins }: Props) {
   const { theme } = usePrefs();
   const multi = game.setup.cardsPerPlayer > 1;
   const rows = lobby.seats
@@ -119,6 +178,9 @@ export function Results({ game, lobby, cdnBase }: Props) {
           );
         })}
       </ol>
+      {seat !== null && (
+        <Earnings earned={coinsEarned(game, seat)} coins={coins} delay={0.4 + rows.length * 0.12} />
+      )}
       <p className="quiet relaunch">Close and relaunch the Activity to play again.</p>
     </main>
   );

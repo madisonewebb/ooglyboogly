@@ -150,6 +150,14 @@ export interface Snapshot {
   version: string;
   /** The user this connection belongs to. */
   you: SessionUser;
+  /** Your saved coins; null for guests, whose coins aren't kept. */
+  coins: number | null;
+}
+
+/** Server → one player's devices: their balance, after a finished game pays out. */
+export const MSG_COINS = 'coins';
+export interface CoinsMessage {
+  coins: number;
 }
 
 /** Each accepted move, in order. index = its position in the move log. */

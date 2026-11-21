@@ -71,6 +71,29 @@ export const CrownIcon = () => (
   </Icon>
 );
 
+/** A coin, for the aquarium shop's money. */
+export const CoinIcon = () => (
+  <svg className="coin-icon" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" fill="var(--coin)" />
+    <circle
+      cx="12"
+      cy="12"
+      r="6.5"
+      fill="none"
+      stroke="var(--on-coin)"
+      strokeOpacity="0.35"
+      strokeWidth="1.6"
+    />
+    <path
+      d="M9.5 9.5h5M9.5 14.5h5"
+      stroke="var(--on-coin)"
+      strokeOpacity="0.45"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 /** A die face with `n` pips, for the pad's Ones to Sixes. */
 export function DieGlyph({ n }: { n: number }) {
   const spots: Record<number, [number, number][]> = {

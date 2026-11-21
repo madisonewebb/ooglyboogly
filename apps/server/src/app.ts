@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { Server } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
+import type { DatabaseSync } from 'node:sqlite';
 import express from 'express';
 import { BRAND_NAME, HELLO_ROOM, type HealthResponse, TABLE_ROOM } from '@rollhouse/shared';
 import { type FetchFn, mountAuth } from './auth';
@@ -19,6 +20,8 @@ export interface ServerDeps {
   /** Replaced in tests to fake Discord. */
   fetch?: FetchFn;
   table?: Partial<TableConfig>;
+  /** Where coins are saved. */
+  db?: DatabaseSync;
 }
 
 export function createGameServer(config: Config, deps: ServerDeps = {}): Server {
@@ -68,6 +71,7 @@ export function createGameServer(config: Config, deps: ServerDeps = {}): Server 
     version: config.version,
     emptyTimeoutMs: EMPTY_TIMEOUT_MS,
     reconnectSeconds: RECONNECT_SECONDS,
+    db: deps.db,
     ...deps.table,
   });
   // One table per Discord Activity instance.
