@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.0](https://github.com/madisonewebb/ooglyboogly/compare/v0.6.0...v0.7.0) (2026-11-21)
+
+
+### Features
+
+* coins for every finished game, saved per player ([#60](https://github.com/madisonewebb/ooglyboogly/issues/60)) ([d9192dd](https://github.com/madisonewebb/ooglyboogly/commit/d9192dd0ae0dae8c9a3ae81fef3929e963d57620))
+* stickers players can send at the table ([#59](https://github.com/madisonewebb/ooglyboogly/issues/59)) ([0ad166b](https://github.com/madisonewebb/ooglyboogly/commit/0ad166be2a7331b7a7d3ae98a7e8e618633b3c62))
+* **web:** black iron cauldron and a slower shake ([1649d85](https://github.com/madisonewebb/ooglyboogly/commit/1649d855687071ccdb182f28437290f962932028))
+* **web:** cauldron rests beside the tray, wider mouth, still held dice ([8fbbcdd](https://github.com/madisonewebb/ooglyboogly/commit/8fbbcdda4121a0f79d0d63db503e7617ad713bb4))
+* **web:** color schemes, two more player colors, loading polish ([#66](https://github.com/madisonewebb/ooglyboogly/issues/66)) ([c211e7c](https://github.com/madisonewebb/ooglyboogly/commit/c211e7c8ed88197cbe62191678622e8c80ac92ae))
+* **web:** Oogly Boogly art for the banner, top bar and app icon ([#58](https://github.com/madisonewebb/ooglyboogly/issues/58)) ([8179601](https://github.com/madisonewebb/ooglyboogly/commit/8179601fec382e171e5e2292bf0501acb948f112))
+* **web:** put the aquarium on the table, above the dice ([#57](https://github.com/madisonewebb/ooglyboogly/issues/57)) ([c1b98a6](https://github.com/madisonewebb/ooglyboogly/commit/c1b98a6e0639dd4cf490a16e88d613a555afc0f2))
+* **web:** the dice cup is now a cauldron ([5ea395e](https://github.com/madisonewebb/ooglyboogly/commit/5ea395ef16f8a79cf46af8e5c7f17c8942451737))
+
+
+### Bug Fixes
+
+* **web:** keep held dice still while the others roll ([cb54082](https://github.com/madisonewebb/ooglyboogly/commit/cb54082b8063dba2768774eb8e62c885c69b4da2))
+* **web:** thinner cauldron rim so dice clear the lip ([1f7928e](https://github.com/madisonewebb/ooglyboogly/commit/1f7928ec207b6136fbf87163e6b66307eaf5d58f))
+
 ## [0.6.0](https://github.com/madisonewebb/ooglyboogly/compare/v0.5.0...v0.6.0) (2026-11-21)
 
 
