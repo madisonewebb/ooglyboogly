@@ -9,6 +9,8 @@ import {
   MSG_ERROR,
   MSG_LOBBY,
   MSG_MOVE,
+  MSG_COINS,
+  type CoinsMessage,
   MSG_REACTION,
   type ReactionMessage,
   MSG_SNAPSHOT,
@@ -42,6 +44,8 @@ export interface Table {
   lastRoll: LiveRoll | null;
   /** Stickers sent in this session, newest last (only the last few are kept). */
   reactions: ReactionMessage[];
+  /** Your saved coins; null for guests or before the snapshot. */
+  coins: number | null;
   clearError(): void;
   send(type: string, body?: unknown): void;
   rejoin(): void;
@@ -80,6 +84,7 @@ export function useTable(auth: Auth): Table {
   const [lostReason, setLostReason] = useState<string | null>(null);
   const [lastRoll, setLastRoll] = useState<LiveRoll | null>(null);
   const [reactions, setReactions] = useState<ReactionMessage[]>([]);
+  const [coins, setCoins] = useState<number | null>(null);
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
@@ -108,7 +113,9 @@ export function useTable(auth: Auth): Table {
           setSnapshot(s);
           setLobby(s.lobby);
           setMoves(s.moves);
+          setCoins(s.coins);
         });
+        room.onMessage(MSG_COINS, (m: CoinsMessage) => setCoins(m.coins));
         room.onMessage(MSG_LOBBY, (l: Lobby) => setLobby(l));
         room.onMessage(MSG_MOVE, ({ index, move, tumble }: MoveMessage) => {
           // Ignore anything already in the log (a snapshot can overlap a move).
@@ -164,6 +171,7 @@ export function useTable(auth: Auth): Table {
     error,
     lastRoll,
     reactions,
+    coins,
     clearError: useCallback(() => setError(null), []),
     send,
     rejoin: useCallback(() => setAttempt((n) => n + 1), []),
