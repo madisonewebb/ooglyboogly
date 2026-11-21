@@ -91,7 +91,7 @@ const BASE = {
   shakeLead: 0.6,
   scoop: 200,
   scoopStagger: 25,
-  shake: 280,
+  shake: 560,
   pour: 200,
   linger: 120,
   away: 240,
@@ -400,10 +400,10 @@ export function cupAt(plan: RollPlan | null, now: number): CupPose {
   let opacity = clamp01(inU * 2.5);
   let tip = 0;
   if (now >= t.shakeStart && now < t.shakeEnd) {
-    // Hearty rattles, ten a second, easing in and out; a held shake also sways.
+    // Slow, heavy sloshes, four a second, easing in and out; a held shake also sways.
     const s = (now - t.shakeStart) / k;
     const env = Math.min(1, s / SHAKE_EASE) * Math.min(1, (t.shakeEnd - now) / k / SHAKE_EASE);
-    const wave = Math.sin((s / 1000) * Math.PI * 2 * 10);
+    const wave = Math.sin((s / 1000) * Math.PI * 2 * 4);
     const sway = Math.sin((s / 1000) * Math.PI * 2 * 1.3) * Math.min(1, s / 600);
     tip = (wave * 0.26 + sway * 0.12) * env;
     // Still finishing its drop as the rattle starts.
@@ -429,7 +429,7 @@ function inCup(plan: RollPlan, rank: number, now: number): Pose {
   const slot = CUP_SLOTS[rank % CUP_SLOTS.length]!;
   const t = timing(plan);
   const shaking = now >= t.shakeStart && now < t.shakeEnd;
-  const jiggle = shaking ? Math.sin((now - t.shakeStart) * 0.06 + rank * 1.7) * 0.12 : 0;
+  const jiggle = shaking ? Math.sin((now - t.shakeStart) * 0.025 + rank * 1.7) * 0.12 : 0;
   const slide = clamp01(-cup.tip / -POUR_TIP) * 0.65;
   const local: Vec3 = [slot.pos[0] + jiggle, slot.pos[1] + slide + Math.abs(jiggle), slot.pos[2]];
   const spin = shaking ? fromAxisAngle([1, 0, 0], jiggle * 3) : IDENTITY;
@@ -451,14 +451,8 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
   const rest = restPos(die, plan.held[die] ?? false);
 
   if (rank < 0) {
-    // Held: wiggle while the others roll, then join any celebration.
-    let quat = plan.before?.[die] ?? restQuat(value);
-    if (!plan.reduced && now < t.physEnd) {
-      quat = mul(
-        fromAxisAngle(Z, Math.sin(((now - plan.start) / 1000) * Math.PI * 10) * 0.07),
-        quat,
-      );
-    }
+    // Held: stays perfectly still while the others roll, then joins any celebration.
+    const quat = plan.before?.[die] ?? restQuat(value);
     return celebrate(plan, t, die, now, {
       pos: rest,
       quat,

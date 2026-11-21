@@ -19,6 +19,8 @@ export interface ServerDeps {
   /** Replaced in tests to fake Discord. */
   fetch?: FetchFn;
   table?: Partial<TableConfig>;
+  /** Tests turn this off so they do not trap the runner's signals. Default: on. */
+  gracefullyShutdown?: boolean;
 }
 
 export function createGameServer(config: Config, deps: ServerDeps = {}): Server {
@@ -26,7 +28,7 @@ export function createGameServer(config: Config, deps: ServerDeps = {}): Server 
     greet: false,
     // Colyseus traps SIGINT/SIGTERM, disconnects every client and disposes
     // rooms before the process exits.
-    gracefullyShutdown: true,
+    gracefullyShutdown: deps.gracefullyShutdown ?? true,
     transport: new WebSocketTransport({ pingInterval: 30_000, pingMaxRetries: 2 }),
     express: (app) => {
       app.disable('x-powered-by');

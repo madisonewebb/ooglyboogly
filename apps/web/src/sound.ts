@@ -203,7 +203,7 @@ export function playRattle(delayMs: number, durationMs: number, dice: number, pa
   const start = a.currentTime + Math.max(0, delayMs) / 1000;
   const out = panned(a, ok.out, pan);
   const dur = durationMs / 1000;
-  // About fourteen knocks a second per die, and the cup's own knock six times in 300 ms.
+  // About fourteen knocks a second per die, and the cup's own knock about eight times a second.
   const clicks = Math.max(2, Math.round(dice * 14 * dur));
   for (let i = 0; i < clicks; i++) {
     const at = start + (i / clicks) * dur + (jitter(1) - 1) * 0.012;
@@ -220,7 +220,7 @@ export function playRattle(delayMs: number, durationMs: number, dice: number, pa
       0.07 * jitter(0.3),
     );
   }
-  const knocks = Math.max(1, Math.round(dur * 20));
+  const knocks = Math.max(1, Math.round(dur * 8));
   for (let i = 1; i <= knocks; i++)
     thump(a, out, start + (i / (knocks + 0.5)) * dur, 300, 0.09, 0.04);
 }

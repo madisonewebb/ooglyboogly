@@ -5,7 +5,7 @@
  * Poses come from timeline.ts each frame and are written straight onto the
  * meshes, so a roll never re-renders React. The look: glazed porcelain dice
  * with violet pips under a soft studio light, on violet felt in a lacquered
- * frame, with the held-dice shelf behind and a cup glazed in the roller's tint.
+ * frame, with the held-dice shelf behind and a black iron cauldron.
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
@@ -453,25 +453,32 @@ function Dice({
   );
 }
 
-function Cup({ roll, hue, scene }: Pick<SceneProps, 'roll' | 'hue' | 'scene'>) {
+/** Cast iron: black and dark grey, whoever's turn it is. */
+const IRON = { body: '#2A2A2F', inside: '#101013', trim: '#45454C' };
+
+/** The lip's radius: a little wider than CUP.radiusTop, with a thin rim, so spilling dice clear it. */
+const LIP = CUP.radiusTop + 0.07;
+
+function Cup({ roll }: Pick<SceneProps, 'roll'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const shell = useMemo(() => {
+    // A round-bellied cauldron: the belly bulges past the mouth, which stays
+    // at CUP's radius and height so the recorded pour still lines up.
     const h = CUP.height / 2;
-    const profile = [
+    const k = CUP.height / 1.8;
+    const profile = new THREE.SplineCurve([
       new THREE.Vector2(0.001, -h),
-      new THREE.Vector2(CUP.radiusBottom - 0.06, -h),
-      new THREE.Vector2(CUP.radiusBottom, -h + 0.06),
-      new THREE.Vector2(CUP.radiusTop, h),
-    ];
+      new THREE.Vector2(0.7, -h),
+      new THREE.Vector2(1.05, -0.62 * k),
+      new THREE.Vector2(1.3, -0.1 * k),
+      new THREE.Vector2(1.31, 0.22 * k),
+      new THREE.Vector2(1.25, 0.62 * k),
+      new THREE.Vector2(LIP, h),
+    ]).getPoints(28);
     return new THREE.LatheGeometry(profile, 56);
   }, []);
   const materials = useRef<THREE.Material[]>([]);
-  const inside = useMemo(
-    () => new THREE.Color(hue).lerp(new THREE.Color(scene.cupInside), 0.55),
-    [hue, scene.cupInside],
-  );
-
   useFrame(() => {
     const now = performance.now();
     const c = cupAt(roll, now);
@@ -501,20 +508,44 @@ function Cup({ roll, hue, scene }: Pick<SceneProps, 'roll' | 'hue' | 'scene'>) {
       <mesh geometry={shell} castShadow>
         <Gloss
           ref={keep}
-          color={hue}
-          roughness={0.32}
-          clearcoat={0.9}
-          clearcoatRoughness={0.1}
+          color={IRON.body}
+          roughness={0.5}
+          clearcoat={0.35}
+          clearcoatRoughness={0.4}
           side={THREE.FrontSide}
         />
       </mesh>
       <mesh geometry={shell}>
-        <meshStandardMaterial ref={keep} color={inside} roughness={0.7} side={THREE.BackSide} />
+        <meshStandardMaterial
+          ref={keep}
+          color={IRON.inside}
+          roughness={0.7}
+          side={THREE.BackSide}
+        />
       </mesh>
-      <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[CUP.radiusTop, 0.09, 14, 56]} />
-        <Gloss ref={keep} color={scene.rim} roughness={0.25} />
+      <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[LIP, 0.06, 14, 56]} />
+        <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
       </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 1.38, 0.08, 0]} castShadow>
+          <torusGeometry args={[0.2, 0.065, 10, 24]} />
+          <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
+        </mesh>
+      ))}
+      {[0, 1, 2].map((i) => {
+        const a = (i / 3) * Math.PI * 2 + Math.PI / 2;
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 0.62, -CUP.height / 2 - 0.02, Math.sin(a) * 0.62]}
+            castShadow
+          >
+            <sphereGeometry args={[0.17, 14, 10]} />
+            <Gloss ref={keep} color={IRON.trim} roughness={0.45} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
@@ -568,7 +599,7 @@ export default function DiceScene(props: SceneProps) {
         hover={props.hover}
         rests={props.rests}
       />
-      <Cup roll={props.roll} hue={props.hue} scene={scene} />
+      <Cup roll={props.roll} />
     </Canvas>
   );
 }

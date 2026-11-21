@@ -12,7 +12,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   const config = loadConfig({ PORT: '1', GIT_SHA: 'abc1234', WEB_DIST: '/nonexistent' });
-  server = createGameServer({ ...config, port: 0 });
+  server = createGameServer({ ...config, port: 0 }, { gracefullyShutdown: false });
   // Port 0 = any free port. Tests must not trap the runner's signals.
   server.options.gracefullyShutdown = false;
   await server.listen(0);
