@@ -19,6 +19,7 @@ import {
 import { BRAND_NAME, type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import wordmark from '../art/wordmark.webp';
 import { Avatar } from '../Avatar';
+import { ReactionFloats, ReactionPicker } from '../Reactions';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
 import { CheckIcon, DieGlyph } from '../icons';
@@ -453,6 +454,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 ))}
               </span>
             ) : null}
+            <ReactionPicker send={table.send} />
           </div>
 
           {trayUser && (
@@ -555,6 +557,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             </AnimatePresence>
             <p className="hint quiet">{hint || ' '}</p>
           </div>
+          <ReactionFloats reactions={table.reactions} lobby={lobby} />
         </section>
 
         <section
