@@ -81,6 +81,31 @@ Only finished games pay, to seated players only. Guests earn coins only where `G
 `wallets`, not `players`: an earlier version of coins was reverted and may have left a differently
 shaped `players` table in some databases.
 
+## Shop
+
+Coins are spent in the shop, opened from the lobby with **Open the shop**. The lobby and the shop
+both show your balance. Prices are fixed (`packages/shared/src/catalog.ts`): skins, brews and
+celebrations cost 40 / 100 / 300 coins and pets 60 / 150 / 400 (common, spooky, legendary), so a
+common item takes about three games with one win.
+
+- **Buying** takes two taps (Buy, then confirm). The server prices every purchase from the catalog
+  and does it in one database transaction, so a retry or a double tap never charges twice and the
+  balance never goes below zero. Items marked `available: false` show as "coming soon" and cannot
+  be bought.
+- **Wearing**: one item per slot (dice skin, brew, pet, celebration); an empty slot is the default
+  look. What a player wears is in `Seat.equipped`, which everyone at the table sees. It can only be
+  changed in the lobby, before the game starts.
+- **Goal pin**: pin one item to see a progress bar toward it in the lobby. It is stored on the
+  server, so it follows you across devices.
+- **Sticker packs** (`packages/shared/src/packs.ts`) are the first things on sale: owning a pack
+  unlocks its stickers in the reaction tray. The art is placeholder vector for now; the prompts for
+  the real art are in `docs/specs/02-spec-shop-inventory-equipping/nano-banana-prompts.md`.
+- **Guests** can shop only where `GUEST_LOGIN` is on (local dev and e2e).
+
+The shop talks to the table room with `buy`, `equip` and `goal` messages and hears back a private
+`wallet` message. Purchases are recorded in the `inventory` table, what is worn in `equipped` and
+the goal in `goals` (`apps/server/src/db.ts`). The screens are in `apps/web/src/shop/`.
+
 ## Branches and releases
 
 - Feature branches open PRs into `develop`. `main` only receives merges from `develop`.

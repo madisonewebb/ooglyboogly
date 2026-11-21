@@ -4,33 +4,33 @@ Spec: `02-spec-shop-inventory-equipping.md`
 
 ## Relevant Files
 
-| File                                           | Why It Is Relevant                                                                       |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `packages/shared/src/packs.ts`                 | New. Two sticker packs, the pack stickers, `ShopEntry` and `shopEntry()`.                |
-| `packages/shared/src/packs.test.ts`            | New. Prices, unique ids, sticker membership, lookup.                                     |
-| `packages/shared/src/protocol.ts`              | Shop messages, `WalletMessage`, `Snapshot.wallet`, shop error codes, wider `StickerId`.  |
-| `packages/shared/src/index.ts`                 | Re-exports `packs.ts`.                                                                   |
-| `apps/server/src/db.ts`                        | `inventory`, `equipped`, `goals` tables; buy, equip, pin and read functions.             |
-| `apps/server/src/db.test.ts`                   | Transaction, idempotency, rollback, equip and goal tests.                                |
-| `apps/server/src/rooms/TableRoom.ts`           | Shop messages, `Seat.equipped`, wallet messages, pack-sticker check.                     |
-| `apps/server/src/rooms/TableRoom.test.ts`      | Room tests for the shop through real clients.                                            |
-| `apps/web/src/useTable.ts`                     | Receives the wallet and exposes it.                                                      |
-| `apps/web/src/App.tsx`                         | Provides the wallet to the screens.                                                      |
-| `apps/web/src/shop/WalletContext.tsx`          | New. Context and `useWallet()`.                                                          |
-| `apps/web/src/shop/shopView.ts`                | New. Pure helpers: card state, progress, sections, seat look text.                       |
-| `apps/web/src/shop/shopView.test.ts`           | New. Tests for the helpers.                                                              |
-| `apps/web/src/shop/Shop.tsx`                   | New. The Shop screen and its cards.                                                      |
-| `apps/web/src/shop/ItemPreview.tsx`            | New. Placeholder previews and pack sticker previews.                                     |
-| `apps/web/src/shop/WalletPanel.tsx`            | New. The lobby's balance, Shop button and goal bar.                                      |
-| `apps/web/src/shop/Shop.test.tsx`              | New. `renderToString` tests for cards and the panel.                                     |
-| `apps/web/src/shop/shop.css`                   | New. All shop styles.                                                                    |
-| `apps/web/src/screens/Lobby.tsx`               | Shop button, panel, seat look line (shared file).                                        |
-| `apps/web/src/Reactions.tsx`                   | Picker shows owned pack stickers; `STICKERS` covers every id.                            |
-| `apps/web/src/Reactions.test.tsx`              | New. Picker render tests.                                                                |
-| `apps/web/src/art/stickers/packs/*.svg`        | New. Six vector placeholder stickers.                                                    |
-| `e2e/tests/shop.spec.ts`                       | New. Earn, buy a pack, see its stickers.                                                 |
-| `README.md`                                    | Short Shop section.                                                                      |
-| `docs/specs/02-spec-shop-inventory-equipping/` | Spec, tasks, audit, proofs, `nano-banana-prompts.md`, validation.                        |
+| File                                           | Why It Is Relevant                                                                      |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `packages/shared/src/packs.ts`                 | New. Two sticker packs, the pack stickers, `ShopEntry` and `shopEntry()`.               |
+| `packages/shared/src/packs.test.ts`            | New. Prices, unique ids, sticker membership, lookup.                                    |
+| `packages/shared/src/protocol.ts`              | Shop messages, `WalletMessage`, `Snapshot.wallet`, shop error codes, wider `StickerId`. |
+| `packages/shared/src/index.ts`                 | Re-exports `packs.ts`.                                                                  |
+| `apps/server/src/db.ts`                        | `inventory`, `equipped`, `goals` tables; buy, equip, pin and read functions.            |
+| `apps/server/src/db.test.ts`                   | Transaction, idempotency, rollback, equip and goal tests.                               |
+| `apps/server/src/rooms/TableRoom.ts`           | Shop messages, `Seat.equipped`, wallet messages, pack-sticker check.                    |
+| `apps/server/src/rooms/TableRoom.test.ts`      | Room tests for the shop through real clients.                                           |
+| `apps/web/src/useTable.ts`                     | Receives the wallet and exposes it.                                                     |
+| `apps/web/src/App.tsx`                         | Provides the wallet to the screens.                                                     |
+| `apps/web/src/shop/WalletContext.tsx`          | New. Context and `useWallet()`.                                                         |
+| `apps/web/src/shop/shopView.ts`                | New. Pure helpers: card state, progress, sections, seat look text.                      |
+| `apps/web/src/shop/shopView.test.ts`           | New. Tests for the helpers.                                                             |
+| `apps/web/src/shop/Shop.tsx`                   | New. The Shop screen and its cards.                                                     |
+| `apps/web/src/shop/ItemPreview.tsx`            | New. Placeholder previews and pack sticker previews.                                    |
+| `apps/web/src/shop/WalletPanel.tsx`            | New. The lobby's balance, Shop button and goal bar.                                     |
+| `apps/web/src/shop/Shop.test.tsx`              | New. `renderToString` tests for cards and the panel.                                    |
+| `apps/web/src/shop/shop.css`                   | New. All shop styles.                                                                   |
+| `apps/web/src/screens/Lobby.tsx`               | Shop button, panel, seat look line (shared file).                                       |
+| `apps/web/src/Reactions.tsx`                   | Picker shows owned pack stickers; `STICKERS` covers every id.                           |
+| `apps/web/src/Reactions.test.tsx`              | New. Picker render tests.                                                               |
+| `apps/web/src/art/stickers/packs/*.svg`        | New. Six vector placeholder stickers.                                                   |
+| `e2e/tests/shop.spec.ts`                       | New. Earn, buy a pack, see its stickers.                                                |
+| `README.md`                                    | Short Shop section.                                                                     |
+| `docs/specs/02-spec-shop-inventory-equipping/` | Spec, tasks, audit, proofs, `nano-banana-prompts.md`, validation.                       |
 
 ### Notes
 
