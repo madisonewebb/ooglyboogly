@@ -40,7 +40,7 @@ describe('sticker packs', () => {
 
   it('looks up shop entries by id, and nothing else', () => {
     expect(shopEntry('cauldronCrew')).toMatchObject({ slot: null, price: 40, available: true });
-    expect(shopEntry('bone')).toMatchObject({ slot: 'diceSkin', price: 40, available: false });
+    expect(shopEntry('bone')).toMatchObject({ slot: 'diceSkin', price: 40 });
     expect(shopEntry('nope')).toBeUndefined();
     expect(shopEntry(7)).toBeUndefined();
     expect(shopEntry({ id: 'bone' })).toBeUndefined();

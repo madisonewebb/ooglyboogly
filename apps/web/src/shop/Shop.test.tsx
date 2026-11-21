@@ -1,9 +1,14 @@
 import { renderToString } from 'react-dom/server';
 import { afterAll, describe, expect, it, vi } from 'vitest';
-import { type Lobby as LobbyState, DEFAULT_SETTINGS, type WalletMessage } from '@rollhouse/shared';
+import {
+  type Lobby as LobbyState,
+  DEFAULT_SETTINGS,
+  shopEntry,
+  type WalletMessage,
+} from '@rollhouse/shared';
 import { Lobby } from '../screens/Lobby';
 import { PrefsProvider } from '../theme/prefs';
-import { Shop } from './Shop';
+import { Shop, ShopCard } from './Shop';
 import { WalletContext } from './WalletContext';
 import { WalletPanel } from './WalletPanel';
 
@@ -49,7 +54,24 @@ describe('Shop', () => {
   });
 
   it('shows coming-soon items as disabled with no Buy and no pin', () => {
-    const html = card(shop(wallet({ balance: 9999 })), 'bone');
+    // A real catalog item marked coming soon, whatever the catalog says today.
+    const bone = { ...shopEntry('bone')!, available: false };
+    const html = card(
+      renderToString(
+        <PrefsProvider>
+          <ul>
+            <ShopCard
+              entry={bone}
+              wallet={wallet({ balance: 9999 })}
+              send={noop}
+              confirming={false}
+              setConfirming={noop}
+            />
+          </ul>
+        </PrefsProvider>,
+      ),
+      'bone',
+    );
     expect(html).toContain('data-state="soon"');
     expect(html).toContain('Coming soon');
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Coming soon/);

@@ -38,6 +38,8 @@ import {
   MSG_WALLET,
   type ReactionMessage,
   type SessionUser,
+  shopEntry,
+  type ShopEntry,
   type Snapshot,
   TABLE_ROOM,
   type WalletMessage,
@@ -746,9 +748,15 @@ describe('the shop', () => {
     expect(getBalance(db, 'u-Madi')).toBe(60);
   });
 
+  /** The real catalog, except that these two items are coming soon whatever the catalog says today. */
+  const soonLookup = (id: unknown): ShopEntry | undefined => {
+    const e = shopEntry(id);
+    return e && ['bone', 'ghostCheerleader'].includes(e.id) ? { ...e, available: false } : e;
+  };
+
   it('refuses what is coming soon, unknown, unaffordable or malformed', async () => {
     const db = openDb(50);
-    await withDb(db);
+    await withDb(db, { shopLookup: soonLookup });
     const a = await join('Madi');
     const codes: string[] = [];
     for (const body of [
@@ -916,7 +924,7 @@ describe('the shop', () => {
 
   it('pins a goal, follows it to another device, and clears it when bought', async () => {
     const db = openDb(100);
-    await withDb(db);
+    await withDb(db, { shopLookup: soonLookup });
     const a = await join('Madi');
     expect((await shop(a, MSG_GOAL, { item: 'moonlitCharms' })).wallet.goal).toBe('moonlitCharms');
     const other = await join('Madi', 'inst-2', 'u-Madi');

@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { ShopEntry } from '@rollhouse/shared';
+import { type ShopEntry, shopEntry } from '@rollhouse/shared';
 import {
   buyItem,
   equipItem,
@@ -183,6 +183,11 @@ describe('the shop', () => {
     };
     return typeof id === 'string' ? e[id] : undefined;
   };
+  /** Marks a real catalog item as coming soon, whatever the catalog says today. */
+  const comingSoon = (id: unknown): ShopEntry | undefined => {
+    const e = shopEntry(id);
+    return e && { ...e, available: false };
+  };
   const fail = (code: string) => expect.objectContaining({ ok: false, code });
   const table = (db: ReturnType<typeof open>['db'], name: string) =>
     db.prepare(`SELECT * FROM ${name}`).all();
@@ -250,7 +255,7 @@ describe('the shop', () => {
     expect(buyItem(db, 'a', 42)).toEqual(fail('UNKNOWN_ITEM'));
     expect(buyItem(db, 'a', { id: 'bone', price: 0 })).toEqual(fail('UNKNOWN_ITEM'));
     // Coming soon: in the catalog, not for sale.
-    expect(buyItem(db, 'a', 'bone')).toEqual(fail('NOT_AVAILABLE'));
+    expect(buyItem(db, 'a', 'bone', comingSoon)).toEqual(fail('NOT_AVAILABLE'));
     expect(getBalance(db, 'a')).toBe(1000);
     expect(table(db, 'inventory')).toEqual([]);
     db.close();
@@ -334,7 +339,7 @@ describe('the shop', () => {
     const { db } = open(100);
     buyItem(db, 'a', 'cauldronCrew');
     expect(pinGoal(db, 'a', 'cauldronCrew')).toEqual(fail('ALREADY_OWNED'));
-    expect(pinGoal(db, 'a', 'bone')).toEqual(fail('NOT_AVAILABLE'));
+    expect(pinGoal(db, 'a', 'bone', comingSoon)).toEqual(fail('NOT_AVAILABLE'));
     expect(pinGoal(db, 'a', 'nope')).toEqual(fail('UNKNOWN_ITEM'));
     expect(getWallet(db, 'a').goal).toBeNull();
     db.close();

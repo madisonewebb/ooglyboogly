@@ -65,12 +65,13 @@ test('earn coins, buy a sticker pack in the shop, and use its stickers', async (
   await page.getByRole('button', { name: 'Open the shop' }).click();
   expect(await balanceOf(page, 'shop-balance')).toBe(earned);
 
-  // Not enough yet: the pack says how short, and cannot be bought. Coming-soon items cannot either.
+  // Not enough yet: the pack says how short, and cannot be bought. A 40-coin dice skin is out of reach too.
   const crew = page.getByTestId('card-cauldronCrew');
   await expect(page.getByTestId('state-cauldronCrew')).toHaveText(`${40 - earned} coins short`);
   await expect(crew.getByRole('button', { name: /^Buy Cauldron Crew/ })).toBeDisabled();
+  await expect(page.getByTestId('state-bone')).toHaveText(`${40 - earned} coins short`);
   await expect(
-    page.getByTestId('card-bone').getByRole('button', { name: 'Coming soon' }),
+    page.getByTestId('card-bone').getByRole('button', { name: /^Buy Bone/ }),
   ).toBeDisabled();
   await expect(page.getByTestId('card-bone')).toContainText('Ivory dice with ink-black pips.');
 

@@ -51,6 +51,7 @@ import {
   REACTION_COOLDOWN_MS,
   type ReactionMessage,
   type SessionUser,
+  type ShopEntry,
   type Snapshot,
   type WalletMessage,
 } from '@rollhouse/shared';
@@ -80,6 +81,8 @@ export interface TableConfig {
   db: DatabaseSync | null;
   /** Guests earn coins too. Only for local dev and e2e, where guest login is on. */
   guestPayouts: boolean;
+  /** Finds what is for sale by id. Defaults to the real catalog; tests swap it to make items coming soon. */
+  shopLookup?: (id: unknown) => ShopEntry | undefined;
 }
 
 export const EMPTY_TIMEOUT_MS = 15 * 60 * 1000;
@@ -340,7 +343,7 @@ export function createTableRoom(cfg: TableConfig) {
        */
       [MSG_BUY]: (client: Client, intent: unknown) => {
         this.shop(client, (userId) =>
-          buyItem(cfg.db!, userId, isObject(intent) ? intent['item'] : undefined),
+          buyItem(cfg.db!, userId, isObject(intent) ? intent['item'] : undefined, cfg.shopLookup),
         );
       },
 
@@ -361,7 +364,7 @@ export function createTableRoom(cfg: TableConfig) {
 
       [MSG_GOAL]: (client: Client, intent: unknown) => {
         this.shop(client, (userId) =>
-          pinGoal(cfg.db!, userId, isObject(intent) ? intent['item'] : undefined),
+          pinGoal(cfg.db!, userId, isObject(intent) ? intent['item'] : undefined, cfg.shopLookup),
         );
       },
 

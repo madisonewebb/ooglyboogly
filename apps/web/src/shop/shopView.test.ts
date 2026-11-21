@@ -19,10 +19,12 @@ const wallet = (over: Partial<WalletMessage> = {}): WalletMessage => ({
   ...over,
 });
 const entry = (id: string) => shopEntry(id)!;
+/** A real catalog item marked coming soon, whatever the catalog says today. */
+const soon = (id: string) => ({ ...entry(id), available: false });
 
 describe('cardState', () => {
   it('says coming soon for what cannot be drawn yet, however rich you are', () => {
-    expect(cardState(entry('bone'), wallet({ balance: 9999 }))).toEqual({ kind: 'soon' });
+    expect(cardState(soon('bone'), wallet({ balance: 9999 }))).toEqual({ kind: 'soon' });
   });
 
   it('says afford at exactly the price, and short below it by how many coins', () => {
@@ -47,7 +49,7 @@ describe('cardState', () => {
       kind: 'closed',
     });
     expect(cardState(entry('cauldronCrew'), null)).toEqual({ kind: 'closed' });
-    expect(cardState(entry('bone'), null)).toEqual({ kind: 'soon' });
+    expect(cardState(soon('bone'), null)).toEqual({ kind: 'soon' });
   });
 });
 

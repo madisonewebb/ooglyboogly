@@ -232,12 +232,17 @@ export function equipItem(
 }
 
 /** Pins the item a player is saving for (or clears it with null). Only something still to buy. */
-export function pinGoal(db: DatabaseSync, userId: string, itemId: unknown): ShopResult {
+export function pinGoal(
+  db: DatabaseSync,
+  userId: string,
+  itemId: unknown,
+  lookup: (id: unknown) => ShopEntry | undefined = shopEntry,
+): ShopResult {
   if (itemId === null) {
     db.prepare('DELETE FROM goals WHERE user_id = ?').run(userId);
     return OK;
   }
-  const entry = shopEntry(itemId);
+  const entry = lookup(itemId);
   if (!entry) return no('UNKNOWN_ITEM', 'there is no such item');
   if (!entry.available) return no('NOT_AVAILABLE', `${entry.name} is coming soon`);
   return inTransaction(db, () => {
