@@ -13,7 +13,10 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { SceneTokens, Tokens } from '../theme/palette';
-import { dieGeometry, glazeMaterial, pipGeometry, porcelainMaterial } from './dieModel';
+import { BrewComet, BrewInCup } from '../cosmetics/brews/Brew';
+import { SkinRig } from '../cosmetics/skins/skinRig';
+import type { SceneLook } from '../cosmetics/look';
+import { dieGeometry, pipGeometry } from './dieModel';
 import { fitCamera, FOV } from './framing';
 import { renderQuality } from './webgl';
 import {
@@ -51,6 +54,8 @@ export interface SceneProps {
   hover: number | null;
   /** How each die lies at rest, so they stay put between rolls. */
   rests: readonly (Quat | null)[];
+  /** The equipped skin and brew of the player whose tray this is; missing means the default look. */
+  look?: SceneLook | undefined;
   /** Screen positions of each column's tray and shelf spots, for the click targets. */
   onSlots(slots: { tray: SlotRect[]; shelf: SlotRect[] }): void;
 }
@@ -356,8 +361,10 @@ function Dice({
   colors,
   hover,
   rests,
+  look,
 }: Omit<SceneProps, 'onSlots' | 'hue' | 'scene'>) {
   const invalidate = useThree((s) => s.invalidate);
+  const camera = useThree((s) => s.camera);
   const body = useMemo(dieGeometry, []);
   const pips = useMemo(pipGeometry, []);
   const blob = useMemo(shadowTexture, []);
@@ -365,12 +372,31 @@ function Dice({
   const spin = useRef<(THREE.Group | null)[]>([]);
   const blobs = useRef<(THREE.Mesh | null)[]>([]);
   const lift = useRef([0, 0, 0, 0, 0]);
-  const materials = useMemo(
-    () => [0, 1, 2, 3, 4].map(() => porcelainMaterial(colors.die, renderQuality() === 'high')),
-    [colors.die],
+  const skin = look?.skin ?? null;
+  const reduced = look?.reduced ?? false;
+  // The rig builds the materials: porcelain with no skin, as ever.
+  const rig = useMemo(
+    () => new SkinRig(skin, { die: colors.die, pip: colors.pip }, renderQuality() === 'high'),
+    [skin, colors.die, colors.pip],
   );
-  const pipMat = useMemo(() => glazeMaterial(colors.pip, renderQuality() === 'high'), [colors.pip]);
-  useEffect(() => () => materials.forEach((m) => m.dispose()), [materials]);
+  const materials = rig.body;
+  useEffect(() => () => rig.dispose(), [rig]);
+  // A Yatzy sets off the skin's effects (gilded glints); they run on their own clock afterwards.
+  const yatzyAt = useRef<number | null>(null);
+  useEffect(() => {
+    if (roll && roll.path && !roll.reduced && celebrationFor(roll.values) === 'yatzy') {
+      yatzyAt.current = timing(roll).celebrate;
+      invalidate();
+    } else if (roll?.path) {
+      yatzyAt.current = null;
+    }
+  }, [roll, invalidate]);
+  // Skins with a slow idle motion (breathing glow, wandering eyes) redraw a few times a second.
+  useEffect(() => {
+    if (!rig.look?.idle || reduced) return;
+    const id = window.setInterval(() => !document.hidden && invalidate(), 66);
+    return () => window.clearInterval(id);
+  }, [rig, reduced, invalidate]);
 
   // Any change to what's shown needs a fresh frame.
   useEffect(() => invalidate(), [values, held, roll, hops, colors, hover, rests, invalidate]);
@@ -412,7 +438,21 @@ function Dice({
         m.needsUpdate = true;
       }
       m.opacity = pose.opacity;
-      m.emissiveIntensity = 0.04 + lift.current[i]! * 0.14;
+      m.emissiveIntensity = rig.glow(i, lift.current[i]!, now, reduced);
+      if (
+        rig.frame(i, {
+          now,
+          delta,
+          pos: o.position,
+          quat: s.quaternion,
+          camera,
+          reduced,
+          opacity: pose.opacity,
+          yatzyAt: yatzyAt.current,
+        })
+      ) {
+        animating = true;
+      }
       const b = blobs.current[i];
       if (b) {
         const onShelf = held[i] && !(roll && rolling && roll.free.includes(i));
@@ -445,10 +485,18 @@ function Dice({
         <group key={i} ref={(g) => void (outer.current[i] = g)}>
           <group ref={(g) => void (spin.current[i] = g)}>
             <mesh geometry={body} material={materials[i]!} castShadow />
-            <mesh geometry={pips} material={pipMat} />
+            {rig.eyes ? (
+              <>
+                <mesh geometry={rig.eyes.geometry.sclera} material={rig.eyes.sclera[i]!} />
+                <mesh geometry={rig.eyes.geometry.pupil} material={rig.eyes.pupil[i]!} />
+              </>
+            ) : (
+              <mesh geometry={pips} material={rig.pip[i]!} />
+            )}
           </group>
         </group>
       ))}
+      {rig.stars && <primitive object={rig.stars} />}
     </>
   );
 }
@@ -459,7 +507,7 @@ const IRON = { body: '#2A2A2F', inside: '#101013', trim: '#45454C' };
 /** The lip's radius: a little wider than CUP.radiusTop, with a thin rim, so spilling dice clear it. */
 const LIP = CUP.radiusTop + 0.07;
 
-function Cup({ roll }: Pick<SceneProps, 'roll'>) {
+function Cup({ roll, look }: Pick<SceneProps, 'roll' | 'look'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const shell = useMemo(() => {
@@ -546,6 +594,7 @@ function Cup({ roll }: Pick<SceneProps, 'roll'>) {
           </mesh>
         );
       })}
+      {look?.brew && <BrewInCup brew={look.brew} roll={roll} reduced={look.reduced} />}
     </group>
   );
 }
@@ -598,8 +647,12 @@ export default function DiceScene(props: SceneProps) {
         colors={props.colors}
         hover={props.hover}
         rests={props.rests}
+        look={props.look}
       />
-      <Cup roll={props.roll} />
+      <Cup roll={props.roll} look={props.look} />
+      {props.look?.brew && (
+        <BrewComet brew={props.look.brew} roll={props.roll} reduced={props.look.reduced} />
+      )}
     </Canvas>
   );
 }

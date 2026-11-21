@@ -19,6 +19,8 @@ import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { BrandBar } from '../Brand';
 import { Avatar } from '../Avatar';
 import { ReactionFloats, ReactionPicker } from '../Reactions';
+import { devCosmetics } from '../cosmetics/devCosmetics';
+import { resolveEquipped } from '../cosmetics/look';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
 import { CheckIcon, DieGlyph } from '../icons';
@@ -449,6 +451,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
               onSettled={onSettled}
               hue={tintOf(trayTint).hue}
               shake={myTray ? shake : null}
+              equipped={resolveEquipped(lobby.seats[trayPlayer]?.equipped, devCosmetics())}
             />
 
             <div className="tray-actions">

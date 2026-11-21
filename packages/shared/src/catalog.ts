@@ -48,29 +48,45 @@ const item = (
 
 /** Spec 03 owns the available flags of the next two lists. */
 export const DICE_SKINS: readonly Item[] = [
-  item('diceSkin', 'bone', 'Bone', 'common', 'Ivory dice with ink-black pips.'),
-  item('diceSkin', 'obsidian', 'Obsidian', 'common', 'Glossy black dice with silver pips.'),
-  item('diceSkin', 'moonstone', 'Moonstone', 'spooky', 'Milky glass with a soft inner glow.'),
+  item('diceSkin', 'bone', 'Bone', 'common', 'Ivory dice with ink-black pips.', true),
+  item('diceSkin', 'obsidian', 'Obsidian', 'common', 'Glossy black dice with silver pips.', true),
+  item('diceSkin', 'moonstone', 'Moonstone', 'spooky', 'Milky glass with a soft inner glow.', true),
   item(
     'diceSkin',
     'googly',
     'Googly Eyes',
     'spooky',
     'The pips are tiny eyes that watch the roll.',
+    true,
   ),
-  item('diceSkin', 'gilded', 'Gilded', 'legendary', 'Gold dice whose pips glint on a Yatzy.'),
+  item('diceSkin', 'gilded', 'Gilded', 'legendary', 'Gold dice whose pips glint on a Yatzy.', true),
 ];
 
 export const BREWS: readonly Item[] = [
-  item('brew', 'swamp', 'Swamp', 'common', 'Murky green, with slow lazy bubbles.'),
-  item('brew', 'violetMurk', 'Violet Murk', 'common', 'A deep purple brew that smokes a little.'),
-  item('brew', 'witchfire', 'Witchfire', 'spooky', 'Green flames lick the rim of the cauldron.'),
+  item('brew', 'swamp', 'Swamp', 'common', 'Murky green, with slow lazy bubbles.', true),
+  item(
+    'brew',
+    'violetMurk',
+    'Violet Murk',
+    'common',
+    'A deep purple brew that smokes a little.',
+    true,
+  ),
+  item(
+    'brew',
+    'witchfire',
+    'Witchfire',
+    'spooky',
+    'Green flames lick the rim of the cauldron.',
+    true,
+  ),
   item(
     'brew',
     'starwater',
     'Starwater',
     'legendary',
     'Glittering bubbles, and a comet on a Yatzy.',
+    true,
   ),
 ];
 
