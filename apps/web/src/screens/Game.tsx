@@ -396,7 +396,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   return (
     <main className="screen game" onPointerDown={unlockAudio}>
       <header className="topbar">
-        <img className="band-wordmark" src={wordmark} alt={BRAND_NAME} width={396} height={128} />
+        <h1 className="sr-only">{BRAND_NAME}</h1>
+        <img className="band-wordmark" src={wordmark} alt="" width={396} height={128} />
       </header>
 
       <div className="table-layout">

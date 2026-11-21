@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { type AppConfig, BRAND_NAME } from '@rollhouse/shared';
 import { type Auth, getConfig, guestSignIn } from './api';
-import { Brand } from './Brand';
+import { BrandBar, Welcome } from './Brand';
 import { Corner } from './Corner';
 import { discordSignIn, inDiscord } from './discord';
 import { Game } from './screens/Game';
@@ -95,14 +95,14 @@ function Boot() {
     case 'outside':
       return (
         <Centered>
-          <Brand />
+          <Welcome />
           <p>Open {BRAND_NAME} from a Discord call: start an Activity and pick it.</p>
         </Centered>
       );
     case 'failed':
       return (
         <Centered>
-          <Brand tagline={false} />
+          <Welcome tagline={false} />
           <p>Sign-in didn&apos;t work: {boot.message}</p>
           <button type="button" onClick={() => location.reload()}>
             Try again
@@ -117,7 +117,12 @@ function Boot() {
 }
 
 function Centered({ children }: { children: ReactNode }) {
-  return <main className="screen centered">{children}</main>;
+  return (
+    <>
+      <BrandBar />
+      <main className="screen centered">{children}</main>
+    </>
+  );
 }
 
 /** A whole screen arriving: lobby, game or results. */
@@ -150,7 +155,7 @@ function GuestForm({ onAuth }: { onAuth: (auth: Auth) => void }) {
   };
   return (
     <Centered>
-      <Brand />
+      <Welcome />
       <form onSubmit={(e) => void submit(e)} className="guest panel">
         <label htmlFor="guest-name">Your name</label>
         <input
