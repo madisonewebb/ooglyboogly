@@ -12,7 +12,7 @@ import {
   type SettingsIntent,
 } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
-import { BrandBar } from '../Brand';
+import { BrandBar, Welcome } from '../Brand';
 import { tintVars } from '../tint';
 import { saveTint } from '../tintPrefs';
 import { CheckIcon, CrownIcon } from '../icons';
@@ -130,6 +130,7 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
     <>
       <BrandBar />
       <main className="screen lobby">
+        <Welcome />
         <div className="lobby-columns">
           <div className="lobby-stack">
             <section className="panel seats-panel">

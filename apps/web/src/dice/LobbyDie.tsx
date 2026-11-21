@@ -65,7 +65,7 @@ export default function LobbyDie(props: { theme: ThemeName; still: boolean }) {
       frameloop={still ? 'demand' : 'always'}
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true }}
-      camera={{ fov: 30, position: [0, 0, 4.2] }}
+      camera={{ fov: 30, position: [0, 0, 3.3] }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.NeutralToneMapping;
       }}
