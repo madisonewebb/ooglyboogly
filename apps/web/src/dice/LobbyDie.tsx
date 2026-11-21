@@ -43,6 +43,9 @@ function Die({ theme, scheme, still }: { theme: ThemeName; scheme: SchemeId; sti
   );
 
   useEffect(() => {
+    // Software rendering: image-based lighting makes the first render block the page for about
+    // 4 seconds (measured with SwiftShader), so it uses plain lights instead (see LobbyDie).
+    if (renderQuality() === 'low') return;
     const pmrem = new THREE.PMREMGenerator(gl);
     const room = new RoomEnvironment();
     const env = pmrem.fromScene(room, 0.04).texture;
@@ -88,8 +91,19 @@ export default function LobbyDie(props: { theme: ThemeName; scheme: SchemeId; st
       }}
       aria-hidden="true"
     >
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[-3, 4, 5]} intensity={2.2} />
+      {software ? (
+        // No image-based lighting here (see Die), so a soft sky and ground light stands in for it.
+        <>
+          <ambientLight intensity={1.1} />
+          <hemisphereLight args={['#ffffff', '#d4cbef', 0.9]} />
+          <directionalLight position={[-3, 4, 5]} intensity={1.5} />
+        </>
+      ) : (
+        <>
+          <ambientLight intensity={0.2} />
+          <directionalLight position={[-3, 4, 5]} intensity={2.2} />
+        </>
+      )}
       {software && !still && <FrameLimiter fps={SOFTWARE_FPS} />}
       <Die theme={theme} scheme={scheme} still={still} />
     </Canvas>
