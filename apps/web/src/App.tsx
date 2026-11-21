@@ -212,13 +212,7 @@ function TableScreen({ auth }: { auth: Auth }) {
           ) : !game ? (
             <Lobby lobby={lobby} table={table} userId={auth.user.id} cdnBase={auth.cdnBase} />
           ) : game.finished ? (
-            <Results
-              game={game}
-              lobby={lobby}
-              cdnBase={auth.cdnBase}
-              seat={seat}
-              coins={table.coins}
-            />
+            <Results game={game} lobby={lobby} cdnBase={auth.cdnBase} />
           ) : (
             <Game game={game} lobby={lobby} table={table} seat={seat} cdnBase={auth.cdnBase} />
           )}

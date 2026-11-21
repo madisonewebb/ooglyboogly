@@ -17,9 +17,6 @@ import {
   MSG_SNAPSHOT,
   MSG_START,
   MSG_UNDO,
-  MSG_COINS,
-  type CoinsMessage,
-  coinsEarned,
   MSG_REACT,
   MSG_REACTION,
   type ReactionMessage,
@@ -27,7 +24,6 @@ import {
   type Snapshot,
   TABLE_ROOM,
 } from '@rollhouse/shared';
-import { coinsOf, openMemoryDatabase } from '../db';
 import { signSession } from '../session';
 import { startTestServer, TEST_SECRET, type TestServer } from '../test-server';
 import { mergeSettings } from './TableRoom';
@@ -53,8 +49,6 @@ class Player {
   moves: Move[] = [];
   errors: ErrorMessage[] = [];
   reactions: ReactionMessage[] = [];
-  /** The balance from the snapshot, then from each payout. */
-  coins: number | null = null;
   /** The tumble seed of each roll message, in order. */
   tumbles: (number | undefined)[] = [];
   constructor(
@@ -65,9 +59,7 @@ class Player {
       this.snapshot = s;
       this.lobby = s.lobby;
       this.moves = [...s.moves];
-      this.coins = s.coins;
     });
-    room.onMessage(MSG_COINS, (m: CoinsMessage) => (this.coins = m.coins));
     room.onMessage(MSG_LOBBY, (l: Lobby) => (this.lobby = l));
     room.onMessage(MSG_MOVE, (m: MoveMessage) => {
       expect(m.index).toBe(this.moves.length);
@@ -294,31 +286,6 @@ describe('table room', () => {
     expect(a.reactions.map((r) => r.sticker)).toEqual(['ooglyBoogly', 'steamingGarbage']);
 
     expect(await a.expectError(MSG_REACT, { sticker: 'confetti' })).toBe('BAD_INTENT');
-  });
-
-  it('pays every player coins once when the game ends, and remembers them', async () => {
-    const db = openMemoryDatabase();
-    t = await startTestServer({}, { db });
-    const a = await join('Madi');
-    const b = await join('Mom');
-    expect(a.coins).toBe(0);
-    await startGame(a, [b], { cardsPerPlayer: 1 });
-    for (let round = 0; round < 13; round++) {
-      await playTurn(a);
-      await playTurn(b);
-    }
-    expect(a.game.finished).toBe(true);
-    const owed = [coinsEarned(a.game, 0).total, coinsEarned(a.game, 1).total];
-    await until(() => a.coins === owed[0] && b.coins === owed[1], 'the payout');
-    expect(coinsOf(db, 'u-Madi')).toBe(owed[0]);
-    expect(coinsOf(db, 'u-Mom')).toBe(owed[1]);
-
-    // Coming back to the finished table shows the balance and pays nothing more.
-    await a.room.leave();
-    const again = await join('Madi');
-    expect(again.coins).toBe(owed[0]);
-    const rows = db.prepare('SELECT COUNT(*) AS n FROM ledger').get() as { n: number };
-    expect(rows.n).toBe(2);
   });
 
   it('seats late arrivals as spectators who cannot act', async () => {

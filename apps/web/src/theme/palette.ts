@@ -34,10 +34,6 @@ export interface Tokens {
   band: string;
   /** Text on the band. */
   onBand: string;
-  /** The coin in the shop's money (decoration only). */
-  coin: string;
-  /** Marks on the coin. */
-  onCoin: string;
   /** Dice. */
   die: string;
   /** Pips. */
@@ -62,8 +58,6 @@ export const THEMES: Record<ThemeName, Tokens> = {
     onOption: '#2A2440',
     band: '#2A2440',
     onBand: '#F4F1FA',
-    coin: '#E8BE45',
-    onCoin: '#6B4A0C',
     die: '#FFFFFF',
     pip: '#5B47B0',
     shadow: '#1A1530',
@@ -83,8 +77,6 @@ export const THEMES: Record<ThemeName, Tokens> = {
     onOption: '#F4F1FA',
     band: '#151321',
     onBand: '#F4F1FA',
-    coin: '#F0C95A',
-    onCoin: '#6B4A0C',
     die: '#F7F5FB',
     pip: '#5B47B0',
     shadow: '#05040A',

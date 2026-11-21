@@ -6,7 +6,7 @@ import { openDatabase, recordBoot } from './db';
 const config = loadConfig();
 const db = openDatabase(config.dataDir);
 const boots = recordBoot(db, config.gitSha, config.version);
-const server = createGameServer(config, { db });
+const server = createGameServer(config);
 
 server.onShutdown(() => {
   db.close();

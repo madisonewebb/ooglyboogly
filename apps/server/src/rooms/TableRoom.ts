@@ -1,5 +1,4 @@
-import { randomInt, randomUUID } from 'node:crypto';
-import type { DatabaseSync } from 'node:sqlite';
+import { randomInt } from 'node:crypto';
 import { type Client, Room, ServerError } from '@colyseus/core';
 import {
   BOXES,
@@ -35,9 +34,6 @@ import {
   MSG_SNAPSHOT,
   MSG_START,
   MSG_UNDO,
-  MSG_COINS,
-  type CoinsMessage,
-  coinsEarned,
   MSG_REACT,
   MSG_REACTION,
   isSticker,
@@ -46,7 +42,6 @@ import {
   type SessionUser,
   type Snapshot,
 } from '@rollhouse/shared';
-import { awardCoins, coinsOf } from '../db';
 import { rollDice } from '../dice';
 import { verifySession } from '../session';
 
@@ -57,12 +52,7 @@ export interface TableConfig {
   emptyTimeoutMs: number;
   /** Seconds a dropped connection may resume with its old session. */
   reconnectSeconds: number;
-  /** Where coins are saved. Without one (some tests), games pay nothing. */
-  db?: DatabaseSync | undefined;
 }
-
-/** Guests (local dev and e2e) play, but their coins aren't kept. */
-const isGuest = (userId: string) => userId.startsWith('guest-');
 
 export const EMPTY_TIMEOUT_MS = 15 * 60 * 1000;
 export const RECONNECT_SECONDS = 30;
@@ -145,9 +135,6 @@ export function createTableRoom(cfg: TableConfig) {
     game: GameState | null = null;
     moves: Move[] = [];
     private emptyTimer: { clear(): void } | null = null;
-    /** Names this game in the coin ledger, so it pays each player once. */
-    private gameId = '';
-    private paid = false;
     /** When each user last sent a sticker, for the cooldown. */
     private lastReaction = new Map<string, number>();
     private reactions = 0;
@@ -262,7 +249,6 @@ export function createTableRoom(cfg: TableConfig) {
         };
         this.game = createGame(setup);
         this.setup = setup;
-        this.gameId = randomUUID();
         for (const c of this.clients) this.sendSnapshot(c);
       },
 
@@ -347,13 +333,8 @@ export function createTableRoom(cfg: TableConfig) {
         moves: this.moves,
         version: cfg.version,
         you: client.auth as SessionUser,
-        coins: this.coinsFor((client.auth as SessionUser).id),
       };
       client.send(MSG_SNAPSHOT, body);
-    }
-
-    private coinsFor(userId: string): number | null {
-      return cfg.db && !isGuest(userId) ? coinsOf(cfg.db, userId) : null;
     }
 
     private broadcastLobby(except?: Client) {
@@ -408,30 +389,6 @@ export function createTableRoom(cfg: TableConfig) {
       // Which recorded tumble to play. Drawn after the dice, and only for looks.
       if (move.type === 'roll') message.tumble = randomInt(0, 2 ** 30);
       this.broadcast(MSG_MOVE, message);
-      if (this.game.finished && !this.paid) this.payOut();
-    }
-
-    /** The last box is filled: every seat earns coins, saved once per game. */
-    private payOut() {
-      this.paid = true;
-      const db = cfg.db;
-      if (!db) return;
-      this.seats.forEach((member, seat) => {
-        const { id, name } = member.user;
-        if (isGuest(id)) return;
-        const delta = coinsEarned(this.game!, seat).total;
-        const coins = awardCoins(db, {
-          userId: id,
-          name,
-          delta,
-          reason: 'game',
-          gameId: this.gameId,
-        });
-        if (coins === null) return;
-        for (const c of this.clients) {
-          if (member.sessions.has(c.sessionId)) c.send(MSG_COINS, { coins } satisfies CoinsMessage);
-        }
-      });
     }
 
     private armEmptyTimer() {
