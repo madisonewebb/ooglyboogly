@@ -18,11 +18,6 @@ const Lab =
   import.meta.env.DEV || import.meta.env.VITE_LAB === '1'
     ? lazy(() => import('./Lab').then((m) => ({ default: m.Lab })))
     : null;
-// The aquarium bench (`?tank`), on the same terms as the dice bench.
-const TankLab =
-  import.meta.env.DEV || import.meta.env.VITE_LAB === '1'
-    ? lazy(() => import('./tank/TankLab').then((m) => ({ default: m.TankLab })))
-    : null;
 installThemeCss();
 
 const root = document.getElementById('root');
@@ -31,11 +26,7 @@ createRoot(root).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
       <PrefsProvider>
-        {TankLab && location.search.includes('tank') ? (
-          <Suspense fallback={null}>
-            <TankLab />
-          </Suspense>
-        ) : Lab && location.search.includes('lab') ? (
+        {Lab && location.search.includes('lab') ? (
           <Suspense fallback={null}>
             <Lab />
           </Suspense>
