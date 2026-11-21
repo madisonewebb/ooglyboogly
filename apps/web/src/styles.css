@@ -12,7 +12,7 @@
   --radius-lg: 1.2rem;
   --font: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
   /* Rounded and friendly, for headings, names and big moments. */
-  --display: 'Quicksand', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  --display: 'Fredoka', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
@@ -81,8 +81,10 @@ body {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   margin: 0;
+  font-family: var(--display);
   line-height: 1.15;
 }
 
@@ -131,6 +133,18 @@ button,
 input {
   font: inherit;
   color: inherit;
+}
+
+/* One voice for everything you tap or read as a label: the rounded display face.
+   Atkinson stays for sentences and numbers in running text. */
+button,
+label,
+legend,
+.toggle,
+.slider,
+.pad-tab,
+.pad tfoot th {
+  font-family: var(--display);
 }
 
 button {
@@ -368,11 +382,11 @@ input:not([type]):focus {
 }
 
 /* At the table they sit inside the band: smaller, and centred in its height. */
-body:has(.screen.game) .corner {
+body:has(.topbar) .corner {
   top: 0.45rem;
 }
 
-body:has(.screen.game) .corner .icon {
+body:has(.topbar) .corner .icon {
   width: 2.5rem;
   height: 2.5rem;
   min-width: 0;
@@ -384,19 +398,19 @@ body:has(.screen.game) .corner .icon {
 }
 
 /* At the table the controls sit on the band: light line icons, no chrome. */
-body:has(.screen.game) .corner .icon {
+body:has(.topbar) .corner .icon {
   border-color: color-mix(in srgb, var(--on-band) 35%, transparent);
   background: transparent;
   color: var(--on-band);
   box-shadow: none;
 }
 
-body:has(.screen.game) .corner .icon:hover:not(:disabled) {
+body:has(.topbar) .corner .icon:hover:not(:disabled) {
   border-color: var(--on-band);
 }
 
 /* Every other screen leaves the top-right corner to the controls. */
-.screen:not(.game, .centered) {
+.screen:not(.game, .centered, .lobby) {
   padding-top: 4.4rem;
 }
 
@@ -420,7 +434,7 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
 }
 
 .centered {
-  min-height: 100dvh;
+  min-height: calc(100dvh - 3.4rem);
   justify-content: center;
   align-items: center;
   text-align: center;
@@ -479,34 +493,18 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   font-weight: 700;
 }
 
-/* The banner: the ghost over the clouds with the name, as the header of sign-in and the lobby. */
+/* The welcome under the band: a small ghost and the tagline. */
 .brand {
-  display: grid;
-  justify-items: center;
-  gap: 0.6rem;
-  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
-.brand-banner {
+.brand-ghost {
   display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 2.4 / 1;
-  object-fit: cover;
-  object-position: 50% 42%;
-  border-radius: var(--radius-lg);
-  background: var(--band);
-  box-shadow: var(--shadow-md);
-}
-
-.centered .brand {
-  width: min(34rem, 100%);
-}
-
-/* The lobby is wide, so the banner becomes a strip that keeps the name and the ghost. */
-.lobby .brand-banner {
-  aspect-ratio: 3.3 / 1;
-  object-position: 50% 45%;
+  width: 4.5rem;
+  height: 4.5rem;
 }
 
 .tagline {
@@ -657,6 +655,7 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
 }
 
 .seat-name {
+  font-family: var(--display);
   font-weight: 600;
   max-width: 100%;
   overflow: hidden;
@@ -792,14 +791,19 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   align-items: center;
   min-height: 3.4rem;
   gap: 0.6rem;
-  margin-top: -0.6rem;
   /* Clear the corner controls. */
-  padding-right: 11rem;
+  padding: 0 11rem 0 1.25rem;
   background: var(--band);
   color: var(--on-band);
   /* Bleeds to the window's edges. */
   box-shadow: 0 0 0 100vmax var(--band);
   clip-path: inset(0 -100vmax);
+}
+
+/* At the table the band sits inside the padded screen and bleeds out of it. */
+.screen.game .topbar {
+  margin-top: -0.6rem;
+  padding-left: 0;
 }
 
 /* The wordmark art in the band, its glow fading into the plum. */
@@ -1302,7 +1306,8 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
 
 .pad thead th {
   text-align: center;
-  font-weight: 700;
+  font-family: var(--display);
+  font-weight: 600;
   color: var(--quiet);
   border-bottom: 1.5px solid var(--rule);
   white-space: nowrap;
@@ -1314,7 +1319,9 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
 
 .pad tbody th {
   text-align: left;
-  font-weight: 600;
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
