@@ -32,3 +32,23 @@ export function withCard(state: GameState, player: number, index: number, c: Car
 }
 
 export const newGame = (over: Partial<GameSetup> = {}) => createGame(setup(over));
+
+/**
+ * A finished game with the given cards, one array of cards per player. The
+ * card count comes from the first player's array.
+ */
+export function finishedGame(
+  cardsByPlayer: readonly (readonly Card[])[],
+  over: Partial<GameSetup> = {},
+): GameState {
+  const base = newGame({
+    players: cardsByPlayer.length,
+    cardsPerPlayer: cardsByPlayer[0]!.length,
+    ...over,
+  });
+  return {
+    ...base,
+    players: base.players.map((p, i) => ({ ...p, cards: cardsByPlayer[i]! })),
+    finished: true,
+  };
+}
