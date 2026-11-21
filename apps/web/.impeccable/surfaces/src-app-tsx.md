@@ -9,7 +9,7 @@ related_targets: ["src/screens/Game.tsx","src/screens/Lobby.tsx","src/screens/Re
 
 Every screen of the web client (sign-in, lobby, game table, results) in one replacement visual world. Mode: Operate. Audience: one family's adults on evening Discord calls, mostly on laptops. Task: roll, pick a box, watch the others' turns, see who wins.
 
-Constraints kept: the whole pad fits a laptop window; AA contrast on every text pairing (palette.test.ts); three text sizes; reduced motion; keyboard play; the recorded dice tumbles and sounds. Next on this surface: a semi-realistic aquarium in the tray column, above the dice.
+Constraints kept: the whole pad fits a laptop window; AA contrast on every text pairing (palette.test.ts); three text sizes; reduced motion; keyboard play; the recorded dice tumbles and sounds.
 
 History: the candy look was rejected, then "Sunprint" (cyanotype, script, print texture) was rejected once seen running. The owner rejected script faces, paper/print texture and anything old-fashioned. This direction was picked from rendered mockups of the real screens.
 

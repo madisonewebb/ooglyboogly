@@ -189,7 +189,7 @@ A family game night after dark, set on a clean, modern table: dark plum around t
 
 The screens are calm and roomy: soft raised white or plum sheets, pill-shaped controls, a plum band or plate holding the wordmark, and a 3D tray of porcelain dice with violet pips on violet felt. Femininity comes from the palette and the rounded display face, kept light: no ornament, no texture on the interface, no illustration. The playful moments are short and earned, like the sparkle burst on a Yatzy and on the winner's name, the pulse of your tint when your turn arrives, and a new score coming into focus on the pad.
 
-Rejected looks the owner confirmed on rendered screens: the earlier candy-shop identity (candy names, colors, motifs) and the "Sunprint" cyanotype that followed it (script typefaces, paper or print textures, anything old-fashioned). A personal aquarium, shown as a realistic glass tank beside the dice, is planned and has no visual system yet.
+Rejected looks the owner confirmed on rendered screens: the earlier candy-shop identity (candy names, colors, motifs) and the "Sunprint" cyanotype that followed it (script typefaces, paper or print textures, anything old-fashioned).
 
 **Key Characteristics:**
 - Plum, lavender and one pink, in a daytime and an evening theme generated from one palette file.

@@ -15,3 +15,5 @@ data/
 *.db
 *.db-*
 .DS_Store
+
+.claude/
