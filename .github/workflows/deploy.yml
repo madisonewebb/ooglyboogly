@@ -61,10 +61,10 @@ jobs:
         run: |
           if [ "$GITHUB_REF_NAME" = "main" ]; then
             echo "environment=prod" >> "$GITHUB_OUTPUT"
-            echo "app_file=argocd/applications/rollhouse.yaml" >> "$GITHUB_OUTPUT"
+            echo "app_file=argocd/applications/ooglyboogly.yaml" >> "$GITHUB_OUTPUT"
           else
             echo "environment=staging" >> "$GITHUB_OUTPUT"
-            echo "app_file=argocd/applications/rollhouse-staging.yaml" >> "$GITHUB_OUTPUT"
+            echo "app_file=argocd/applications/ooglyboogly-staging.yaml" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check out home-lab
@@ -90,7 +90,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "chore(rollhouse): deploy $ENVIRONMENT ${GITHUB_SHA::7}"
+          git commit -am "chore(ooglyboogly): deploy $ENVIRONMENT ${GITHUB_SHA::7}"
           if ! git push origin HEAD:main; then
             echo "Push rejected; rebasing and retrying once"
             git pull --rebase origin main

@@ -3,7 +3,7 @@
  * EXPECTED_SHA, then joins the hello room over WebSocket and checks
  * that a ping comes back as a pong.
  *
- *   BASE_URL=https://rollhouse-staging.castillocurios.com EXPECTED_SHA=<sha> node smoke.ts
+ *   BASE_URL=https://ooglyboogly-staging.castillocurios.com EXPECTED_SHA=<sha> node smoke.ts
  *
  * Runs directly on Node (type stripping), so keep it to erasable TypeScript.
  */

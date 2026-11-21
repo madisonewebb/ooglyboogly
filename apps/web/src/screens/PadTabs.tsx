@@ -1,7 +1,9 @@
+import { motion } from 'motion/react';
 import { useRef } from 'react';
 import type { Lobby } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
-import { flavorVars } from '../flavor';
+import { tintVars } from '../tint';
+import { SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
 
 export const padTabId = (seat: number) => `pad-tab-${seat}`;
@@ -66,7 +68,7 @@ export function PadTabs({ lobby, cdnBase, seat, viewed, onView, up, done, pulses
             type="button"
             role="tab"
             className={['pad-tab', s.connected ? '' : 'is-away'].join(' ')}
-            style={flavorVars(s.flavor, theme)}
+            style={tintVars(s.tint, theme)}
             aria-selected={selected}
             aria-controls={PAD_PANEL_ID}
             aria-label={label}
@@ -74,8 +76,16 @@ export function PadTabs({ lobby, cdnBase, seat, viewed, onView, up, done, pulses
             tabIndex={selected ? 0 : -1}
             onClick={() => onView(i)}
           >
+            {selected && (
+              <motion.span
+                layoutId="pad-tab-active"
+                className="tab-active"
+                transition={SPRING.snappy}
+                aria-hidden="true"
+              />
+            )}
             <span className="tab-face">
-              <Avatar user={s.user} cdnBase={cdnBase} flavor={s.flavor} />
+              <Avatar user={s.user} cdnBase={cdnBase} tint={s.tint} />
               {pulses[i] ? <span key={pulses[i]} className="tab-dot" aria-hidden="true" /> : null}
             </span>
             <span className="tab-name">{label}</span>

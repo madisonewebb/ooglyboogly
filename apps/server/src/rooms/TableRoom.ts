@@ -13,18 +13,18 @@ import {
   tryMove,
 } from '@rollhouse/rules';
 import {
-  assignFlavor,
+  assignTint,
   DEFAULT_SETTINGS,
   type ErrorCode,
-  type FlavorId,
-  isFlavor,
+  type TintId,
+  isTint,
   type ErrorMessage,
   type JoinOptions,
   type Lobby,
   type LobbySettings,
   type MoveMessage,
   MSG_ERROR,
-  MSG_FLAVOR,
+  MSG_TINT,
   MSG_HOLD,
   MSG_LOBBY,
   MSG_MOVE,
@@ -57,7 +57,7 @@ interface Member {
   user: SessionUser;
   sessions: Set<string>;
   /** Seats only; spectators keep the first free one, unused. */
-  flavor: FlavorId;
+  tint: TintId;
 }
 
 const isObject = (m: unknown): m is Record<string, unknown> =>
@@ -153,17 +153,17 @@ export function createTableRoom(cfg: TableConfig) {
       let member = this.seats.find((s) => s.user.id === user.id);
       if (!member) {
         if (!this.setup && this.seats.length < MAX_PLAYERS) {
-          const flavor = assignFlavor(
-            this.seats.map((s) => s.flavor),
-            isFlavor(options?.flavor) ? options.flavor : null,
+          const tint = assignTint(
+            this.seats.map((s) => s.tint),
+            isTint(options?.tint) ? options.tint : null,
           );
-          member = { user, sessions: new Set(), flavor };
+          member = { user, sessions: new Set(), tint };
           this.seats.push(member);
           if (!this.hostId) this.hostId = user.id;
         } else {
           member = this.spectators.find((s) => s.user.id === user.id);
           if (!member) {
-            member = { user, sessions: new Set(), flavor: assignFlavor([]) };
+            member = { user, sessions: new Set(), tint: assignTint([]) };
             this.spectators.push(member);
           }
         }
@@ -214,18 +214,18 @@ export function createTableRoom(cfg: TableConfig) {
         this.broadcastLobby();
       },
 
-      [MSG_FLAVOR]: (client: Client, intent: unknown) => {
+      [MSG_TINT]: (client: Client, intent: unknown) => {
         if (this.setup) return this.sendError(client, 'STARTED', 'the game has started');
         const userId = (client.auth as SessionUser).id;
         const member = this.seats.find((s) => s.user.id === userId);
         if (!member) return this.sendError(client, 'NOT_SEATED', 'you are watching this game');
-        if (!isObject(intent) || !isFlavor(intent['flavor'])) {
-          return this.sendError(client, 'BAD_INTENT', 'pick one of the flavors');
+        if (!isObject(intent) || !isTint(intent['tint'])) {
+          return this.sendError(client, 'BAD_INTENT', 'pick one of the tints');
         }
-        const flavor = intent['flavor'];
-        // The picker greys out other players' flavors, so a taken one only arrives on a
-        // race; keep the current flavor and resend the lobby so the client catches up.
-        if (!this.seats.some((s) => s !== member && s.flavor === flavor)) member.flavor = flavor;
+        const tint = intent['tint'];
+        // The picker greys out other players' tints, so a taken one only arrives on a
+        // race; keep the current tint and resend the lobby so the client catches up.
+        if (!this.seats.some((s) => s !== member && s.tint === tint)) member.tint = tint;
         this.broadcastLobby();
       },
 
@@ -294,7 +294,7 @@ export function createTableRoom(cfg: TableConfig) {
         seats: this.seats.map((s) => ({
           user: s.user,
           connected: s.sessions.size > 0,
-          flavor: s.flavor,
+          tint: s.tint,
         })),
         hostId: this.hostId,
         settings: this.settings,

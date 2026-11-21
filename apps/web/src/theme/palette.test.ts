@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  contrast,
-  FLAVOR_IDS,
-  FLAVORS,
-  TEXT_PAIRS,
-  type ThemeName,
-  THEMES,
-  themeCss,
-} from './palette';
+import { contrast, TINT_IDS, TINTS, TEXT_PAIRS, type ThemeName, THEMES, themeCss } from './palette';
 
 const AA = 4.5;
 const themes = Object.keys(THEMES) as ThemeName[];
@@ -16,9 +8,9 @@ describe('contrast()', () => {
   it('matches the WCAG reference values', () => {
     expect(contrast('#000000', '#FFFFFF')).toBeCloseTo(21, 5);
     expect(contrast('#FFFFFF', '#FFFFFF')).toBe(1);
-    // Measured in the plan: white on bubblegum fails, plum passes.
-    expect(contrast('#FFFFFF', '#FF4F9A')).toBeCloseTo(3.07, 2);
-    expect(contrast('#3A1E40', '#FF4F9A')).toBeCloseTo(4.75, 2);
+    // White on the pink accent fails; plum ink passes.
+    expect(contrast('#FFFFFF', '#E88DB2')).toBeLessThan(4.5);
+    expect(contrast('#2A2440', '#E88DB2')).toBeCloseTo(6.24, 2);
   });
 });
 
@@ -29,8 +21,8 @@ describe.each(themes)('%s theme', (name) => {
     expect(contrast(t[fg], t[bg])).toBeGreaterThanOrEqual(AA);
   });
 
-  it.each(FLAVOR_IDS)('%s ink reads on the pad and the page', (id) => {
-    const ink = FLAVORS[id].ink[name];
+  it.each(TINT_IDS)('%s ink reads on the pad and the page', (id) => {
+    const ink = TINTS[id].ink[name];
     expect(contrast(ink, t.pad)).toBeGreaterThanOrEqual(AA);
     expect(contrast(ink, t.bg)).toBeGreaterThanOrEqual(AA);
   });
@@ -39,8 +31,8 @@ describe.each(themes)('%s theme', (name) => {
 describe('themeCss()', () => {
   it('defines every token for both themes', () => {
     const css = themeCss();
-    expect(css).toContain(":root[data-theme='light']{--bg:#FFEEF3;");
-    expect(css).toContain('--on-accent:#22122A;');
+    expect(css).toContain(":root[data-theme='light']{--bg:#F6F3FB;");
+    expect(css).toContain('--on-accent:#1D1A2C;');
     expect(css.match(/--quiet:/g)).toHaveLength(2);
   });
 });

@@ -1,17 +1,68 @@
 /*
- * Rollhouse: a candy shop on game night. Colors come only from the generated
- * theme variables (theme/palette.ts), so the contrast test covers every one.
- * Sizes are in rem, so the Text size setting scales everything.
+ * Rollhouse: Lavender evening. Dark plum, lavender and a pink accent, with a
+ * lavender daytime version; a rounded display face for headings and big
+ * moments. Colors come only from the generated theme variables
+ * (theme/palette.ts), so the contrast test covers every one. Sizes are in
+ * rem, so the Text size setting scales everything. Motion timings mirror
+ * theme/motion.ts.
  */
 
 :root {
-  --radius: 1rem;
+  --radius: 0.9rem;
+  --radius-lg: 1.2rem;
   --font: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
-  --display: 'Gluten', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  /* Rounded and friendly, for headings, names and big moments. */
+  --display: 'Quicksand', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* A gentle overshoot, for things that pop into place. */
+  --ease-spring: linear(
+    0,
+    0.2 7%,
+    0.62 17%,
+    0.95 28%,
+    1.08 38%,
+    1.09 44%,
+    1.04 54%,
+    1 66%,
+    0.99 78%,
+    1
+  );
+  /* Slow to appear, then it settles: a new score coming into focus. */
+  --ease-develop: cubic-bezier(0.45, 0, 0.25, 1);
+  --dur-fast: 140ms;
+  --dur: 220ms;
+  --dur-slow: 380ms;
+
+  --shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--shadow) 10%, transparent),
+    0 3px 10px -2px color-mix(in srgb, var(--shadow) 8%, transparent);
+  --shadow-md:
+    0 2px 4px color-mix(in srgb, var(--shadow) 7%, transparent),
+    0 12px 30px -8px color-mix(in srgb, var(--shadow) 18%, transparent);
+  --shadow-lg:
+    0 4px 10px color-mix(in srgb, var(--shadow) 10%, transparent),
+    0 24px 50px -12px color-mix(in srgb, var(--shadow) 30%, transparent);
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  scrollbar-color: var(--rule) transparent;
+  caret-color: var(--strong);
+}
+
+/* The band bleeds past the page edges; it must never make the page scroll sideways. */
+body {
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--option);
+  color: var(--on-option);
 }
 
 body {
@@ -23,6 +74,10 @@ body {
   /* 17px at Regular, and never smaller anywhere. */
   font-size: 1.0625rem;
   line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--dur-slow) var(--ease-out),
+    color var(--dur-slow) var(--ease-out);
 }
 
 h1,
@@ -37,14 +92,15 @@ h1 {
 
 h2 {
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .wordmark {
   font-family: var(--display);
   font-weight: 700;
+  letter-spacing: -0.01em;
   font-size: 2.6rem;
-  letter-spacing: 0.01em;
+  line-height: 1.15;
   color: var(--text);
 }
 
@@ -78,25 +134,31 @@ input {
 }
 
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   min-height: 48px;
   min-width: 48px;
   padding: 0 1.1rem;
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 999px;
   background: var(--pad);
   font-weight: 600;
   cursor: pointer;
   transition:
-    transform 120ms ease,
-    border-color 120ms ease;
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 button:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--strong);
 }
 
 button:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: translateY(1px);
 }
 
 button:disabled {
@@ -106,36 +168,102 @@ button:disabled {
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--strong);
   outline-offset: 3px;
 }
 
+/*
+ * The one thing to do next, in pink: Roll, Write it in, Start. It sits
+ * on a thin darker lip and presses down into it.
+ */
 button.primary {
+  --lip: color-mix(in oklab, var(--accent), #000 22%);
+  border: 1.5px solid var(--lip);
+  border-radius: 999px;
   background: var(--accent);
-  border-color: var(--accent);
   color: var(--on-accent);
   font-weight: 800;
+  box-shadow:
+    0 0.1rem 0.25rem color-mix(in srgb, var(--shadow) 16%, transparent),
+    0 0.55rem 1.2rem -0.45rem color-mix(in srgb, var(--shadow) 45%, transparent);
+}
+
+button.primary:hover:not(:disabled) {
+  border-color: var(--lip);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0.15rem 0.35rem color-mix(in srgb, var(--shadow) 18%, transparent),
+    0 0.8rem 1.5rem -0.5rem color-mix(in srgb, var(--shadow) 50%, transparent);
+}
+
+button.primary:active:not(:disabled) {
+  transform: translateY(0.12rem);
+  box-shadow:
+    0 0.05rem 0.15rem color-mix(in srgb, var(--shadow) 20%, transparent),
+    0 0.25rem 0.6rem -0.3rem color-mix(in srgb, var(--shadow) 35%, transparent);
 }
 
 button.primary:disabled {
   background: var(--pad);
-  border-color: var(--rule);
   color: var(--quiet);
+  border: 1.5px dashed var(--rule);
+  box-shadow: none;
+}
+
+/* Held down while you shake and while the dice roll, then it pops back up. */
+button.primary.busy,
+button.primary.busy:hover:not(:disabled),
+button.primary.busy:active:not(:disabled),
+button.primary.busy:disabled {
+  --lip: color-mix(in oklab, var(--accent), #000 22%);
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1.5px solid var(--lip);
+  transform: translateY(0.12rem);
+  box-shadow:
+    0 0.05rem 0.15rem color-mix(in srgb, var(--shadow) 20%, transparent),
+    0 0.25rem 0.6rem -0.3rem color-mix(in srgb, var(--shadow) 35%, transparent);
+}
+
+button.primary.busy:not(:disabled) {
+  animation: jiggle 110ms linear infinite;
+}
+
+@keyframes jiggle {
+  25% {
+    transform: translate(-1px, 0.12rem) rotate(-0.4deg);
+  }
+  75% {
+    transform: translate(1px, 0.12rem) rotate(0.4deg);
+  }
 }
 
 button.big {
   width: 100%;
-  min-height: 3.5rem;
-  font-size: 1.2rem;
+  min-height: 3.6rem;
+  font-size: 1.25rem;
+}
+
+kbd {
+  font: 700 0.8rem/1 var(--font);
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.45rem;
+  border: 1.5px solid color-mix(in srgb, currentColor 35%, transparent);
+  opacity: 0.85;
 }
 
 input[type='text'],
 input:not([type]) {
   min-height: 48px;
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 0.75rem;
   background: var(--pad);
   padding: 0 0.85rem;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+input:not([type]):focus {
+  border-color: var(--strong);
 }
 
 .toggle {
@@ -150,13 +278,26 @@ input:not([type]) {
 .toggle input {
   width: 1.5rem;
   height: 1.5rem;
-  accent-color: var(--accent);
+  accent-color: var(--strong);
+}
+
+.slider {
+  display: grid;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.slider input {
+  width: 100%;
+  min-height: 2rem;
+  accent-color: var(--strong);
 }
 
 .panel {
   background: var(--pad);
-  border: 2px solid var(--rule);
-  border-radius: var(--radius);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -170,7 +311,7 @@ input:not([type]) {
 .choice {
   border: 0;
   padding: 0;
-  margin: 0.25rem 0 0.5rem;
+  margin: 0.25rem 0 0.4rem;
 }
 
 .choice legend {
@@ -185,18 +326,35 @@ input:not([type]) {
   gap: 0.5rem;
 }
 
+.segmented button {
+  position: relative;
+  isolation: isolate;
+}
+
 .segmented button[aria-pressed='true'] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
+  border-color: var(--strong);
+  color: var(--on-strong);
+  font-weight: 700;
+}
+
+.seg-pill {
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  background: var(--strong);
+  z-index: -1;
+}
+
+.seg-label {
+  position: relative;
 }
 
 /* ---------- Corner ---------- */
 
 .corner {
-  position: fixed;
+  position: absolute;
   top: 0.6rem;
-  right: 0.6rem;
+  right: 0.75rem;
   z-index: 20;
   display: flex;
   gap: 0.4rem;
@@ -204,15 +362,38 @@ input:not([type]) {
 
 .corner .icon {
   padding: 0;
-  font-size: 1.3rem;
+  width: 2.9rem;
+  height: 2.9rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.corner .icon:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* At the table the controls sit on the band: light line icons, no chrome. */
+body:has(.screen.game) .corner .icon {
+  border-color: color-mix(in srgb, var(--on-band) 35%, transparent);
+  background: transparent;
+  color: var(--on-band);
+  box-shadow: none;
+}
+
+body:has(.screen.game) .corner .icon:hover:not(:disabled) {
+  border-color: var(--on-band);
+}
+
+/* Every other screen leaves the top-right corner to the controls. */
+.screen:not(.game, .centered) {
+  padding-top: 4.4rem;
 }
 
 .settings {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + 0.6rem);
   right: 0;
   width: min(22rem, calc(100vw - 1.2rem));
-  box-shadow: 0 0.75rem 2rem rgb(34 18 42 / 0.25);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ---------- Screens ---------- */
@@ -233,40 +414,133 @@ input:not([type]) {
   text-align: center;
 }
 
+.joining {
+  color: var(--quiet);
+  font-weight: 700;
+}
+
 .banner {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: fixed;
+  top: 0.7rem;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: calc(100vw - 13rem);
   margin: 0;
-  padding: 0.6rem 4.5rem 0.6rem 1rem;
-  background: var(--butter);
-  color: var(--on-fill);
-  text-align: center;
-  font-weight: 600;
+  padding: 0.35rem 0.5rem 0.35rem 1.1rem;
+  border-radius: 999px;
+  background: var(--option);
+  color: var(--on-option);
+  box-shadow: var(--shadow-md);
+  font-weight: 700;
 }
 
 .banner button {
   min-height: 40px;
-  margin-left: 0.5rem;
+  border-color: var(--on-option);
+  color: var(--text);
 }
 
 .guest {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
   text-align: left;
-  width: min(22rem, 100%);
+  width: min(24rem, 100%);
+  margin-top: 0.5rem;
 }
 
-/* ---------- Avatars and flavors ---------- */
+/* The name form, as a soft raised sheet. */
+.guest.panel {
+  border-color: color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--pad);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
+}
+
+.guest label {
+  font-weight: 700;
+}
+
+/* The wordmark on a plum plate, with the die turning beside the name. */
+.brand {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.6rem;
+  padding: 1.1rem 2rem 1.2rem;
+  border-radius: var(--radius-lg);
+  background: var(--band);
+  color: var(--on-band);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 30rem) {
+  .brand {
+    padding-inline: 1rem;
+  }
+
+  .brand .brand-die {
+    width: 3.6rem;
+    height: 3.6rem;
+  }
+}
+
+.brand-die {
+  grid-row: span 2;
+  display: block;
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+.brand-flat {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 1.1rem;
+  rotate: -12deg;
+}
+
+.brand-flat .flat-die {
+  padding: 0.45rem;
+  border-radius: 0.8rem;
+}
+
+.brand-flat .flat-die .pip {
+  width: 0.45rem;
+  height: 0.45rem;
+}
+
+.brand .wordmark {
+  font-size: clamp(2.3rem, 8.5vw, 3.4rem);
+  line-height: 1.05;
+  color: var(--on-band);
+}
+
+.tagline {
+  margin: 0;
+  color: color-mix(in srgb, var(--on-band) 82%, transparent);
+  font-weight: 700;
+  text-align: left;
+}
+
+/* ---------- Avatars and tints ---------- */
 
 .avatar {
   position: relative;
+  display: inline-block;
   flex: none;
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  border: 3px solid var(--candy);
+  border: 3px solid var(--hue);
   background: var(--pad);
 }
 
@@ -279,7 +553,7 @@ input:not([type]) {
 }
 
 .avatar-face {
-  background: var(--candy);
+  background: var(--hue);
 }
 
 .avatar .initial {
@@ -291,7 +565,7 @@ input:not([type]) {
   padding: 0 0.2rem;
   border-radius: 999px;
   background: var(--pad);
-  border: 2px solid var(--candy);
+  border: 2px solid var(--hue);
   color: var(--ink);
   font-size: 0.8rem;
   font-weight: 800;
@@ -299,61 +573,121 @@ input:not([type]) {
   text-align: center;
 }
 
-.flavors {
+.tints {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
   gap: 0.5rem;
 }
 
-.flavor {
+.tint {
   justify-content: flex-start;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0 0.9rem 0 0.4rem;
+  gap: 0.65rem;
+  padding: 0 0.9rem 0 0.35rem;
   color: var(--text);
 }
 
-.flavor .swatch {
+.tint .swatch {
   flex: none;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
-  background: var(--candy);
+  background: var(--hue);
   display: grid;
   place-items: center;
   font-weight: 800;
-  color: var(--pad);
+  color: var(--on-option);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shadow) 18%, transparent);
 }
 
-.flavor[aria-pressed='true'] {
-  border-color: var(--text);
-  box-shadow: inset 0 0 0 2px var(--candy);
+.tint[aria-pressed='true'] {
+  border-color: var(--hue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--hue) 28%, transparent);
+  font-weight: 700;
 }
 
-.flavor:disabled {
+.tint:disabled {
   color: var(--quiet);
+}
+
+.tint:disabled .swatch {
+  opacity: 0.55;
 }
 
 /* ---------- Lobby ---------- */
 
-.lobby .wordmark {
-  text-align: center;
-  margin: 0.5rem 0 0;
+.lobby {
+  max-width: 64rem;
+  padding: 0.75rem 1.25rem 1.25rem;
+}
+
+.lobby .brand-die {
+  width: 4.75rem;
+  height: 4.75rem;
+}
+
+.lobby h2 .count {
+  color: var(--quiet);
 }
 
 .seats {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
-.seats li {
+.seat {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.9rem;
+  gap: 0.25rem;
+  width: 6.5rem;
+  padding: 0.75rem 0.3rem 0.2rem;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.seat-face {
+  position: relative;
+  display: flex;
+}
+
+.seat .avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.seat-face.empty {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: 3px dashed var(--rule);
+}
+
+.crown {
+  position: absolute;
+  top: -0.85rem;
+  left: 50%;
+  translate: -50% 0;
+  color: var(--strong);
+  font-size: 1.2rem;
+  filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--shadow) 40%, transparent));
+}
+
+.seat-name {
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seat-tags {
+  display: flex;
+  gap: 0.25rem;
+  min-height: 1.6rem;
 }
 
 .away {
@@ -361,115 +695,300 @@ input:not([type]) {
 }
 
 .badge {
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 999px;
-  padding: 0 0.55rem;
+  padding: 0 0.5rem;
   color: var(--quiet);
   font-weight: 600;
+}
+
+/* The lobby is one sheet: two columns of sections with a rule between them. */
+.lobby-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  padding: 1.5rem 1.75rem 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--pad);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
+}
+
+.lobby-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  min-width: 0;
+}
+
+.lobby-stack + .lobby-stack {
+  margin-left: 1.75rem;
+  padding-left: 1.75rem;
+  border-left: 1px solid var(--rule);
+}
+
+.lobby .panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.lobby h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.45rem;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.lobby h2 .count {
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+@media (max-width: 48rem) {
+  .lobby-columns {
+    grid-template-columns: 1fr;
+    padding: 1.25rem;
+  }
+
+  .lobby-stack + .lobby-stack {
+    margin: 1.6rem 0 0;
+    padding: 1.6rem 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+}
+
+.start {
+  margin-top: 0.25rem;
 }
 
 .waiting {
   text-align: center;
   color: var(--quiet);
+  font-weight: 700;
+}
+
+.waiting .dots span {
+  animation: dot 1.2s var(--ease-in-out) infinite;
+}
+
+.waiting .dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.waiting .dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
 }
 
 /* ---------- Game ---------- */
 
 .screen.game {
-  max-width: 78rem;
-  padding-top: 0.6rem;
-  gap: 0.75rem;
+  max-width: 86rem;
+  padding: 0.6rem 1.25rem 0.9rem;
+  gap: 0.5rem;
 }
 
+/* A plum band across the whole window, under the corner controls, with the wordmark. */
 .topbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  min-height: 3.4rem;
+  gap: 0.6rem;
+  margin-top: -0.6rem;
   /* Clear the corner controls. */
-  padding-right: 7rem;
+  padding-right: 11rem;
+  background: var(--band);
+  color: var(--on-band);
+  /* Bleeds to the window's edges. */
+  box-shadow: 0 0 0 100vmax var(--band);
+  clip-path: inset(0 -100vmax);
+}
+
+.topbar .wordmark {
+  color: var(--on-band);
 }
 
 .table-layout {
   display: grid;
-  grid-template-columns: minmax(20rem, 2fr) minmax(0, 3fr);
-  gap: 1.25rem;
-  align-items: start;
-}
-
-@media (max-width: 52rem) {
-  .table-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-/*
- * On a laptop the whole pad fits the window, so you never scroll to see a box:
- * the game fills the window height and the pad's rows share whatever is left.
- * Rows stop growing at their full size and shrink to --row before anything scrolls.
- */
-@media (min-width: 52.01rem) {
-  .screen.game {
-    box-sizing: border-box;
-    height: 100dvh;
-    padding-bottom: 0.75rem;
-  }
-
-  .table-layout {
-    flex: 1;
-    min-height: 0;
-  }
-
-  .pad-col {
-    /* Roughly the window less the chrome, over 16 rows; previews track it. */
-    --row: clamp(1.75rem, calc((100dvh - 14rem) / 16), 2.65rem);
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    max-height: 100%;
-    overflow-y: auto;
-  }
-
-  .pad-col > [role='tabpanel'] {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .pad-sheet {
-    flex: 1;
-    min-height: 0;
-    /* 16 rows at full size. */
-    max-height: calc(16 * 2.65rem);
-  }
-
-  .pad {
-    height: 100%;
-  }
-
-  .pad-col .pad th,
-  .pad-col .pad td {
-    padding-block: 0.05rem;
-  }
+  grid-template-columns: minmax(24rem, 1.18fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
 }
 
 .tray-col {
-  position: sticky;
-  top: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Whose turn it is, in their tint, with the rolls left as dots; large on your own turn. */
+.turn-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 3.4rem;
+  padding: 0 0.25rem;
+}
+
+.turn-face {
+  position: relative;
+  display: flex;
+}
+
+/* Your turn: a ring in your tint ripples out from your face, twice. */
+.turn-pulse {
+  position: absolute;
+  inset: -0.2rem;
+  border-radius: 50%;
+  border: 3px solid var(--hue);
+  pointer-events: none;
+  opacity: 0;
+  animation: turn-pulse 900ms var(--ease-out) 2;
+}
+
+@keyframes turn-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+.turn-banner .avatar {
+  width: 2.9rem;
+  height: 2.9rem;
 }
 
 .status {
+  position: relative;
+  flex: 1;
   margin: 0;
   font-size: 1.25rem;
   font-weight: 800;
 }
 
-.status.yours {
+.status-text {
+  display: inline-block;
+}
+
+.status.headline {
   font-family: var(--display);
-  font-size: 1.6rem;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 2.8vw, 2.6rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.turn-banner.yours .status.headline {
+  font-size: clamp(2.2rem, 3.4vw, 3.2rem);
+}
+
+@media (max-width: 30rem) {
+  .status.headline,
+  .turn-banner.yours .status.headline {
+    font-size: 1.9rem;
+  }
+}
+
+.turn-banner.yours .status:not(.headline) {
+  font-weight: 800;
+}
+
+.roll-dots {
+  display: flex;
+  gap: 0.4rem;
+  padding-right: 0.25rem;
+}
+
+.roll-dots span {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  border: 2.5px solid var(--hue);
+  transition:
+    background-color var(--dur) var(--ease-out),
+    transform var(--dur-slow) var(--ease-spring);
+}
+
+.roll-dots span.on {
+  background: var(--hue);
+  transform: scale(1.12);
+}
+
+.tray-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  /* Room for the biggest set of actions, so the tray never jumps. */
+  min-height: 8.8rem;
+}
+
+.action-row {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 34rem;
+}
+
+.action-row .primary.big {
+  flex: 1;
+}
+
+.roll-again {
+  flex: none;
+  min-height: 3.6rem;
+  padding: 0 1.3rem;
+}
+
+.confirm-zero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 34rem;
+  padding: 0.7rem;
+  border: 1.5px solid var(--strong);
+  border-radius: var(--radius-lg);
+  background: var(--pad);
+  box-shadow: var(--shadow-md);
+}
+
+.confirm-zero p {
+  margin: 0;
+  font-weight: 800;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.confirm-buttons .primary {
+  padding: 0 1.4rem;
 }
 
 .hint {
@@ -478,24 +997,20 @@ input:not([type]) {
   text-align: center;
 }
 
-/* The dice stage: a canvas with tap targets laid over each die. */
+/* The dice stage: the 3D tray, with a button laid over each die. */
 .dice-stage {
   position: relative;
   width: 100%;
   aspect-ratio: var(--stage-aspect, 1.4);
-  border-radius: var(--radius);
-  background: var(--bg);
-  overflow: visible;
-}
-
-/* Tap targets wait for the scene to place them. */
-.dice-stage.loading .die-buttons {
-  visibility: hidden;
 }
 
 .dice-stage .scene {
   position: absolute;
   inset: 0;
+}
+
+.dice-stage .scene canvas {
+  display: block;
 }
 
 .dice-stage:not(.flat) .die-buttons .die {
@@ -505,54 +1020,42 @@ input:not([type]) {
   padding: 0;
   min-width: 48px;
   min-height: 48px;
-  border: 3px solid transparent;
+  border: 0;
   border-radius: 1rem;
   background: transparent;
-}
-
-.dice-stage:not(.flat) .die-buttons .die:hover:not(:disabled) {
-  border-color: var(--accent);
 }
 
 .dice-stage:not(.flat) .die-buttons .die:active:not(:disabled) {
   transform: translate(-50%, -50%) scale(0.95);
 }
 
-.dice-stage:not(.flat) .die-buttons .die:disabled {
-  border-color: transparent;
+.dice-stage:not(.flat) .die-buttons .die:focus-visible {
+  outline-offset: 2px;
 }
 
 /* Flat dice: no WebGL, or while the 3D scene loads. */
-.dice-stage.flat {
-  display: flex;
-  align-items: stretch;
-  aspect-ratio: auto;
-  min-height: 11rem;
-  background: var(--pad);
-  border: 2px solid var(--rule);
-}
-
 .dice-stage.flat .die-buttons {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.75rem;
   align-content: center;
   justify-content: center;
-  width: 100%;
   padding: 0.75rem;
 }
 
 .dice-stage.flat .die {
-  width: 4rem;
-  height: 4rem;
+  width: 4.5rem;
+  height: 4.5rem;
   padding: 0;
   border: 0;
-  border-radius: 1rem;
+  border-radius: 1.1rem;
   background: transparent;
 }
 
 .dice-stage.flat .die.held {
-  outline: 4px solid var(--butter);
+  outline: 4px solid var(--option);
   outline-offset: 3px;
 }
 
@@ -561,17 +1064,17 @@ input:not([type]) {
   grid-template: repeat(3, 1fr) / repeat(3, 1fr);
   width: 100%;
   height: 100%;
-  padding: 0.6rem;
-  border-radius: 1rem;
+  padding: 0.7rem;
+  border-radius: 1.1rem;
   background: var(--die);
   box-shadow:
-    inset 0 -0.35rem 0 rgb(0 0 0 / 0.12),
-    inset 0.3rem 0.3rem 0.6rem rgb(255 255 255 / 0.45);
+    inset 0 -0.25rem 0 color-mix(in srgb, var(--pip) 12%, transparent),
+    var(--shadow-sm);
 }
 
 .flat-die .pip {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.75rem;
+  height: 0.75rem;
   margin: auto;
   border-radius: 50%;
   background: var(--pip);
@@ -581,8 +1084,8 @@ input:not([type]) {
   visibility: hidden;
 }
 
-/* A Yatzy: sprinkles in the roller's flavor. */
-.sprinkles {
+/* A Yatzy: the word over the tray, with a burst of sparkles. */
+.celebrate {
   position: absolute;
   inset: 0;
   display: grid;
@@ -590,97 +1093,61 @@ input:not([type]) {
   pointer-events: none;
 }
 
-.sprinkles span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0.7rem;
-  height: 0.28rem;
-  border-radius: 999px;
-  opacity: 0;
-  animation: sprinkle 1100ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
-}
-
 .celebrate-word {
   font-family: var(--display);
-  font-size: 3rem;
-  color: var(--text);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 4.2rem;
+  color: var(--on-band);
   text-shadow:
-    0 0 0.4rem var(--bg),
-    0 0 1rem var(--bg);
-  animation: celebrate 1200ms cubic-bezier(0.2, 0.9, 0.3, 1.3) forwards;
-}
-
-@keyframes sprinkle {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(var(--rot)) scale(0.4);
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 2.5rem))
-      rotate(calc(var(--rot) + 220deg)) scale(1);
-  }
+    0 0.1rem 0.4rem color-mix(in srgb, var(--shadow) 55%, transparent),
+    0 0 1.4rem color-mix(in srgb, var(--shadow) 50%, transparent);
+  animation: celebrate 1400ms var(--ease-out) forwards;
 }
 
 @keyframes celebrate {
   0% {
     opacity: 0;
-    transform: scale(0.4) rotate(-8deg);
+    filter: blur(6px);
+    transform: scale(0.92);
   }
   25% {
     opacity: 1;
-    transform: scale(1.1) rotate(3deg);
+    filter: blur(0);
+    transform: scale(1);
   }
   80% {
     opacity: 1;
-    transform: scale(1) rotate(0);
   }
   100% {
     opacity: 0;
-    transform: scale(1.05);
+    filter: blur(3px);
+    transform: scale(1.03);
   }
-}
-
-.write-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-  padding: 0.75rem;
-  background: var(--pad);
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
-}
-
-.write-bar p {
-  margin: 0;
-  flex-basis: 100%;
-  font-weight: 800;
-}
-
-.undo {
-  align-self: flex-start;
 }
 
 /* ---------- The score pad: one ruled sheet ---------- */
 
+/* The pad: one soft raised sheet. */
 .pad-col {
   background: var(--pad);
-  border: 2px solid var(--rule);
-  border-radius: 1.25rem;
-  padding: 0.9rem 1rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
+  padding: 0.85rem 1rem 1rem;
   overflow-x: auto;
+  min-width: 0;
 }
 
 .pad-title {
-  margin: 0.5rem 0 0.25rem;
+  margin: 0.55rem 0 0.15rem;
+  font-size: 1.0625rem;
+  color: var(--quiet);
 }
 
-/* One tab per player across the top of the sheet; the chosen one wears their candy. */
+/* One tab per player across the top of the sheet; the chosen one wears their tint. */
 .pad-tabs {
   display: flex;
   gap: 0.4rem;
@@ -689,26 +1156,26 @@ input:not([type]) {
   margin: -0.4rem -0.5rem 0;
   padding: 0.4rem 0.5rem 0;
   /* The rule is drawn inside the row so the chosen tab can cover it without overflowing. */
-  box-shadow: inset 0 -2px 0 var(--rule);
+  box-shadow: inset 0 -1px 0 var(--rule);
 }
 
 .pad-tab {
   position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   flex: none;
   min-height: 3.4rem;
   padding: 0.3rem 1rem 0.3rem 0.45rem;
-  border: 2px solid transparent;
-  border-bottom: 0;
-  border-radius: 1rem 1rem 0 0;
+  border: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: transparent;
   color: var(--text);
 }
 
 .pad-tab:hover:not(:disabled) {
-  border-color: var(--rule);
+  background: color-mix(in srgb, var(--rule) 30%, transparent);
 }
 
 .pad-tab:active:not(:disabled) {
@@ -716,10 +1183,21 @@ input:not([type]) {
 }
 
 .pad-tab[aria-selected='true'] {
-  border-color: var(--candy);
-  background: var(--pad);
-  box-shadow: inset 0 0.3rem 0 var(--candy);
-  font-weight: 800;
+  font-weight: 700;
+}
+
+.pad-tab[aria-selected='true']:hover {
+  background: transparent;
+}
+
+.tab-active {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1.5px solid var(--hue);
+  border-bottom: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--hue) 12%, var(--pad));
 }
 
 .pad-tab:focus-visible {
@@ -737,16 +1215,16 @@ input:not([type]) {
 
 .tab-tag {
   padding: 0 0.5rem;
-  border: 2px solid var(--rule);
+  border: 1.5px solid var(--rule);
   border-radius: 999px;
   color: var(--quiet);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .tab-tag.up {
-  border-color: var(--butter);
-  background: var(--butter);
-  color: var(--on-fill);
+  border-color: var(--strong);
+  background: var(--strong);
+  color: var(--on-strong);
 }
 
 /* Someone else just wrote on their pad: their dot pulses on the tab, then fades. */
@@ -758,7 +1236,7 @@ input:not([type]) {
   height: 1rem;
   border-radius: 50%;
   border: 2px solid var(--pad);
-  background: var(--candy);
+  background: var(--hue);
   opacity: 0;
   pointer-events: none;
   animation: tab-pulse 2400ms ease-out forwards;
@@ -800,8 +1278,8 @@ input:not([type]) {
   margin: 0.2rem 0 0.6rem;
   padding: 0.5rem 0.6rem 0.5rem 1rem;
   border-radius: var(--radius);
-  background: var(--butter);
-  color: var(--on-fill);
+  background: var(--option);
+  color: var(--on-option);
 }
 
 .look-only p {
@@ -825,15 +1303,16 @@ input:not([type]) {
 .pad td {
   /* A minimum: on a laptop the rows stretch to fill the sheet. */
   height: var(--row, 2.65rem);
-  padding: 0.15rem 0.5rem;
+  padding: 0.15rem 0.45rem;
+  line-height: 1.2;
   border-bottom: 1px solid var(--rule);
 }
 
 .pad thead th {
   text-align: center;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--quiet);
-  border-bottom: 2px solid var(--rule);
+  border-bottom: 1.5px solid var(--rule);
   white-space: nowrap;
 }
 
@@ -845,6 +1324,38 @@ input:not([type]) {
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.box-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.die-glyph {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.die-glyph rect {
+  fill: var(--pad);
+  stroke: var(--quiet);
+  stroke-width: 2;
+}
+
+.die-glyph circle {
+  fill: var(--strong);
+}
+
+.box-points {
+  color: var(--quiet);
+  font-weight: 700;
+}
+
+.box-points::before {
+  content: '·';
+  margin-right: 0.4rem;
 }
 
 .pad td {
@@ -864,73 +1375,142 @@ input:not([type]) {
 .pad .filled .score {
   display: inline-block;
   font-weight: 800;
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   color: var(--ink);
 }
 
-.pop-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 2.4rem;
-  height: 2.4rem;
-  margin: -1.2rem 0 0 -1.2rem;
-  border-radius: 50%;
-  border: 3px solid var(--candy);
-  opacity: 0;
-  animation: ring 520ms ease-out;
-  pointer-events: none;
+/*
+ * A new score comes into focus: it starts blurred in the option color while a
+ * lavender wash spreads behind it, then settles into the player's ink.
+ */
+.pad .filled .score.developing {
+  animation: develop 1300ms var(--ease-develop) both;
 }
 
-@keyframes ring {
+@keyframes develop {
   0% {
-    opacity: 0.9;
-    transform: scale(0.3);
+    color: var(--option);
+    filter: blur(2.5px);
+    opacity: 0.35;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    color: var(--ink);
+    filter: blur(0);
+  }
+}
+
+.wash {
+  position: absolute;
+  inset: 0.2rem 0.25rem;
+  border-radius: 0.55rem;
+  background: var(--strong);
+  opacity: 0;
+  pointer-events: none;
+  animation: wash 1300ms var(--ease-develop);
+}
+
+@keyframes wash {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.35);
+  }
+  22% {
+    opacity: 0.2;
   }
   100% {
     opacity: 0;
-    transform: scale(1.6);
+    transform: scaleX(1);
   }
 }
 
-/* Previews read as previews by shape: deep mauve in a dashed outline. */
+/*
+ * Previews read as previews by shape. A box this roll scores in is a soft
+ * filled chip; a zero is a small dashed chip; the one you picked is lavender,
+ * with a check.
+ */
 .preview {
-  width: 100%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  text-align: center;
-  min-height: calc(var(--row, 2.65rem) - 0.35rem);
+  gap: 0.35rem;
+  min-width: 2.75rem;
+  min-height: min(1.75rem, calc(var(--row, 2.65rem) - 0.3rem));
+  padding: 0 0.6rem;
   line-height: 1.1;
-  border: 2px dashed var(--quiet);
-  border-radius: 0.7rem;
+  border: 1.5px dashed var(--quiet);
+  border-radius: 0.55rem;
   background: transparent;
   color: var(--quiet);
-  font-weight: 800;
-  font-size: 1.15rem;
+  font-weight: 700;
+  font-size: 1.0625rem;
   font-variant-numeric: tabular-nums;
+  animation: preview-in var(--dur) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 14ms);
+}
+
+@keyframes preview-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.3rem) scale(0.85);
+  }
+}
+
+.preview:hover:not(:disabled) {
+  border-style: solid;
 }
 
 .preview:disabled {
   border-color: transparent;
 }
 
-/* Boxes this roll would score points in stand out; zeros stay quiet. */
+.preview.scores,
+.preview.chosen {
+  width: 100%;
+  min-height: calc(var(--row, 2.65rem) - 0.4rem);
+  font-size: 1.15rem;
+}
+
 .preview.scores {
-  border-style: solid;
-  border-color: var(--mint);
-  background: var(--mint);
-  color: var(--on-fill);
+  border: 0;
+  background: var(--option);
+  color: var(--on-option);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--shadow) 10%, transparent);
+}
+
+.preview.scores:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--shadow) 10%, transparent),
+    var(--shadow-sm);
+}
+
+.preview.chosen,
+.preview.chosen:hover:not(:disabled) {
+  border: 0;
+  background: var(--strong);
+  color: var(--on-strong);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--strong) 25%, transparent);
+  transform: none;
+  animation: chosen 1.8s var(--ease-in-out) infinite;
+}
+
+@keyframes chosen {
+  50% {
+    box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--strong) 12%, transparent);
+  }
 }
 
 .bonus-tag {
-  padding: 0 0.4rem;
+  padding: 0 0.45rem;
   border-radius: 999px;
-  background: var(--butter);
-  color: var(--on-fill);
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 1.0625rem;
   font-weight: 800;
+  display: inline-block;
 }
 
 .upper-row th,
@@ -941,8 +1521,32 @@ input:not([type]) {
 
 /* Ones to Sixes so far against the bonus line, until it turns into the +35 tag. */
 .upper-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   color: var(--quiet);
   font-weight: 700;
+}
+
+.upper-progress .meter {
+  width: 3rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--rule);
+  overflow: hidden;
+}
+
+.upper-progress .meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--strong);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+
+/* Narrow columns at a big table: just the count. */
+.pad-col:has(thead th:nth-child(5)) .upper-progress .meter {
+  display: none;
 }
 
 .bonus-boxes {
@@ -955,37 +1559,142 @@ input:not([type]) {
   place-items: center;
   width: 1.6rem;
   height: 1.6rem;
-  border: 2px solid var(--rule);
-  border-radius: 0.45rem;
+  border: 1.5px solid var(--rule);
+  border-radius: 0.4rem;
   font-weight: 800;
 }
 
 .bonus-boxes span.earned {
-  border-color: var(--mint);
-  background: var(--mint);
-  color: var(--on-fill);
+  border-color: var(--strong);
+  background: var(--strong);
+  color: var(--on-strong);
 }
 
-.preview.chosen {
-  border-style: solid;
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
+/* ---------- Laptop: everything in one window ---------- */
+
+@media (min-width: 52.01rem) {
+  .screen.game {
+    height: 100dvh;
+  }
+
+  .table-layout {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .tray-col {
+    min-height: 0;
+  }
+
+  /* The tray takes whatever height is left; the scene fits itself to it. */
+  .dice-stage {
+    flex: 1;
+    min-height: 12rem;
+    aspect-ratio: auto;
+  }
+
+  /*
+   * The whole pad fits the window, so you never scroll to see a box: rows
+   * share whatever height is left, and stop growing at their full size.
+   */
+  .pad-col {
+    /* Roughly the window less the chrome, over 16 rows; previews track it. */
+    --row: clamp(1.75rem, calc((100dvh - 14rem) / 16), 2.65rem);
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .pad-col > [role='tabpanel'] {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pad-sheet {
+    flex: 1;
+    min-height: 0;
+    /* 16 rows at full size. */
+    max-height: calc(16 * 2.65rem);
+  }
+
+  .pad {
+    height: 100%;
+  }
+
+  .pad-col .pad th,
+  .pad-col .pad td {
+    padding-block: 0.05rem;
+  }
+}
+
+@media (max-width: 52rem) {
+  .table-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- Results ---------- */
 
-.results .wordmark {
-  text-align: center;
-  margin-top: 1.5rem;
+.results {
+  max-width: 42rem;
 }
 
+/* The winner on a plum plate, with a burst of sparkles as the name arrives. */
+.winner-banner {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 11rem;
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--band);
+  color: var(--on-band);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.winner-banner .wordmark {
+  position: relative;
+  text-align: center;
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  color: var(--on-band);
+  text-wrap: balance;
+}
+
+/* The standings: rows ruled on one sheet, totals large in each player's ink. */
 .standings {
   list-style: none;
-  padding: 0;
+  padding: 0.25rem 0;
   margin: 0;
   display: grid;
-  gap: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--pad);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent),
+    0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent);
+}
+
+.standings .standing {
+  padding: 0.9rem 1.4rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.standings .standing + .standing {
+  border-top: 1px solid var(--rule);
+}
+
+.standing.top .standing-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 1.15;
 }
 
 .row {
@@ -994,10 +1703,39 @@ input:not([type]) {
   gap: 0.9rem;
 }
 
+.rank {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.standing.top .rank {
+  background: var(--strong);
+  color: var(--on-strong);
+}
+
+.standing-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.standing.top .total {
+  font-size: 3rem;
+}
+
 .standings .total {
   margin-left: auto;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
 
 .bonus-note {
@@ -1019,11 +1757,60 @@ input:not([type]) {
   text-align: right;
 }
 
+.relaunch {
+  text-align: center;
+}
+
+/* Sparkles: small four-point stars that burst out, twinkle and fade. Decoration only. */
+.sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sparkles span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--size);
+  height: var(--size);
+  background: var(--color);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+  animation: sparkle 1500ms var(--ease-out) forwards;
+}
+
+/* They fly by moving left and top: offsets are shares of the box, not of the star. */
+@keyframes sparkle {
+  0% {
+    opacity: 0;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+    left: calc(50% + var(--dx));
+    top: calc(50% + var(--dy));
+    transform: translate(-50%, -50%) scale(1) rotate(45deg);
+  }
+  100% {
+    opacity: 0;
+    left: calc(50% + var(--dx) * 1.15);
+    top: calc(50% + var(--dy) * 1.15 + 1rem);
+    transform: translate(-50%, -50%) scale(0.6) rotate(90deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
     transition-duration: 1ms !important;
   }
 
@@ -1031,6 +1818,10 @@ input:not([type]) {
   .tab-dot {
     animation-name: tab-fade;
     animation-duration: 2400ms !important;
+  }
+
+  .preview.chosen {
+    animation: none;
   }
 }
 

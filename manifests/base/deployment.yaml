@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rollhouse
+  name: ooglyboogly
 spec:
   replicas: 1
   # SQLite on a ReadWriteOnce volume allows exactly one writer.
@@ -33,7 +33,7 @@ spec:
             - /data/rollhouse.db
           envFrom:
             - configMapRef:
-                name: rollhouse-config
+                name: ooglyboogly-config
           resources:
             requests:
               cpu: 10m
@@ -65,7 +65,7 @@ spec:
           args: [replicate]
           envFrom:
             - configMapRef:
-                name: rollhouse-config
+                name: ooglyboogly-config
           resources:
             requests:
               cpu: 10m
@@ -90,17 +90,17 @@ spec:
             - name: tmp
               mountPath: /tmp
       containers:
-        - name: rollhouse
+        - name: ooglyboogly
           image: ghcr.io/madisonewebb/rollhouse
           ports:
             - name: http
               containerPort: 8080
           envFrom:
             - configMapRef:
-                name: rollhouse-config
+                name: ooglyboogly-config
             # DISCORD_CLIENT_SECRET and SESSION_SECRET (overlays/<env>/app-sealedsecret.yaml).
             - secretRef:
-                name: rollhouse-app
+                name: ooglyboogly-app
           env:
             - name: PORT
               value: '8080'
@@ -136,13 +136,13 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: rollhouse-data
+            claimName: ooglyboogly-data
         - name: tmp
           emptyDir: {}
         - name: litestream-config
           configMap:
-            name: rollhouse-litestream
+            name: ooglyboogly-litestream
         - name: litestream-ssh
           secret:
-            secretName: rollhouse-litestream
+            secretName: ooglyboogly-litestream
             defaultMode: 0440

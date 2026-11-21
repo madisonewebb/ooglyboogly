@@ -9,14 +9,15 @@ export interface Prefs {
   textSize: TextSize;
   /** Rolls play at about half length. */
   fastRolls: boolean;
-  sound: boolean;
+  /** 0 (muted) to 1. */
+  volume: number;
 }
 
 export const DEFAULT_PREFS: Prefs = {
   theme: 'system',
   textSize: 'regular',
   fastRolls: false,
-  sound: true,
+  volume: 0.8,
 };
 
 /** Root font size per text size; everything is sized in rem from here. */
@@ -32,7 +33,13 @@ const KEY = 'rollhouse:prefs';
 export function loadPrefs(): Prefs {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<Prefs>) };
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<Prefs> & { sound?: boolean };
+      // Before the volume slider, sound was on or off.
+      if (saved.volume === undefined && saved.sound === false) saved.volume = 0;
+      delete saved.sound;
+      return { ...DEFAULT_PREFS, ...saved };
+    }
   } catch {
     /* fall through to the defaults */
   }
@@ -96,7 +103,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute(
         'content',
-        getComputedStyle(html).getPropertyValue('--bg').trim() || '#FFEEF3',
+        getComputedStyle(html).getPropertyValue('--band').trim() || '#2A2440',
       );
   }, [theme, prefs.textSize]);
 

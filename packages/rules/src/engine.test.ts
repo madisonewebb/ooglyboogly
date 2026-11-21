@@ -173,12 +173,12 @@ describe('scoring', () => {
     expect(g.players[0]!.cards[0]!.yatzyBonuses).toBe(1);
   });
 
-  it('stops adding bonuses after three on a card', () => {
+  it('keeps adding bonuses past three on a card', () => {
     let g = play(newGame(), roll(0, '55555'), score(0, 'yatzy'));
     for (const box of ['fives', 'chance', 'fullHouse', 'smallStraight'] as const) {
       g = play(g, roll(0, '55555'), score(0, box));
     }
-    expect(g.players[0]!.cards[0]!.yatzyBonuses).toBe(3);
+    expect(g.players[0]!.cards[0]!.yatzyBonuses).toBe(4);
     expect(g.players[0]!.cards[0]!.boxes).toMatchObject({
       chance: 25,
       fullHouse: 25,

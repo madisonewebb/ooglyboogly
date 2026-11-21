@@ -1,0 +1,1132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-20T22:38:48+00:00",
+  "title": "Design System: Rollhouse",
+  "extensions": {
+    "colorMeta": {
+      "lavender-mist": {
+        "role": "neutral",
+        "displayName": "Lavender Mist",
+        "canonical": "#F6F3FB",
+        "oklch": "oklch(96.9% 0.011 303.1)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252526",
+          "#434145",
+          "#626065",
+          "#838188",
+          "#A6A4A9",
+          "#CAC8CC",
+          "#EFEEF0"
+        ]
+      },
+      "white-sheet": {
+        "role": "neutral",
+        "displayName": "White Sheet",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#A5A5A5",
+          "#C9C9C9",
+          "#EEEEEE"
+        ]
+      },
+      "lilac-rule": {
+        "role": "neutral",
+        "displayName": "Lilac Rule",
+        "canonical": "#E1DAF0",
+        "oklch": "oklch(90.1% 0.031 300.3)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#262429",
+          "#43404A",
+          "#635E6D",
+          "#857F92",
+          "#A7A2B2",
+          "#CAC7D2",
+          "#EFEDF4"
+        ]
+      },
+      "plum-ink": {
+        "role": "neutral",
+        "displayName": "Plum Ink",
+        "canonical": "#2A2440",
+        "oklch": "oklch(28.1% 0.051 292.7)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#25242D",
+          "#423F50",
+          "#625D76",
+          "#837D9E",
+          "#A5A1BC",
+          "#C9C6DA",
+          "#EEEDF8"
+        ]
+      },
+      "dusk-quiet": {
+        "role": "neutral",
+        "displayName": "Dusk Quiet",
+        "canonical": "#675F84",
+        "oklch": "oklch(50.8% 0.059 294.1)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#25232E",
+          "#433F52",
+          "#625C79",
+          "#847CA2",
+          "#A6A0BF",
+          "#CAC6DC",
+          "#EFECFA"
+        ]
+      },
+      "peony-pink": {
+        "role": "primary",
+        "displayName": "Peony Pink",
+        "canonical": "#E88DB2",
+        "oklch": "oklch(74.9% 0.118 354.4)",
+        "tonalRamp": [
+          "#0F090B",
+          "#341D26",
+          "#5D3244",
+          "#8A4964",
+          "#B86387",
+          "#D28EA8",
+          "#EBB9CC",
+          "#FFE5F0"
+        ]
+      },
+      "violet": {
+        "role": "secondary",
+        "displayName": "Violet",
+        "canonical": "#6B55C8",
+        "oklch": "oklch(53.2% 0.171 287.9)",
+        "tonalRamp": [
+          "#0B0A12",
+          "#24203F",
+          "#403871",
+          "#5F51A8",
+          "#806DE0",
+          "#A197F1",
+          "#C6C0FF",
+          "#ECEAFF"
+        ]
+      },
+      "lilac-wash": {
+        "role": "secondary",
+        "displayName": "Lilac Wash",
+        "canonical": "#ECE6FA",
+        "oklch": "oklch(93.6% 0.027 299.5)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#262429",
+          "#434049",
+          "#635F6C",
+          "#847F91",
+          "#A7A2B1",
+          "#CAC7D1",
+          "#EFEDF3"
+        ]
+      },
+      "moonlight": {
+        "role": "neutral",
+        "displayName": "Moonlight",
+        "canonical": "#F4F1FA",
+        "oklch": "oklch(96.3% 0.012 301.3)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#252527",
+          "#424145",
+          "#626066",
+          "#838189",
+          "#A6A4AA",
+          "#CAC8CD",
+          "#EFEEF1"
+        ]
+      },
+      "iris-pip": {
+        "role": "neutral",
+        "displayName": "Iris Pip",
+        "canonical": "#5B47B0",
+        "oklch": "oklch(47.7% 0.160 287.5)",
+        "tonalRamp": [
+          "#0B0A12",
+          "#24203D",
+          "#40396E",
+          "#5F53A4",
+          "#7F6FDA",
+          "#A198ED",
+          "#C5C1FE",
+          "#ECEAFF"
+        ]
+      },
+      "plum-shadow": {
+        "role": "neutral",
+        "displayName": "Plum Shadow",
+        "canonical": "#1A1530",
+        "oklch": "oklch(21.8% 0.052 289.9)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#25242D",
+          "#414051",
+          "#605E77",
+          "#817E9F",
+          "#A4A1BD",
+          "#C8C7DA",
+          "#EEEDF9"
+        ]
+      },
+      "evening-plum": {
+        "role": "neutral",
+        "displayName": "Evening Plum",
+        "canonical": "#1D1A2C",
+        "oklch": "oklch(23.0% 0.035 291.1)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#25242A",
+          "#42404C",
+          "#615F70",
+          "#827F96",
+          "#A5A3B5",
+          "#C9C7D4",
+          "#EEEDF5"
+        ]
+      },
+      "evening-sheet": {
+        "role": "neutral",
+        "displayName": "Evening Sheet",
+        "canonical": "#29253D",
+        "oklch": "oklch(28.1% 0.044 290.9)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#25242C",
+          "#42404E",
+          "#615E74",
+          "#827E9B",
+          "#A5A2B9",
+          "#C9C7D8",
+          "#EEEDF7"
+        ]
+      },
+      "evening-rule": {
+        "role": "neutral",
+        "displayName": "Evening Rule",
+        "canonical": "#3D3757",
+        "oklch": "oklch(35.8% 0.055 292.0)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#25242D",
+          "#423F51",
+          "#615D78",
+          "#837DA1",
+          "#A5A1BE",
+          "#C9C6DB",
+          "#EEEDF9"
+        ]
+      },
+      "evening-quiet": {
+        "role": "neutral",
+        "displayName": "Evening Quiet",
+        "canonical": "#B6AED0",
+        "oklch": "oklch(76.9% 0.049 296.0)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#26242C",
+          "#433F4F",
+          "#635D75",
+          "#847D9C",
+          "#A7A1BA",
+          "#CAC6D8",
+          "#EFEDF7"
+        ]
+      },
+      "evening-pink": {
+        "role": "primary",
+        "displayName": "Evening Pink",
+        "canonical": "#F2A7C3",
+        "oklch": "oklch(80.8% 0.095 355.3)",
+        "tonalRamp": [
+          "#0F0A0B",
+          "#311F26",
+          "#583643",
+          "#834F63",
+          "#AF6A85",
+          "#CA93A7",
+          "#E5BCCA",
+          "#FFE7EF"
+        ]
+      },
+      "evening-lavender": {
+        "role": "secondary",
+        "displayName": "Evening Lavender",
+        "canonical": "#BBA9F3",
+        "oklch": "oklch(77.7% 0.105 295.0)",
+        "tonalRamp": [
+          "#0B0A0F",
+          "#262234",
+          "#443B5E",
+          "#65578B",
+          "#8775BA",
+          "#A89BD2",
+          "#CBC3EA",
+          "#EFEBFF"
+        ]
+      },
+      "evening-wash": {
+        "role": "secondary",
+        "displayName": "Evening Wash",
+        "canonical": "#463F6C",
+        "oklch": "oklch(39.6% 0.075 289.7)",
+        "tonalRamp": [
+          "#0B0B0E",
+          "#252330",
+          "#413E57",
+          "#605C81",
+          "#817BAC",
+          "#A4A0C7",
+          "#C8C5E2",
+          "#EEECFD"
+        ]
+      },
+      "evening-band": {
+        "role": "neutral",
+        "displayName": "Evening Band",
+        "canonical": "#151321",
+        "oklch": "oklch(19.6% 0.028 290.1)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#252429",
+          "#42414A",
+          "#615F6D",
+          "#828092",
+          "#A4A3B2",
+          "#C9C8D2",
+          "#EEEEF4"
+        ]
+      },
+      "evening-die": {
+        "role": "neutral",
+        "displayName": "Evening Die",
+        "canonical": "#F7F5FB",
+        "oklch": "oklch(97.3% 0.008 301.4)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252526",
+          "#424144",
+          "#626064",
+          "#838186",
+          "#A5A4A8",
+          "#C9C8CB",
+          "#EFEEF0"
+        ]
+      },
+      "evening-shadow": {
+        "role": "neutral",
+        "displayName": "Evening Shadow",
+        "canonical": "#05040A",
+        "oklch": "oklch(11.4% 0.017 293.0)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#252528",
+          "#424147",
+          "#616069",
+          "#82818C",
+          "#A5A4AD",
+          "#C9C8CF",
+          "#EEEEF2"
+        ]
+      },
+      "felt-day": {
+        "role": "neutral",
+        "displayName": "Felt Day",
+        "canonical": "#5D4FA3",
+        "oklch": "oklch(48.4% 0.131 288.2)",
+        "tonalRamp": [
+          "#0B0A10",
+          "#242139",
+          "#403B66",
+          "#5F5698",
+          "#8074CA",
+          "#A29BE0",
+          "#C6C3F4",
+          "#EDEBFF"
+        ]
+      },
+      "rim-day": {
+        "role": "neutral",
+        "displayName": "Rim Day",
+        "canonical": "#E6E0F3",
+        "oklch": "oklch(91.7% 0.026 300.3)",
+        "tonalRamp": [
+          "#0B0B0C",
+          "#262429",
+          "#434049",
+          "#635F6C",
+          "#847F90",
+          "#A7A2B0",
+          "#CAC7D1",
+          "#EFEDF3"
+        ]
+      },
+      "shelf-day": {
+        "role": "neutral",
+        "displayName": "Shelf Day",
+        "canonical": "#D9D0EE",
+        "oklch": "oklch(87.4% 0.042 299.2)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#26242B",
+          "#443F4D",
+          "#645D72",
+          "#857D98",
+          "#A7A1B7",
+          "#CBC6D6",
+          "#EFEDF6"
+        ]
+      },
+      "seat-day": {
+        "role": "neutral",
+        "displayName": "Seat Day",
+        "canonical": "#C5B9E4",
+        "oklch": "oklch(81.0% 0.061 297.8)",
+        "tonalRamp": [
+          "#0B0B0D",
+          "#26232E",
+          "#443E52",
+          "#645C79",
+          "#867BA2",
+          "#A89FBF",
+          "#CBC5DC",
+          "#F0ECFA"
+        ]
+      },
+      "felt-evening": {
+        "role": "neutral",
+        "displayName": "Felt Evening",
+        "canonical": "#3A3263",
+        "oklch": "oklch(35.1% 0.083 288.9)",
+        "tonalRamp": [
+          "#0B0B0F",
+          "#242332",
+          "#413E59",
+          "#605B84",
+          "#807AB1",
+          "#A39FCB",
+          "#C7C5E5",
+          "#EDECFF"
+        ]
+      },
+      "rim-evening": {
+        "role": "neutral",
+        "displayName": "Rim Evening",
+        "canonical": "#4E4774",
+        "oklch": "oklch(42.5% 0.074 290.0)",
+        "tonalRamp": [
+          "#0B0B0E",
+          "#252330",
+          "#413E57",
+          "#605C80",
+          "#817BAB",
+          "#A4A0C6",
+          "#C8C5E1",
+          "#EEECFD"
+        ]
+      },
+      "shelf-evening": {
+        "role": "neutral",
+        "displayName": "Shelf Evening",
+        "canonical": "#453E69",
+        "oklch": "oklch(39.1% 0.072 290.1)",
+        "tonalRamp": [
+          "#0B0B0E",
+          "#252330",
+          "#413E56",
+          "#615C7F",
+          "#817BAA",
+          "#A4A0C5",
+          "#C8C5E1",
+          "#EEECFC"
+        ]
+      },
+      "seat-evening": {
+        "role": "neutral",
+        "displayName": "Seat Evening",
+        "canonical": "#38325A",
+        "oklch": "oklch(34.3% 0.069 289.1)",
+        "tonalRamp": [
+          "#0B0B0E",
+          "#252330",
+          "#413F55",
+          "#605C7E",
+          "#817CA9",
+          "#A3A0C4",
+          "#C8C6E0",
+          "#EEEDFC"
+        ]
+      },
+      "tint-rose": {
+        "role": "tertiary",
+        "displayName": "Tint Rose",
+        "canonical": "#E0708F",
+        "oklch": "oklch(68.3% 0.142 4.0)",
+        "tonalRamp": [
+          "#10090A",
+          "#381B22",
+          "#642E3D",
+          "#94425A",
+          "#C55978",
+          "#DE889D",
+          "#F4B5C3",
+          "#FFE3EB"
+        ]
+      },
+      "tint-rose-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Rose Ink",
+        "canonical": "#CD2C59",
+        "oklch": "oklch(56.2% 0.196 10.6)",
+        "tonalRamp": [
+          "#120809",
+          "#3E151D",
+          "#702334",
+          "#A52F4C",
+          "#DC3F66",
+          "#F27A8F",
+          "#FFADB9",
+          "#FFDFE5"
+        ]
+      },
+      "tint-rose-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Rose Ink Evening",
+        "canonical": "#E0708F",
+        "oklch": "oklch(68.3% 0.142 4.0)",
+        "tonalRamp": [
+          "#10090A",
+          "#381B22",
+          "#642E3D",
+          "#94425A",
+          "#C55978",
+          "#DE889D",
+          "#F4B5C3",
+          "#FFE3EB"
+        ]
+      },
+      "tint-seaglass": {
+        "role": "tertiary",
+        "displayName": "Tint Seaglass",
+        "canonical": "#4FBFAE",
+        "oklch": "oklch(73.6% 0.105 181.7)",
+        "tonalRamp": [
+          "#070D0B",
+          "#0F2B26",
+          "#144C44",
+          "#167064",
+          "#1B9687",
+          "#69B6A8",
+          "#A2D6CC",
+          "#D9F6F0"
+        ]
+      },
+      "tint-seaglass-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Seaglass Ink",
+        "canonical": "#2C796E",
+        "oklch": "oklch(52.6% 0.077 182.2)",
+        "tonalRamp": [
+          "#080C0B",
+          "#172926",
+          "#264A44",
+          "#356D64",
+          "#489186",
+          "#7CB1A8",
+          "#ADD2CB",
+          "#DFF4F0"
+        ]
+      },
+      "tint-seaglass-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Seaglass Ink Evening",
+        "canonical": "#4FBFAE",
+        "oklch": "oklch(73.6% 0.105 181.7)",
+        "tonalRamp": [
+          "#070D0B",
+          "#0F2B26",
+          "#144C44",
+          "#167064",
+          "#1B9687",
+          "#69B6A8",
+          "#A2D6CC",
+          "#D9F6F0"
+        ]
+      },
+      "tint-marigold": {
+        "role": "tertiary",
+        "displayName": "Tint Marigold",
+        "canonical": "#EE9A2E",
+        "oklch": "oklch(75.4% 0.152 67.3)",
+        "tonalRamp": [
+          "#0F0A05",
+          "#352006",
+          "#5F3800",
+          "#8D5100",
+          "#BC6D00",
+          "#D59650",
+          "#EDC091",
+          "#FFE9CF"
+        ]
+      },
+      "tint-marigold-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Marigold Ink",
+        "canonical": "#9F5F0D",
+        "oklch": "oklch(54.6% 0.119 64.4)",
+        "tonalRamp": [
+          "#0F0A06",
+          "#322110",
+          "#5A3A18",
+          "#855520",
+          "#B2722B",
+          "#CD9968",
+          "#E7C19F",
+          "#FFEAD6"
+        ]
+      },
+      "tint-marigold-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Marigold Ink Evening",
+        "canonical": "#EE9A2E",
+        "oklch": "oklch(75.4% 0.152 67.3)",
+        "tonalRamp": [
+          "#0F0A05",
+          "#352006",
+          "#5F3800",
+          "#8D5100",
+          "#BC6D00",
+          "#D59650",
+          "#EDC091",
+          "#FFE9CF"
+        ]
+      },
+      "tint-fern": {
+        "role": "tertiary",
+        "displayName": "Tint Fern",
+        "canonical": "#62AE5C",
+        "oklch": "oklch(68.2% 0.139 142.4)",
+        "tonalRamp": [
+          "#080D07",
+          "#172B16",
+          "#284C25",
+          "#387034",
+          "#4C9647",
+          "#7EB679",
+          "#AED6AA",
+          "#DFF6DD"
+        ]
+      },
+      "tint-fern-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Fern Ink",
+        "canonical": "#427B3D",
+        "oklch": "oklch(52.8% 0.111 142.2)",
+        "tonalRamp": [
+          "#090C08",
+          "#1B2A19",
+          "#2E4A2B",
+          "#436E3F",
+          "#5A9355",
+          "#87B382",
+          "#B4D3B0",
+          "#E2F5E0"
+        ]
+      },
+      "tint-fern-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Fern Ink Evening",
+        "canonical": "#62AE5C",
+        "oklch": "oklch(68.2% 0.139 142.4)",
+        "tonalRamp": [
+          "#080D07",
+          "#172B16",
+          "#284C25",
+          "#387034",
+          "#4C9647",
+          "#7EB679",
+          "#AED6AA",
+          "#DFF6DD"
+        ]
+      },
+      "tint-heather": {
+        "role": "tertiary",
+        "displayName": "Tint Heather",
+        "canonical": "#A07BD6",
+        "oklch": "oklch(65.6% 0.136 301.5)",
+        "tonalRamp": [
+          "#0C0A10",
+          "#292037",
+          "#493764",
+          "#6C5194",
+          "#916DC5",
+          "#B096DB",
+          "#D1BFF1",
+          "#F3E9FF"
+        ]
+      },
+      "tint-heather-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Heather Ink",
+        "canonical": "#8454CA",
+        "oklch": "oklch(55.6% 0.177 299.4)",
+        "tonalRamp": [
+          "#0C0912",
+          "#291E3D",
+          "#4A346E",
+          "#6E4BA4",
+          "#9364DA",
+          "#B191ED",
+          "#D2BCFE",
+          "#F3E7FF"
+        ]
+      },
+      "tint-heather-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Heather Ink Evening",
+        "canonical": "#A37FD7",
+        "oklch": "oklch(66.6% 0.132 301.8)",
+        "tonalRamp": [
+          "#0C0A10",
+          "#292037",
+          "#493862",
+          "#6C5292",
+          "#916EC3",
+          "#B096D9",
+          "#D1BFF0",
+          "#F3E9FF"
+        ]
+      },
+      "tint-primrose": {
+        "role": "tertiary",
+        "displayName": "Tint Primrose",
+        "canonical": "#E6CB45",
+        "oklch": "oklch(84.2% 0.150 97.5)",
+        "tonalRamp": [
+          "#0D0B05",
+          "#2C2504",
+          "#4E4100",
+          "#746000",
+          "#9B8100",
+          "#B9A54A",
+          "#D7CA8E",
+          "#F6EFCD"
+        ]
+      },
+      "tint-primrose-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Primrose Ink",
+        "canonical": "#7E6C11",
+        "oklch": "oklch(53.3% 0.104 96.8)",
+        "tonalRamp": [
+          "#0C0B07",
+          "#2A2511",
+          "#4B421B",
+          "#6F6124",
+          "#948231",
+          "#B3A66B",
+          "#D3CAA1",
+          "#F4EFD8"
+        ]
+      },
+      "tint-primrose-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Primrose Ink Evening",
+        "canonical": "#E6CB45",
+        "oklch": "oklch(84.2% 0.150 97.5)",
+        "tonalRamp": [
+          "#0D0B05",
+          "#2C2504",
+          "#4E4100",
+          "#746000",
+          "#9B8100",
+          "#B9A54A",
+          "#D7CA8E",
+          "#F6EFCD"
+        ]
+      },
+      "tint-poppy": {
+        "role": "tertiary",
+        "displayName": "Tint Poppy",
+        "canonical": "#E8613C",
+        "oklch": "oklch(65.8% 0.176 36.1)",
+        "tonalRamp": [
+          "#120906",
+          "#3C1910",
+          "#6C2B19",
+          "#A03D21",
+          "#D5522D",
+          "#EC8568",
+          "#FFB49F",
+          "#FFE3D6"
+        ]
+      },
+      "tint-poppy-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Poppy Ink",
+        "canonical": "#C83D18",
+        "oklch": "oklch(56.0% 0.182 35.0)",
+        "tonalRamp": [
+          "#120806",
+          "#3D1910",
+          "#6D2919",
+          "#A23A21",
+          "#D84E2C",
+          "#EE8368",
+          "#FFB39F",
+          "#FFE2D6"
+        ]
+      },
+      "tint-poppy-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Poppy Ink Evening",
+        "canonical": "#E96A47",
+        "oklch": "oklch(67.3% 0.166 36.3)",
+        "tonalRamp": [
+          "#110907",
+          "#3B1A11",
+          "#6A2D1C",
+          "#9D4026",
+          "#D15634",
+          "#E8876C",
+          "#FCB5A2",
+          "#FFE4D8"
+        ]
+      },
+      "tint-walnut": {
+        "role": "tertiary",
+        "displayName": "Tint Walnut",
+        "canonical": "#A0714E",
+        "oklch": "oklch(58.9% 0.077 57.2)",
+        "tonalRamp": [
+          "#0E0A08",
+          "#2F2219",
+          "#543C2B",
+          "#7C583E",
+          "#A57754",
+          "#C29C81",
+          "#DFC3B0",
+          "#FBEBE0"
+        ]
+      },
+      "tint-walnut-ink": {
+        "role": "tertiary",
+        "displayName": "Tint Walnut Ink",
+        "canonical": "#8F6546",
+        "oklch": "oklch(54.3% 0.070 57.0)",
+        "tonalRamp": [
+          "#0E0A08",
+          "#2E221A",
+          "#523D2D",
+          "#7A5942",
+          "#A37859",
+          "#C09D85",
+          "#DDC4B2",
+          "#FAEBE1"
+        ]
+      },
+      "tint-walnut-ink-evening": {
+        "role": "tertiary",
+        "displayName": "Tint Walnut Ink Evening",
+        "canonical": "#B48765",
+        "oklch": "oklch(65.9% 0.073 58.1)",
+        "tonalRamp": [
+          "#0E0A08",
+          "#2E2219",
+          "#533D2C",
+          "#7A5940",
+          "#A37857",
+          "#C09D83",
+          "#DDC4B1",
+          "#FAEBE1"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Wordmark on the brand plate, the winner's name; the Yatzy word at 4.2rem."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Whose turn it is; grows on your own turn."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Lobby section heads, the top standing's name, the small wordmark on the band."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text; 17px floor."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, pad row names, seat names."
+      },
+      "action": {
+        "displayName": "Action",
+        "purpose": "The big primary action in the tray."
+      },
+      "score": {
+        "displayName": "Score",
+        "purpose": "Numbers written on the pad in the player's ink, tabular figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sheet",
+        "value": "0 1px 2px color-mix(in srgb, var(--shadow) 6%, transparent), 0 14px 34px -14px color-mix(in srgb, var(--shadow) 28%, transparent)",
+        "purpose": "The pad, lobby sheet, standings and sign-in form."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 2px color-mix(in srgb, var(--shadow) 10%, transparent), 0 3px 10px -2px color-mix(in srgb, var(--shadow) 8%, transparent)",
+        "purpose": "Corner icons, flat dice, a hovered score option."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 2px 4px color-mix(in srgb, var(--shadow) 7%, transparent), 0 12px 30px -8px color-mix(in srgb, var(--shadow) 18%, transparent)",
+        "purpose": "Brand and winner plates, banner, confirm card."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 4px 10px color-mix(in srgb, var(--shadow) 10%, transparent), 0 24px 50px -12px color-mix(in srgb, var(--shadow) 30%, transparent)",
+        "purpose": "The settings popover."
+      },
+      {
+        "name": "primary-lift",
+        "value": "0 0.1rem 0.25rem color-mix(in srgb, var(--shadow) 16%, transparent), 0 0.55rem 1.2rem -0.45rem color-mix(in srgb, var(--shadow) 45%, transparent)",
+        "purpose": "The pink primary action at rest; deepens on hover, shrinks when pressed or busy."
+      },
+      {
+        "name": "focus-ring",
+        "value": "outline: 3px solid var(--strong); outline-offset: 3px",
+        "purpose": "Every focusable element."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default for state changes and things arriving."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "Loops: waiting dots, the chosen chip breathing."
+      },
+      {
+        "name": "ease-spring",
+        "value": "linear(0, 0.2 7%, 0.62 17%, 0.95 28%, 1.08 38%, 1.09 44%, 1.04 54%, 1 66%, 0.99 78%, 1)",
+        "purpose": "Gentle overshoot for things that pop into place (roll dots)."
+      },
+      {
+        "name": "ease-develop",
+        "value": "cubic-bezier(0.45, 0, 0.25, 1)",
+        "purpose": "A new score coming into focus (1300ms)."
+      },
+      {
+        "name": "dur-fast",
+        "value": "140ms",
+        "purpose": "Hover, press, border changes."
+      },
+      {
+        "name": "dur",
+        "value": "220ms",
+        "purpose": "Preview chips arriving."
+      },
+      {
+        "name": "dur-slow",
+        "value": "380ms",
+        "purpose": "Theme change, meter fill, roll dots."
+      },
+      {
+        "name": "spring-pop",
+        "value": "spring stiffness 520 damping 18",
+        "purpose": "Scores, chips, the winner's name (motion/react)."
+      },
+      {
+        "name": "spring-snappy",
+        "value": "spring stiffness 520 damping 36",
+        "purpose": "Panels, tabs, toggles, the segmented pill."
+      },
+      {
+        "name": "spring-soft",
+        "value": "spring stiffness 260 damping 30",
+        "purpose": "Whole screens and layout shifts."
+      },
+      {
+        "name": "sparkle",
+        "value": "1500ms ease-out, four-point stars",
+        "purpose": "Yatzy and winner bursts; decoration only."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all animations 1ms; score cue stays as a fade",
+        "purpose": "Honors prefers-reduced-motion and the in-app setting."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "30rem"
+      },
+      {
+        "name": "lobby-stack",
+        "value": "48rem"
+      },
+      {
+        "name": "table-one-window",
+        "value": "52rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary-big",
+      "description": "The one next action (Roll, Write it in, Start game): pink pill on a darker lip that lifts on hover and presses down.",
+      "html": "<button class=\"ds-btn-primary\">Roll</button>",
+      "css": ".ds-btn-primary{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:3.6rem;min-width:16rem;padding:0 1.1rem;font-size:1.25rem;font-weight:800;border-radius:999px;background:var(--accent);color:var(--on-accent);border:1.5px solid color-mix(in oklab,var(--accent),#000 22%);box-shadow:0 .1rem .25rem color-mix(in srgb,var(--shadow) 16%,transparent),0 .55rem 1.2rem -.45rem color-mix(in srgb,var(--shadow) 45%,transparent);cursor:pointer;transition:transform 140ms cubic-bezier(.22,1,.36,1),box-shadow 140ms cubic-bezier(.22,1,.36,1)}.ds-btn-primary:hover{transform:translateY(-1px);box-shadow:0 .15rem .35rem color-mix(in srgb,var(--shadow) 18%,transparent),0 .8rem 1.5rem -.5rem color-mix(in srgb,var(--shadow) 50%,transparent)}.ds-btn-primary:active{transform:translateY(.12rem);box-shadow:0 .05rem .15rem color-mix(in srgb,var(--shadow) 20%,transparent),0 .25rem .6rem -.3rem color-mix(in srgb,var(--shadow) 35%,transparent)}.ds-btn-primary:focus-visible{outline:3px solid var(--strong);outline-offset:3px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action: sheet-colored pill with a rule border that turns violet on hover.",
+      "html": "<button class=\"ds-btn-secondary\">Roll again</button>",
+      "css": ".ds-btn-secondary{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 1.1rem;font-size:1.0625rem;font-weight:600;border:1.5px solid var(--rule);border-radius:999px;background:var(--pad);color:var(--text);cursor:pointer;transition:border-color 140ms cubic-bezier(.22,1,.36,1),transform 140ms cubic-bezier(.22,1,.36,1)}.ds-btn-secondary:hover{border-color:var(--strong)}.ds-btn-secondary:active{transform:translateY(1px)}.ds-btn-secondary:focus-visible{outline:3px solid var(--strong);outline-offset:3px}"
+    },
+    {
+      "name": "Segmented Choice",
+      "kind": "chip",
+      "refersTo": "button-segment-selected",
+      "description": "A row of pills; the selected one is violet.",
+      "html": "<div class=\"ds-seg\"><button aria-pressed=\"true\">Take turns</button><button aria-pressed=\"false\">Everyone at once</button></div>",
+      "css": ".ds-seg{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;display:flex;gap:.5rem}.ds-seg button{font:inherit;min-height:48px;padding:0 1.1rem;font-size:1.0625rem;font-weight:600;border:1.5px solid var(--rule);border-radius:999px;background:var(--pad);color:var(--text);cursor:pointer}.ds-seg button:hover{border-color:var(--strong)}.ds-seg button[aria-pressed=true]{background:var(--strong);border-color:var(--strong);color:var(--on-strong);font-weight:700}.ds-seg button:focus-visible{outline:3px solid var(--strong);outline-offset:3px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Name entry on sign-in: sheet fill, rule border, violet on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Your name\">",
+      "css": ".ds-input{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;min-height:48px;font-size:1.0625rem;border:1.5px solid var(--rule);border-radius:.75rem;background:var(--pad);color:var(--text);padding:0 .85rem;caret-color:var(--strong);transition:border-color 140ms cubic-bezier(.22,1,.36,1)}.ds-input:focus{border-color:var(--strong)}.ds-input:focus-visible{outline:3px solid var(--strong);outline-offset:3px}"
+    },
+    {
+      "name": "Brand Plate",
+      "kind": "card",
+      "refersTo": "band-plate",
+      "description": "The wordmark in Quicksand on a plum plate, used on sign-in and the lobby; the winner plate shares it.",
+      "html": "<div class=\"ds-plate\"><span class=\"ds-plate-name\">Rollhouse</span><span class=\"ds-plate-tag\">Five dice, one table.</span></div>",
+      "css": ".ds-plate{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;display:grid;justify-items:center;padding:1.1rem 2rem 1.2rem;border-radius:1.2rem;background:var(--band);color:var(--on-band);box-shadow:0 2px 4px color-mix(in srgb,var(--shadow) 7%,transparent),0 12px 30px -8px color-mix(in srgb,var(--shadow) 18%,transparent)}.ds-plate-name{font-family:Quicksand,'Atkinson Hyperlegible Next',system-ui,sans-serif;font-weight:700;font-size:3rem;line-height:1.05;letter-spacing:-.01em}.ds-plate-tag{font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;font-weight:700;font-size:1.0625rem;color:color-mix(in srgb,var(--on-band) 82%,transparent)}"
+    },
+    {
+      "name": "Score Pad Rows",
+      "kind": "custom",
+      "refersTo": "score-option",
+      "description": "Rows on the ruled pad: a score you could take (lilac chip), a zero (dashed chip), the box you picked (violet), and a written score in the player's ink.",
+      "html": "<table class=\"ds-pad\"><tr><th>Ones</th><td><button class=\"ds-chosen\">2</button></td></tr><tr><th>Fours</th><td><button class=\"ds-option\">4</button></td></tr><tr><th>Twos</th><td><button class=\"ds-zero\">0</button></td></tr><tr><th>Chance</th><td><span class=\"ds-score\">16</span></td></tr></table>",
+      "css": ".ds-pad{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;width:20rem;border-collapse:collapse;background:var(--pad);color:var(--text);font-size:1.0625rem;font-variant-numeric:tabular-nums}.ds-pad th,.ds-pad td{height:2.65rem;padding:.15rem .45rem;border-bottom:1px solid var(--rule)}.ds-pad th{text-align:left;font-weight:600}.ds-pad td{text-align:center}.ds-pad button{font:inherit;font-weight:700;cursor:pointer}.ds-option,.ds-chosen{width:100%;min-height:2.25rem;font-size:1.15rem;border:0;border-radius:.55rem}.ds-option{background:var(--option);color:var(--on-option);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--shadow) 10%,transparent);transition:transform 140ms}.ds-option:hover{transform:translateY(-1px)}.ds-chosen{background:var(--strong);color:var(--on-strong);box-shadow:0 0 0 .2rem color-mix(in srgb,var(--strong) 25%,transparent)}.ds-zero{min-width:2.75rem;min-height:1.75rem;border:1.5px dashed var(--quiet);border-radius:.55rem;background:transparent;color:var(--quiet)}.ds-zero:hover{border-style:solid}.ds-pad button:focus-visible{outline:3px solid var(--strong);outline-offset:3px}.ds-score{font-weight:800;font-size:1.35rem;color:#CD2C59}"
+    },
+    {
+      "name": "Pad Tabs",
+      "kind": "nav",
+      "refersTo": "tab-tag-up",
+      "description": "One tab per player across the pad; the selected tab wears the player's hue; the 'Up' tag marks whose turn it is.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button role=\"tab\" aria-selected=\"false\"><span class=\"ds-av\" style=\"--hue:#E0708F\"></span>Madi</button><button role=\"tab\" aria-selected=\"true\" style=\"--hue:#A07BD6\"><span class=\"ds-av\"></span>You <span class=\"ds-up\">Up</span></button></div>",
+      "css": ".ds-tabs{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;display:flex;gap:.4rem;padding:.4rem .5rem 0;background:var(--pad);box-shadow:inset 0 -1px 0 var(--rule)}.ds-tabs button{font:inherit;display:flex;align-items:center;gap:.6rem;min-height:3.4rem;padding:.3rem 1rem .3rem .45rem;border:1.5px solid transparent;border-bottom:0;border-radius:.9rem .9rem 0 0;background:transparent;color:var(--text);font-weight:600;cursor:pointer}.ds-tabs button:hover{background:color-mix(in srgb,var(--rule) 30%,transparent)}.ds-tabs button[aria-selected=true]{font-weight:700;border-color:var(--hue);background:color-mix(in srgb,var(--hue) 12%,var(--pad))}.ds-tabs button:focus-visible{outline:3px solid var(--strong);outline-offset:-3px}.ds-av{width:2.5rem;height:2.5rem;border-radius:50%;border:3px solid var(--hue,#A07BD6);background:var(--hue,#A07BD6)}.ds-up{padding:0 .5rem;border-radius:999px;background:var(--strong);color:var(--on-strong)}"
+    },
+    {
+      "name": "Tint Picker",
+      "kind": "chip",
+      "refersTo": "button-secondary",
+      "description": "Player color choice in the lobby: pill with a hue swatch; the chosen one rings in its hue.",
+      "html": "<div class=\"ds-tints\"><button class=\"ds-tint\" aria-pressed=\"true\" style=\"--hue:#E0708F\"><span></span>Rose</button><button class=\"ds-tint\" aria-pressed=\"false\" style=\"--hue:#4FBFAE\"><span></span>Sea glass</button></div>",
+      "css": ".ds-tints{--bg:#F6F3FB;--pad:#FFFFFF;--rule:#E1DAF0;--text:#2A2440;--quiet:#675F84;--accent:#E88DB2;--on-accent:#2A2440;--strong:#6B55C8;--on-strong:#FFFFFF;--option:#ECE6FA;--on-option:#2A2440;--band:#2A2440;--on-band:#F4F1FA;--shadow:#1A1530;font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;display:grid;grid-template-columns:repeat(2,11rem);gap:.5rem}.ds-tint{font:inherit;display:flex;align-items:center;gap:.65rem;min-height:48px;padding:0 .9rem 0 .35rem;border:1.5px solid var(--rule);border-radius:999px;background:var(--pad);color:var(--text);font-weight:600;cursor:pointer}.ds-tint span{width:2.25rem;height:2.25rem;border-radius:50%;background:var(--hue)}.ds-tint:hover{border-color:var(--strong)}.ds-tint[aria-pressed=true]{border-color:var(--hue);box-shadow:0 0 0 3px color-mix(in srgb,var(--hue) 28%,transparent);font-weight:700}.ds-tint:focus-visible{outline:3px solid var(--strong);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lavender Evening Table",
+    "overview": "A family game night after dark, set on a clean, modern table: dark plum around the edges, lavender for whatever is yours or chosen, and one soft pink for the thing to do next. The evening theme is the main scene, because the game is mostly played on evening voice calls. The daytime theme keeps the same structure with pale lavender ground and plum ink, so both themes share one set of roles and differ only in values.\n\nThe screens are calm and roomy: soft raised white or plum sheets, pill-shaped controls, a plum band or plate holding the wordmark, and a 3D tray of porcelain dice with violet pips on violet felt. Femininity comes from the palette and the rounded display face, kept light: no ornament, no texture on the interface, no illustration. The playful moments are short and earned, like the sparkle burst on a Yatzy and on the winner's name, the pulse of your tint when your turn arrives, and a new score coming into focus on the pad.\n\nRejected looks the owner confirmed on rendered screens: the earlier candy-shop identity (candy names, colors, motifs) and the \"Sunprint\" cyanotype that followed it (script typefaces, paper or print textures, anything old-fashioned). A personal aquarium, shown as a realistic glass tank beside the dice, is planned and has no visual system yet.",
+    "keyCharacteristics": [
+      "Plum, lavender and one pink, in a daytime and an evening theme generated from one palette file.",
+      "Quicksand 700 for names and big moments; Atkinson Hyperlegible Next for everything you read and tap.",
+      "Soft raised sheets with plum-tinted shadows; pills for every button.",
+      "Each player owns a flower or leaf tint that rings their face, colors their cup and writes their numbers.",
+      "Short, earned celebrations; reduced motion turns all of them into fades."
+    ],
+    "rules": [
+      {
+        "name": "The One Pink Rule",
+        "body": "Pink marks the single thing to do next, plus the earned +35 bonus. If two pink buttons are on screen, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lavender Is Yours Rule",
+        "body": "Violet and lavender mean chosen, selected, focused or earned. They never decorate.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Palette File Rule",
+        "body": "Every color comes from `theme/palette.ts` as a generated CSS variable, and every text pairing there passes 4.5:1 in a test. A new color is added there with its pairing, never typed into a component.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink, Not Hue Rule",
+        "body": "A player's hue never sets text on the pad; only its per-theme ink does.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rounded Moments Rule",
+        "body": "Quicksand is for names and moments: wordmark, section heads, the turn headline, the winner, the Yatzy word. Controls, tables and numbers stay in Atkinson.",
+        "section": "typography"
+      },
+      {
+        "name": "The 17px Floor Rule",
+        "body": "No text is smaller than 1.0625rem, and every size is in rem so the Text size setting scales the whole UI.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tinted Shadow Rule",
+        "body": "Every shadow mixes `--shadow` at low opacity with negative spread. No pure black, no hard offset shadows.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Press-Down Rule",
+        "body": "The primary action sits on a darker lip (accent mixed 22% toward black) and presses down 0.12rem when pressed or while the dice roll; it jiggles while you hold to shake.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every color from `theme/palette.ts` and add any new text pairing to its contrast test (4.5:1).",
+      "Do keep pink to the single next action and the earned bonus; use violet/lavender for chosen, selected, focused and earned.",
+      "Do write player numbers in their tint's ink for the current theme, and use the hue only for rings, swatches, dots, tab washes and the cup.",
+      "Do set names, headlines and big moments in Quicksand 700, and everything you read or tap in Atkinson Hyperlegible Next.",
+      "Do make every button a pill at least 48px tall, and every surface a soft sheet with the plum-tinted shadow.",
+      "Do keep sizes in rem with nothing under 1.0625rem.",
+      "Do design both themes at once, evening first, and judge a new look on rendered screens.",
+      "Do keep celebrations short and decorative, and make reduced motion turn them into fades."
+    ],
+    "donts": [
+      "Don't use script typefaces, paper or print textures, or anything old-fashioned.",
+      "Don't bring back candy names, candy colors or candy motifs; femininity stays a light touch.",
+      "Don't type a hex value into a component or stylesheet.",
+      "Don't use a player's hue as text on the pad.",
+      "Don't use pure-black or hard offset shadows.",
+      "Don't make it look like a casino or a slot machine; it is a calm evening game among family."
+    ]
+  }
+}

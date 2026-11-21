@@ -1,6 +1,8 @@
 /**
- * The Rollhouse palette, from the plan's visual direction. This file is the only
- * place colors are defined: the CSS variables are generated from it, and
+ * The Rollhouse palette: Lavender evening. Dark plum with lavender and a pink
+ * accent for the evening calls it's mostly played on, and a lavender daytime
+ * version. Each player writes in a flower or leaf color. This file is the
+ * only place colors are defined: the CSS variables are generated from it, and
  * palette.test.ts checks every text pairing against WCAG AA (4.5:1).
  */
 
@@ -14,90 +16,136 @@ export interface Tokens {
   /** Pad rules and borders (decoration only, never text). */
   rule: string;
   text: string;
-  /** Quiet text and score previews. */
+  /** Quiet text. */
   quiet: string;
-  /** Roll button, your turn, the chosen box. */
+  /** Pink, the one accent: Roll, Write it in, Sit down, Start. */
   accent: string;
   /** Text on the accent. */
   onAccent: string;
-  /** Held dice shelf and new records (fills only). */
-  butter: string;
-  /** Success and bonuses (fills only). */
-  mint: string;
-  /** Text on butter and mint fills. */
-  onFill: string;
-  /** Jelly dice body. */
+  /** Lavender: the box you picked, earned bonuses, whose turn it is, selections, focus rings. */
+  strong: string;
+  /** Text on a strong fill. */
+  onStrong: string;
+  /** A soft fill for a score you could take. */
+  option: string;
+  /** Text on an option fill. */
+  onOption: string;
+  /** The band across the top of the table, and the name plates. */
+  band: string;
+  /** Text on the band. */
+  onBand: string;
+  /** Dice. */
   die: string;
   /** Pips. */
   pip: string;
+  /** Shadows under raised things (decoration only). */
+  shadow: string;
 }
 
 export const THEMES: Record<ThemeName, Tokens> = {
-  // Strawberry Milk
+  // Daytime: pale lavender and white, plum ink.
   light: {
-    bg: '#FFEEF3',
+    bg: '#F6F3FB',
     pad: '#FFFFFF',
-    rule: '#DCCBF5',
-    text: '#3A1E40',
-    quiet: '#806386',
-    accent: '#FF4F9A',
-    onAccent: '#3A1E40',
-    butter: '#FFD25E',
-    mint: '#3FC6A4',
-    onFill: '#3A1E40',
-    die: '#FF4F9A',
-    pip: '#FFFFFF',
+    rule: '#E1DAF0',
+    text: '#2A2440',
+    quiet: '#675F84',
+    accent: '#E88DB2',
+    onAccent: '#2A2440',
+    strong: '#6B55C8',
+    onStrong: '#FFFFFF',
+    option: '#ECE6FA',
+    onOption: '#2A2440',
+    band: '#2A2440',
+    onBand: '#F4F1FA',
+    die: '#FFFFFF',
+    pip: '#5B47B0',
+    shadow: '#1A1530',
   },
-  // Midnight Plum
+  // Evening: dark plum, lavender and pink.
   dark: {
-    bg: '#22122A',
-    pad: '#321D3D',
-    rule: '#57406A',
-    text: '#FBEFF5',
-    quiet: '#A891B3',
-    accent: '#FF72B0',
-    onAccent: '#22122A',
-    butter: '#FFD86E',
-    mint: '#5FE0BE',
-    onFill: '#22122A',
-    die: '#FF4F9A',
-    pip: '#FFFFFF',
+    bg: '#1D1A2C',
+    pad: '#29253D',
+    rule: '#3D3757',
+    text: '#F4F1FA',
+    quiet: '#B6AED0',
+    accent: '#F2A7C3',
+    onAccent: '#1D1A2C',
+    strong: '#BBA9F3',
+    onStrong: '#1D1A2C',
+    option: '#463F6C',
+    onOption: '#F4F1FA',
+    band: '#151321',
+    onBand: '#F4F1FA',
+    die: '#F7F5FB',
+    pip: '#5B47B0',
+    shadow: '#05040A',
   },
 };
 
-export const FLAVOR_IDS = [
-  'raspberry',
-  'blueberry',
-  'tangerine',
-  'spearmint',
-  'grape',
-  'lemon',
-  'cottonCandy',
-  'cocoa',
-] as const;
-export type FlavorId = (typeof FLAVOR_IDS)[number];
+/** The 3D tray's materials: decoration only, never behind text. */
+export interface SceneTokens {
+  /** The felt the dice land on. */
+  felt: string;
+  /** The lacquered frame around the felt. */
+  rim: string;
+  /** The held-dice shelf and its five seats. */
+  shelf: string;
+  seat: string;
+  /** Inside the cup. */
+  cupInside: string;
+  /** How bright the studio light is. */
+  light: number;
+}
 
-export interface Flavor {
+export const SCENE: Record<ThemeName, SceneTokens> = {
+  light: {
+    felt: '#5D4FA3',
+    rim: '#E6E0F3',
+    shelf: '#D9D0EE',
+    seat: '#C5B9E4',
+    cupInside: '#2A2440',
+    light: 1,
+  },
+  dark: {
+    felt: '#3A3263',
+    rim: '#4E4774',
+    shelf: '#453E69',
+    seat: '#38325A',
+    cupInside: '#151321',
+    light: 0.9,
+  },
+};
+
+export const TINT_IDS = [
+  'rose',
+  'seaglass',
+  'marigold',
+  'fern',
+  'heather',
+  'primrose',
+  'poppy',
+  'walnut',
+] as const;
+export type TintId = (typeof TINT_IDS)[number];
+
+export interface Tint {
   name: string;
-  /** Avatar chips, score pops, sprinkles. Never text on the pad. */
-  candy: string;
+  /** Avatar rings, swatches and the dice cup. Never text on the pad. */
+  hue: string;
   /** Numbers written on the pad, per theme. */
   ink: Record<ThemeName, string>;
 }
 
-export const FLAVORS: Record<FlavorId, Flavor> = {
-  raspberry: { name: 'Raspberry', candy: '#E0337A', ink: { light: '#CE1F67', dark: '#E65D95' } },
-  blueberry: { name: 'Blueberry', candy: '#4A6CF7', ink: { light: '#365CF6', dark: '#6A86F8' } },
-  tangerine: { name: 'Tangerine', candy: '#F28C28', ink: { light: '#A7580A', dark: '#F28C28' } },
-  spearmint: { name: 'Spearmint', candy: '#1FA884', ink: { light: '#177B60', dark: '#1FA884' } },
-  grape: { name: 'Grape', candy: '#8B4FD8', ink: { light: '#884BD7', dark: '#A779E1' } },
-  lemon: { name: 'Lemon', candy: '#D4A106', ink: { light: '#876704', dark: '#D4A106' } },
-  cottonCandy: {
-    name: 'Cotton Candy',
-    candy: '#2BB3E6',
-    ink: { light: '#127499', dark: '#2BB3E6' },
-  },
-  cocoa: { name: 'Cocoa', candy: '#8B5A3C', ink: { light: '#8B5A3C', dark: '#BA815F' } },
+export const TINTS: Record<TintId, Tint> = {
+  rose: { name: 'Rose', hue: '#E0708F', ink: { light: '#CD2C59', dark: '#E0708F' } },
+  seaglass: { name: 'Sea glass', hue: '#4FBFAE', ink: { light: '#2C796E', dark: '#4FBFAE' } },
+  marigold: { name: 'Marigold', hue: '#EE9A2E', ink: { light: '#9F5F0D', dark: '#EE9A2E' } },
+  fern: { name: 'Fern', hue: '#62AE5C', ink: { light: '#427B3D', dark: '#62AE5C' } },
+  heather: { name: 'Heather', hue: '#A07BD6', ink: { light: '#8454CA', dark: '#A37FD7' } },
+  primrose: { name: 'Primrose', hue: '#E6CB45', ink: { light: '#7E6C11', dark: '#E6CB45' } },
+  poppy: { name: 'Poppy', hue: '#E8613C', ink: { light: '#C83D18', dark: '#E96A47' } },
+  walnut: { name: 'Walnut', hue: '#A0714E', ink: { light: '#8F6546', dark: '#B48765' } },
 };
 
 /** Every [text, surface] pairing the UI uses. All must reach 4.5:1. */
@@ -107,8 +155,9 @@ export const TEXT_PAIRS: [keyof Tokens, keyof Tokens][] = [
   ['quiet', 'bg'],
   ['quiet', 'pad'],
   ['onAccent', 'accent'],
-  ['onFill', 'butter'],
-  ['onFill', 'mint'],
+  ['onStrong', 'strong'],
+  ['onOption', 'option'],
+  ['onBand', 'band'],
 ];
 
 function channel(c: number): number {

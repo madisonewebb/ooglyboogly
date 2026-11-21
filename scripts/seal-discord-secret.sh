@@ -7,8 +7,8 @@
 set -euo pipefail
 
 case "${1:-}" in
-  staging) ns=rollhouse-staging app='Rollhouse Dev' ;;
-  prod) ns=rollhouse app='Rollhouse' ;;
+  staging) ns=ooglyboogly-staging app='Oogly Boogly Dev' ;;
+  prod) ns=ooglyboogly app='Oogly Boogly' ;;
   *)
     echo "usage: $0 staging|prod" >&2
     exit 2
@@ -25,7 +25,7 @@ echo
 [[ -n $secret ]] || { echo "no secret entered, nothing changed" >&2; exit 1; }
 
 printf 'DISCORD_CLIENT_SECRET=%s\n' "$secret" \
-  | kubectl create secret generic rollhouse-app -n "$ns" --from-env-file=/dev/stdin \
+  | kubectl create secret generic ooglyboogly-app -n "$ns" --from-env-file=/dev/stdin \
       --dry-run=client -o yaml \
   | kubeseal --kubeconfig /etc/rancher/k3s/k3s.yaml \
       --controller-namespace kube-system --controller-name sealed-secrets-controller \
