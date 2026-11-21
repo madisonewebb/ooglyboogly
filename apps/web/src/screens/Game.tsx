@@ -390,7 +390,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
         : myTray && dice && !rolling && rollsLeft === 0
           ? 'Pick a box on your pad.'
           : canRoll
-            ? 'Hold Roll to shake the cup longer.'
+            ? 'Hold Roll to stir the cauldron longer.'
             : '';
 
   return (

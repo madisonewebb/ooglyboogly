@@ -5,7 +5,7 @@
  * Poses come from timeline.ts each frame and are written straight onto the
  * meshes, so a roll never re-renders React. The look: glazed porcelain dice
  * with violet pips under a soft studio light, on violet felt in a lacquered
- * frame, with the held-dice shelf behind and a cup glazed in the roller's tint.
+ * frame, with the held-dice shelf behind and a cauldron in the roller's tint.
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
@@ -457,16 +457,27 @@ function Cup({ roll, hue, scene }: Pick<SceneProps, 'roll' | 'hue' | 'scene'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const shell = useMemo(() => {
+    // A round-bellied cauldron: the belly bulges past the mouth, which stays
+    // at CUP's radius and height so the recorded pour still lines up.
     const h = CUP.height / 2;
-    const profile = [
+    const k = CUP.height / 1.8;
+    const profile = new THREE.SplineCurve([
       new THREE.Vector2(0.001, -h),
-      new THREE.Vector2(CUP.radiusBottom - 0.06, -h),
-      new THREE.Vector2(CUP.radiusBottom, -h + 0.06),
+      new THREE.Vector2(0.7, -h),
+      new THREE.Vector2(1.05, -0.62 * k),
+      new THREE.Vector2(1.3, -0.1 * k),
+      new THREE.Vector2(1.31, 0.22 * k),
+      new THREE.Vector2(1.25, 0.62 * k),
       new THREE.Vector2(CUP.radiusTop, h),
-    ];
+    ]).getPoints(28);
     return new THREE.LatheGeometry(profile, 56);
   }, []);
   const materials = useRef<THREE.Material[]>([]);
+  // Cast iron: the roller's tint darkened, for the rim, handles and feet.
+  const iron = useMemo(
+    () => new THREE.Color(hue).lerp(new THREE.Color(scene.cupInside), 0.7),
+    [hue, scene.cupInside],
+  );
   const inside = useMemo(
     () => new THREE.Color(hue).lerp(new THREE.Color(scene.cupInside), 0.55),
     [hue, scene.cupInside],
@@ -511,10 +522,29 @@ function Cup({ roll, hue, scene }: Pick<SceneProps, 'roll' | 'hue' | 'scene'>) {
       <mesh geometry={shell}>
         <meshStandardMaterial ref={keep} color={inside} roughness={0.7} side={THREE.BackSide} />
       </mesh>
-      <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[CUP.radiusTop, 0.09, 14, 56]} />
-        <Gloss ref={keep} color={scene.rim} roughness={0.25} />
+      <mesh position={[0, CUP.height / 2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[CUP.radiusTop, 0.12, 14, 56]} />
+        <Gloss ref={keep} color={iron} roughness={0.45} />
       </mesh>
+      {[-1, 1].map((side) => (
+        <mesh key={side} position={[side * 1.38, 0.08, 0]} castShadow>
+          <torusGeometry args={[0.2, 0.065, 10, 24]} />
+          <Gloss ref={keep} color={iron} roughness={0.45} />
+        </mesh>
+      ))}
+      {[0, 1, 2].map((i) => {
+        const a = (i / 3) * Math.PI * 2 + Math.PI / 2;
+        return (
+          <mesh
+            key={i}
+            position={[Math.cos(a) * 0.62, -CUP.height / 2 - 0.02, Math.sin(a) * 0.62]}
+            castShadow
+          >
+            <sphereGeometry args={[0.17, 14, 10]} />
+            <Gloss ref={keep} color={iron} roughness={0.45} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
