@@ -1,28 +1,15 @@
-import { lazy, Suspense } from 'react';
 import { BRAND_NAME } from '@rollhouse/shared';
-import { FlatFace } from './dice/DiceTray';
-import { hasWebGL, renderQuality } from './dice/webgl';
-import { usePrefs } from './theme/prefs';
+import banner from './art/banner.webp';
 
-const LobbyDie = lazy(() => import('./dice/LobbyDie'));
-
-/** The wordmark on a plum plate, with a die turning beside it. */
+/**
+ * The banner: the ghost peeking over the clouds beside the name. The name is
+ * in the art, so the heading is there for screen readers only.
+ */
 export function Brand({ tagline = true }: { tagline?: boolean }) {
-  const { theme, reducedMotion } = usePrefs();
   return (
     <div className="brand">
-      <span className="brand-die" aria-hidden="true">
-        {hasWebGL() && renderQuality() === 'high' ? (
-          <Suspense fallback={null}>
-            <LobbyDie theme={theme} still={reducedMotion} />
-          </Suspense>
-        ) : (
-          <span className="brand-flat">
-            <FlatFace value={5} />
-          </span>
-        )}
-      </span>
-      <h1 className="wordmark">{BRAND_NAME}</h1>
+      <img className="brand-banner" src={banner} alt="" width={1376} height={768} />
+      <h1 className="sr-only">{BRAND_NAME}</h1>
       {tagline && <p className="tagline">Five dice, one table.</p>}
     </div>
   );
