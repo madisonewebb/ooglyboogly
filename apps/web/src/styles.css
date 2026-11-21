@@ -1860,28 +1860,6 @@ body:has(.screen.game) .corner .icon:hover:not(:disabled) {
   font-size: 1.2rem;
 }
 
-/* At the table: the tank above the dice, kept to its 2:1 shape and a share of the window's height. */
-.table-tank {
-  --tank-h: clamp(7rem, 26dvh, 16rem);
-  display: flex;
-  justify-content: center;
-}
-
-.table-tank > .aquarium {
-  width: min(100%, calc(var(--tank-h) * 2));
-}
-
-.table-tank .aquarium.mini {
-  right: 0.6rem;
-  bottom: 1.4rem;
-  width: 30%;
-  min-width: 7rem;
-}
-
-.table-tank .aquarium.mini .aquarium-label {
-  font-size: 1rem;
-}
-
 .tank-lab {
   max-width: 64rem;
 }
