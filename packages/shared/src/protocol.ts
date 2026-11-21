@@ -1,5 +1,6 @@
 import type { Box, GameSetup, Move, PlayStyle, RuleErrorCode } from '@rollhouse/rules';
-import type { Equipped } from './catalog';
+import type { Equipped, Slot } from './catalog';
+import { PACK_STICKER_IDS, type PackStickerId } from './packs';
 import type { TintId } from './tints';
 
 /** Room and message names shared by the server, the web client and the smoke test. */
@@ -155,6 +156,8 @@ export interface Snapshot {
   you: SessionUser;
   /** Once the game has finished and been paid: what everyone earned. */
   payout?: PayoutMessage;
+  /** The receiving player's own coins, items and goal. Never sent to anyone else. */
+  wallet?: WalletMessage;
 }
 
 /** Each accepted move, in order. index = its position in the move log. */
@@ -169,7 +172,13 @@ export interface MoveMessage {
 }
 
 export type ErrorCode =
-  RuleErrorCode | 'NOT_HOST' | 'NOT_SEATED' | 'STARTED' | 'NOT_STARTED' | 'BAD_INTENT';
+  | RuleErrorCode
+  | 'NOT_HOST'
+  | 'NOT_SEATED'
+  | 'STARTED'
+  | 'NOT_STARTED'
+  | 'BAD_INTENT'
+  | ShopErrorCode;
 
 export interface ErrorMessage {
   code: ErrorCode;
@@ -196,6 +205,49 @@ export interface PayoutMessage {
   balance: number | null;
 }
 
+/* ---------- The shop ---------- */
+
+/** Why a shop message was refused. */
+export type ShopErrorCode =
+  | 'SHOP_CLOSED'
+  | 'UNKNOWN_ITEM'
+  | 'NOT_AVAILABLE'
+  | 'ALREADY_OWNED'
+  | 'NOT_ENOUGH_COINS'
+  | 'NOT_OWNED';
+
+/** Client → server: spend coins on an item or a sticker pack. The server prices it. */
+export const MSG_BUY = 'buy';
+export interface BuyIntent {
+  item: string;
+}
+
+/** Client → server: wear an item (or take the slot's item off with `item: null`). Lobby only. */
+export const MSG_EQUIP = 'equip';
+export interface EquipIntent {
+  slot: Slot;
+  item: string | null;
+}
+
+/** Client → server: pin the item you are saving up for, or clear it with `item: null`. */
+export const MSG_GOAL = 'goal';
+export interface GoalIntent {
+  item: string | null;
+}
+
+/** Server → one player (every device of theirs): their coins, items and goal. */
+export const MSG_WALLET = 'wallet';
+export interface WalletMessage {
+  balance: number;
+  /** Ids of everything bought: cosmetics and sticker packs. */
+  owned: string[];
+  equipped: Equipped;
+  /** The pinned item, or null. */
+  goal: string | null;
+  /** False where this player cannot spend (guests outside dev, or no database). */
+  canBuy: boolean;
+}
+
 /* ---------- Reactions ---------- */
 
 /**
@@ -213,10 +265,12 @@ export const STICKER_IDS = [
   'steamingGarbage',
   'stressed',
 ] as const;
-export type StickerId = (typeof STICKER_IDS)[number];
+/** A sticker anyone may send, or one from a sticker pack the sender owns. */
+export type StickerId = (typeof STICKER_IDS)[number] | PackStickerId;
 
 export const isSticker = (v: unknown): v is StickerId =>
-  (STICKER_IDS as readonly unknown[]).includes(v);
+  (STICKER_IDS as readonly unknown[]).includes(v) ||
+  (PACK_STICKER_IDS as readonly unknown[]).includes(v);
 
 /** Client → server: send a sticker. */
 export const MSG_REACT = 'react';
