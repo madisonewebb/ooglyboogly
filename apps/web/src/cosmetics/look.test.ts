@@ -15,6 +15,10 @@ describe('definitions match the catalog', () => {
     expect(Object.keys(BREWS).sort()).toEqual([...BREW_IDS].sort());
   });
 
+  it('marks all nine skins and brews of this spec available', () => {
+    for (const i of [...DICE_SKINS, ...CATALOG_BREWS]) expect(i.available).toBe(true);
+  });
+
   it('gives every skin one distinguishing feature or color', () => {
     const bodies = new Set(Object.values(SKINS).map((s) => s.body));
     expect(bodies.size).toBe(SKIN_IDS.length);

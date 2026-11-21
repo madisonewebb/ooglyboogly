@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import type { SceneTokens, Tokens } from '../theme/palette';
+import { BrewComet, BrewInCup } from '../cosmetics/brews/Brew';
 import { SkinRig } from '../cosmetics/skins/skinRig';
 import type { SceneLook } from '../cosmetics/look';
 import { dieGeometry, pipGeometry } from './dieModel';
@@ -506,7 +507,7 @@ const IRON = { body: '#2A2A2F', inside: '#101013', trim: '#45454C' };
 /** The lip's radius: a little wider than CUP.radiusTop, with a thin rim, so spilling dice clear it. */
 const LIP = CUP.radiusTop + 0.07;
 
-function Cup({ roll }: Pick<SceneProps, 'roll'>) {
+function Cup({ roll, look }: Pick<SceneProps, 'roll' | 'look'>) {
   const group = useRef<THREE.Group>(null);
   const invalidate = useThree((s) => s.invalidate);
   const shell = useMemo(() => {
@@ -593,6 +594,7 @@ function Cup({ roll }: Pick<SceneProps, 'roll'>) {
           </mesh>
         );
       })}
+      {look?.brew && <BrewInCup brew={look.brew} roll={roll} reduced={look.reduced} />}
     </group>
   );
 }
@@ -647,7 +649,10 @@ export default function DiceScene(props: SceneProps) {
         rests={props.rests}
         look={props.look}
       />
-      <Cup roll={props.roll} />
+      <Cup roll={props.roll} look={props.look} />
+      {props.look?.brew && (
+        <BrewComet brew={props.look.brew} roll={props.roll} reduced={props.look.reduced} />
+      )}
     </Canvas>
   );
 }
