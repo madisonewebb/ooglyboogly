@@ -2,7 +2,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 8090;
+// E2E_PORT lets several checkouts run the suite at once without sharing a server or database.
+const PORT = Number(process.env['E2E_PORT'] ?? 8090);
 
 export default defineConfig({
   testDir: './tests',
@@ -25,7 +26,7 @@ export default defineConfig({
       WEB_DIST: '../apps/web/dist',
       GUEST_LOGIN: 'true',
       // Its own database: test games pay coins, and must not touch the dev one in data/.
-      DATA_DIR: path.join(tmpdir(), 'rollhouse-e2e-data'),
+      DATA_DIR: path.join(tmpdir(), `rollhouse-e2e-data-${PORT}`),
     },
   },
 });

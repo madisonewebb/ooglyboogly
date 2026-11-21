@@ -1,4 +1,5 @@
 import type { Box, GameSetup, Move, PlayStyle, RuleErrorCode } from '@rollhouse/rules';
+import type { Equipped } from './catalog';
 import type { TintId } from './tints';
 
 /** Room and message names shared by the server, the web client and the smoke test. */
@@ -98,6 +99,8 @@ export interface Seat {
   connected: boolean;
   /** Unique at the table. */
   tint: TintId;
+  /** What this player has on, shown to everyone at the table. Missing slots are the default look. */
+  equipped?: Equipped;
 }
 
 export interface Lobby {
