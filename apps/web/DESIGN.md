@@ -61,19 +61,19 @@ colors:
   tint-walnut-ink-evening: "#B48765"
 typography:
   display:
-    fontFamily: "Quicksand, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontFamily: "Fredoka, Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "clamp(2.3rem, 8.5vw, 3.4rem)"
     fontWeight: 700
     lineHeight: 1.05
     letterSpacing: "-0.01em"
   headline:
-    fontFamily: "Quicksand, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontFamily: "Fredoka, Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "clamp(1.9rem, 2.8vw, 2.6rem)"
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "-0.02em"
   title:
-    fontFamily: "Quicksand, Atkinson Hyperlegible Next, system-ui, sans-serif"
+    fontFamily: "Fredoka, Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "1.45rem"
     fontWeight: 700
     lineHeight: 1.2
@@ -193,7 +193,7 @@ Rejected looks the owner confirmed on rendered screens: the earlier candy-shop i
 
 **Key Characteristics:**
 - Plum, lavender and one pink, in a daytime and an evening theme generated from one palette file.
-- Quicksand 700 for names and big moments; Atkinson Hyperlegible Next for everything you read and tap.
+- Fredoka 700 for names and big moments; Atkinson Hyperlegible Next for everything you read and tap.
 - Soft raised sheets with plum-tinted shadows; pills for every button.
 - Each player owns a flower or leaf tint that rings their face, colors their cup and writes their numbers.
 - Short, earned celebrations; reduced motion turns all of them into fades.
@@ -234,21 +234,21 @@ A plum-and-lavender palette with a single pink accent, and eight player tints th
 
 ## Typography
 
-**Display Font:** Quicksand 700 (falls back to Atkinson Hyperlegible Next, system-ui)
+**Display Font:** Fredoka 700 (falls back to Atkinson Hyperlegible Next, system-ui)
 **Body Font:** Atkinson Hyperlegible Next 400 / 600 / 800 (falls back to system-ui)
 
 **Character:** A rounded, friendly geometric face for names and big moments over a legibility-first sans that carries every label, number and control.
 
 ### Hierarchy
-- **Display** (Quicksand 700, clamp(2.3rem, 8.5vw, 3.4rem), 1.05): the wordmark on the brand plate and the winner's name (clamp(2.4rem, 6vw, 3.4rem)). The Yatzy word over the tray is the largest use (4.2rem).
-- **Headline** (Quicksand 700, clamp(1.9rem, 2.8vw, 2.6rem), 1.15, -0.02em): whose turn it is; on your own turn it grows to clamp(2.2rem, 3.4vw, 3.2rem).
-- **Title** (Quicksand 700, 1.45rem, 1.2): lobby section heads and the top standing's name (1.6rem). The small wordmark on the table band is 1.6rem.
+- **Display** (Fredoka 700, clamp(2.3rem, 8.5vw, 3.4rem), 1.05): the wordmark on the brand plate and the winner's name (clamp(2.4rem, 6vw, 3.4rem)). The Yatzy word over the tray is the largest use (4.2rem).
+- **Headline** (Fredoka 700, clamp(1.9rem, 2.8vw, 2.6rem), 1.15, -0.02em): whose turn it is; on your own turn it grows to clamp(2.2rem, 3.4vw, 3.2rem).
+- **Title** (Fredoka 700, 1.45rem, 1.2): lobby section heads and the top standing's name (1.6rem). The small wordmark on the table band is 1.6rem.
 - **Body** (Atkinson 400, 1.0625rem, 1.4): all running text. 17px at Regular is the floor everywhere.
 - **Label** (Atkinson 600, 1.0625rem): buttons, pad row names, seat names. Selected states step to 700, primary buttons to 800.
 - **Score** (Atkinson 800, 1.35rem, tabular figures): numbers written on the pad in the player's ink; totals on results run 2.2rem, the winner's 3rem.
 
 ### Named Rules
-**The Rounded Moments Rule.** Quicksand is for names and moments: wordmark, section heads, the turn headline, the winner, the Yatzy word. Controls, tables and numbers stay in Atkinson.
+**The Rounded Moments Rule.** Fredoka is for names and moments: wordmark, section heads, the turn headline, the winner, the Yatzy word. Controls, tables and numbers stay in Atkinson.
 
 **The 17px Floor Rule.** No text is smaller than 1.0625rem, and every size is in rem so the Text size setting scales the whole UI.
 
@@ -311,13 +311,13 @@ Rounded, friendly and press-able.
 - **Pad tabs:** one tab per player across the top of the pad, avatar plus name. The selected tab wears the player's hue as a 1.5px border and a 12% hue wash over the sheet, open at the bottom into the pad. A tint dot pulses on a tab when that player writes a score.
 
 ### Band and Plates
-The plum band runs edge to edge at the table with the small wordmark. The brand plate (lobby and sign-in) and winner plate are band-colored 1.2rem slabs with moonlight Quicksand; the brand plate has a slowly turning 3D die beside the name (a flat die where WebGL is unavailable).
+The plum band runs edge to edge at the table with the small wordmark. The brand plate (lobby and sign-in) and winner plate are band-colored 1.2rem slabs with moonlight Fredoka; the brand plate has a slowly turning 3D die beside the name (a flat die where WebGL is unavailable).
 
 ### Player Avatar
 A circle ringed 3px in the player's hue, with a small pill initial at the lower right in their ink. On your turn, a hue ring ripples out from it twice. Roll dots beside the headline fill in the same hue.
 
 ### Dice Tray
-Glazed porcelain dice with violet pips on violet felt in a lacquered lavender frame, the held-dice shelf behind with five seats, and a glossy cup in the roller's tint. Each die has an invisible button over it for holding. A Yatzy fades in the word in moonlight Quicksand over the tray with a sparkle burst in the roller's hue, pink and violet.
+Glazed porcelain dice with violet pips on violet felt in a lacquered lavender frame, the held-dice shelf behind with five seats, and a glossy cup in the roller's tint. Each die has an invisible button over it for holding. A Yatzy fades in the word in moonlight Fredoka over the tray with a sparkle burst in the roller's hue, pink and violet.
 
 ### Score Pad
 A ruled sheet: 1px rules, a double rule before the lower section, die glyphs (violet pips) beside the upper rows, point values in quiet after a middle dot. A new score comes into focus: it starts blurred in the option color while a violet wash spreads behind it, then settles into the player's ink. An upper-bonus meter tracks progress until it turns into the pink +35 tag.
@@ -328,7 +328,7 @@ A ruled sheet: 1px rules, a double rule before the lower section, die glyphs (vi
 - **Do** take every color from `theme/palette.ts` and add any new text pairing to its contrast test (4.5:1).
 - **Do** keep pink to the single next action and the earned bonus; use violet/lavender for chosen, selected, focused and earned.
 - **Do** write player numbers in their tint's ink for the current theme, and use the hue only for rings, swatches, dots, tab washes and the cup.
-- **Do** set names, headlines and big moments in Quicksand 700, and everything you read or tap in Atkinson Hyperlegible Next.
+- **Do** set names, headlines and big moments in Fredoka 700, and everything you read or tap in Atkinson Hyperlegible Next.
 - **Do** make every button a pill at least 48px tall, and every surface a soft sheet with the plum-tinted shadow.
 - **Do** keep sizes in rem with nothing under 1.0625rem.
 - **Do** design both themes at once, evening first, and judge a new look on rendered screens.

@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { activePlayers, applyMove, createGame, isCardFull, replay } from './engine';
 import { cardOptions } from './options';
+import { computePayouts } from './payout';
 import { scoreBox } from './scoring';
 import { cardTotal, playerTotal } from './totals';
 import {
@@ -186,6 +187,90 @@ describe('whole-game properties', () => {
         },
       ),
       { numRuns: 50 },
+    );
+  });
+});
+
+describe('payout properties', () => {
+  const cardArb = fc.record({
+    boxes: fc.record(
+      { yatzy: fc.constantFrom(0, YATZY), chance: fc.integer({ min: 5, max: 30 }) },
+      { requiredKeys: [] },
+    ),
+    yatzyBonuses: fc.integer({ min: 0, max: 3 }),
+  });
+
+  it('never pays a negative amount, and one game pays a bounded total', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 5 }),
+        fc.integer({ min: 2, max: 8 }),
+        fc.nat(2 ** 30),
+        (cards, seats, seed) => {
+          const rand = prng(seed);
+          const players = Array.from({ length: seats }, () =>
+            Array.from({ length: cards }, () => ({
+              boxes: {
+                chance: 5 + rand(26),
+                ...(rand(10) < 3 ? { yatzy: YATZY } : {}),
+              },
+              yatzyBonuses: rand(10) === 0 ? 1 : 0,
+            })),
+          );
+          const game = {
+            ...createGame({
+              players: seats,
+              cardsPerPlayer: cards,
+              playStyle: 'turns' as const,
+              multipliers: false,
+              turnOrder: Array.from({ length: seats }, (_, i) => i),
+            }),
+            finished: true,
+          };
+          const finished = {
+            ...game,
+            players: game.players.map((p, i) => ({ ...p, cards: players[i]! })),
+          };
+          const payouts = computePayouts(finished);
+          const finish = Math.round((10 * cards) / 3);
+          const yatzy = Math.round((3 * cards) / 3);
+          let sum = 0;
+          for (const p of payouts) {
+            expect(p.breakdown.finish).toBe(finish);
+            expect(p.breakdown.win).toBeGreaterThanOrEqual(0);
+            expect(p.breakdown.yatzy).toBeGreaterThanOrEqual(0);
+            expect(p.total).toBe(p.breakdown.finish + p.breakdown.win + p.breakdown.yatzy);
+            sum += p.total;
+          }
+          expect(Number.isNaN(sum)).toBe(false);
+          // Everyone finishes, the win bonus is shared out once, each seat may earn the Yatzy bonus.
+          expect(sum).toBeLessThanOrEqual(seats * finish + finish + seats * yatzy);
+        },
+      ),
+    );
+  });
+
+  it('pays whole coins in the same seat order as the players', () => {
+    fc.assert(
+      fc.property(fc.array(cardArb, { minLength: 1, maxLength: 3 }), (cs) => {
+        const game = {
+          ...createGame({
+            players: 2,
+            cardsPerPlayer: cs.length,
+            playStyle: 'turns' as const,
+            multipliers: false,
+            turnOrder: [0, 1],
+          }),
+          finished: true,
+        };
+        const finished = {
+          ...game,
+          players: game.players.map((p) => ({ ...p, cards: cs })),
+        };
+        const payouts = computePayouts(finished);
+        expect(payouts.map((p) => p.player)).toEqual([0, 1]);
+        for (const p of payouts) expect(Number.isInteger(p.total)).toBe(true);
+      }),
     );
   });
 });

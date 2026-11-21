@@ -6,9 +6,11 @@ import {
   type JoinOptions,
   type Lobby,
   type MoveMessage,
+  type PayoutMessage,
   MSG_ERROR,
   MSG_LOBBY,
   MSG_MOVE,
+  MSG_PAYOUT,
   MSG_REACTION,
   type ReactionMessage,
   MSG_SNAPSHOT,
@@ -42,6 +44,8 @@ export interface Table {
   lastRoll: LiveRoll | null;
   /** Stickers sent in this session, newest last (only the last few are kept). */
   reactions: ReactionMessage[];
+  /** What the finished game paid, once it has: null until then, and when nobody was paid. */
+  payout: PayoutMessage | null;
   clearError(): void;
   send(type: string, body?: unknown): void;
   rejoin(): void;
@@ -80,6 +84,7 @@ export function useTable(auth: Auth): Table {
   const [lostReason, setLostReason] = useState<string | null>(null);
   const [lastRoll, setLastRoll] = useState<LiveRoll | null>(null);
   const [reactions, setReactions] = useState<ReactionMessage[]>([]);
+  const [payout, setPayout] = useState<PayoutMessage | null>(null);
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
@@ -108,6 +113,7 @@ export function useTable(auth: Auth): Table {
           setSnapshot(s);
           setLobby(s.lobby);
           setMoves(s.moves);
+          setPayout(s.payout ?? null);
         });
         room.onMessage(MSG_LOBBY, (l: Lobby) => setLobby(l));
         room.onMessage(MSG_MOVE, ({ index, move, tumble }: MoveMessage) => {
@@ -122,6 +128,7 @@ export function useTable(auth: Auth): Table {
         room.onMessage(MSG_REACTION, (r: ReactionMessage) =>
           setReactions((prev) => [...prev.slice(-11), r]),
         );
+        room.onMessage(MSG_PAYOUT, (p: PayoutMessage) => setPayout(p));
         room.onMessage(MSG_ERROR, (e: ErrorMessage) => setError(e));
         room.onDrop(() => setConnection('reconnecting'));
         room.onReconnect(() => setConnection('open'));
@@ -164,6 +171,7 @@ export function useTable(auth: Auth): Table {
     error,
     lastRoll,
     reactions,
+    payout,
     clearError: useCallback(() => setError(null), []),
     send,
     rejoin: useCallback(() => setAttempt((n) => n + 1), []),

@@ -13,3 +13,13 @@ export {
   type MoveResult,
 } from './engine';
 export { cardTotal, playerTotal, type CardTotal, type PlayerTotal } from './totals';
+export {
+  BASELINE_CARDS,
+  computePayouts,
+  FINISH_COINS,
+  scaled,
+  SOLO_COINS,
+  YATZY_COINS,
+  type PayoutBreakdown,
+  type SeatPayout,
+} from './payout';

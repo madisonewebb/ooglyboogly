@@ -15,8 +15,8 @@ import {
   UPPER_BONUS_THRESHOLD,
   YATZY_BONUS,
 } from '@rollhouse/rules';
-import { BRAND_NAME, type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
-import wordmark from '../art/wordmark.webp';
+import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
+import { BrandBar } from '../Brand';
 import { Avatar } from '../Avatar';
 import { ReactionFloats, ReactionPicker } from '../Reactions';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
@@ -394,309 +394,311 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
             : '';
 
   return (
-    <main className="screen game" onPointerDown={unlockAudio}>
-      <header className="topbar">
-        <img className="band-wordmark" src={wordmark} alt={BRAND_NAME} width={396} height={128} />
-      </header>
-
-      <div className="table-layout">
-        <section className="tray-col" aria-label="Dice">
-          <div className={`turn-banner${yours ? ' yours' : ''}`} style={tintVars(trayTint, theme)}>
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.span
-                key={trayPlayer}
-                className="turn-face"
-                initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0, transition: SPRING.pop }}
-                exit={{ opacity: 0, scale: 0.6, transition: { duration: DURATION.fast } }}
-              >
-                {trayUser && <Avatar user={trayUser} cdnBase={cdnBase} tint={trayTint} />}
-                {myTurn && turnPulse > 0 && trayPlayer === seat && (
-                  <span key={turnPulse} className="turn-pulse" aria-hidden="true" />
-                )}
-              </motion.span>
-            </AnimatePresence>
-            <p className={`status${headline ? ' headline' : ''}`} role="status">
+    <>
+      <BrandBar />
+      <main className="screen game" onPointerDown={unlockAudio}>
+        <div className="table-layout">
+          <section className="tray-col" aria-label="Dice">
+            <div
+              className={`turn-banner${yours ? ' yours' : ''}`}
+              style={tintVars(trayTint, theme)}
+            >
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
-                  key={status}
-                  className="status-text"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0, transition: SPRING.snappy }}
-                  exit={{ opacity: 0, y: -10, transition: { duration: DURATION.fast } }}
+                  key={trayPlayer}
+                  className="turn-face"
+                  initial={{ opacity: 0, scale: 0.6, rotate: -12 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0, transition: SPRING.pop }}
+                  exit={{ opacity: 0, scale: 0.6, transition: { duration: DURATION.fast } }}
                 >
-                  {status}
+                  {trayUser && <Avatar user={trayUser} cdnBase={cdnBase} tint={trayTint} />}
+                  {myTurn && turnPulse > 0 && trayPlayer === seat && (
+                    <span key={turnPulse} className="turn-pulse" aria-hidden="true" />
+                  )}
                 </motion.span>
               </AnimatePresence>
-            </p>
-            {dice !== null || turn.rolls > 0 || yours ? (
-              <span className="roll-dots" aria-hidden="true" title={`${rollsLeft} rolls left`}>
-                {Array.from({ length: ROLLS_PER_TURN }, (_, i) => (
-                  <span key={i} className={i < rollsLeft ? 'on' : ''} />
-                ))}
-              </span>
-            ) : null}
-            <ReactionPicker send={table.send} />
-          </div>
+              <p className={`status${headline ? ' headline' : ''}`} role="status">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.span
+                    key={status}
+                    className="status-text"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0, transition: SPRING.snappy }}
+                    exit={{ opacity: 0, y: -10, transition: { duration: DURATION.fast } }}
+                  >
+                    {status}
+                  </motion.span>
+                </AnimatePresence>
+              </p>
+              {dice !== null || turn.rolls > 0 || yours ? (
+                <span className="roll-dots" aria-hidden="true" title={`${rollsLeft} rolls left`}>
+                  {Array.from({ length: ROLLS_PER_TURN }, (_, i) => (
+                    <span key={i} className={i < rollsLeft ? 'on' : ''} />
+                  ))}
+                </span>
+              ) : null}
+              <ReactionPicker send={table.send} />
+            </div>
 
-          <DiceTray
-            values={dice ?? [null, null, null, null, null]}
-            held={turn.held}
-            roll={roll}
-            rolling={rolling}
-            onToggle={toggle}
-            onSettled={onSettled}
-            hue={tintOf(trayTint).hue}
-            shake={myTray ? shake : null}
-          />
+            <DiceTray
+              values={dice ?? [null, null, null, null, null]}
+              held={turn.held}
+              roll={roll}
+              rolling={rolling}
+              onToggle={toggle}
+              onSettled={onSettled}
+              hue={tintOf(trayTint).hue}
+              shake={myTray ? shake : null}
+            />
 
-          <div className="tray-actions">
-            <AnimatePresence mode="popLayout" initial={false}>
-              {myTray && pick && confirming ? (
-                <Swap
-                  key="confirm"
-                  className="confirm-zero"
-                  role="group"
-                  aria-label="Write a zero?"
-                >
-                  <p>Put 0 in {where(pick)}?</p>
-                  <div className="confirm-buttons">
-                    <button type="button" className="primary" onClick={write}>
-                      Yes, put 0
+            <div className="tray-actions">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {myTray && pick && confirming ? (
+                  <Swap
+                    key="confirm"
+                    className="confirm-zero"
+                    role="group"
+                    aria-label="Write a zero?"
+                  >
+                    <p>Put 0 in {where(pick)}?</p>
+                    <div className="confirm-buttons">
+                      <button type="button" className="primary" onClick={write}>
+                        Yes, put 0
+                      </button>
+                      <button type="button" onClick={() => setConfirming(false)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </Swap>
+                ) : myTray && pick ? (
+                  <Swap key="write" className="action-row">
+                    <button type="button" className="primary big write" onClick={write}>
+                      <CheckIcon /> Write it in: {pick.value} in {where(pick)}
                     </button>
-                    <button type="button" onClick={() => setConfirming(false)}>
-                      Cancel
-                    </button>
-                  </div>
-                </Swap>
-              ) : myTray && pick ? (
-                <Swap key="write" className="action-row">
-                  <button type="button" className="primary big write" onClick={write}>
-                    <CheckIcon /> Write it in: {pick.value} in {where(pick)}
-                  </button>
-                  {rollsLeft > 0 && !allHeld && (
+                    {rollsLeft > 0 && !allHeld && (
+                      <button
+                        type="button"
+                        className="roll-again"
+                        aria-label={`Roll (${rollsLeft} left)`}
+                        onClick={rollNow}
+                      >
+                        Roll again
+                      </button>
+                    )}
+                  </Swap>
+                ) : myTray ? (
+                  <Swap key="roll" className="action-row">
                     <button
                       type="button"
-                      className="roll-again"
-                      aria-label={`Roll (${rollsLeft} left)`}
-                      onClick={rollNow}
-                    >
-                      Roll again
-                    </button>
-                  )}
-                </Swap>
-              ) : myTray ? (
-                <Swap key="roll" className="action-row">
-                  <button
-                    type="button"
-                    className={`primary big roll${rolling || shaking ? ' busy' : ''}`}
-                    aria-label={
-                      rollsLeft === 0 && !rolling ? 'No rolls left' : `Roll (${rollsLeft} left)`
-                    }
-                    aria-keyshortcuts="Space"
-                    disabled={!canRoll && !shaking}
-                    onPointerDown={(e) => {
-                      if (e.button !== 0) return;
-                      try {
-                        e.currentTarget.setPointerCapture(e.pointerId);
-                      } catch {
-                        // No capture: letting go elsewhere still ends it below.
+                      className={`primary big roll${rolling || shaking ? ' busy' : ''}`}
+                      aria-label={
+                        rollsLeft === 0 && !rolling ? 'No rolls left' : `Roll (${rollsLeft} left)`
                       }
-                      press('pointer');
-                    }}
-                    onPointerUp={() => pressing.current === 'pointer' && letGo()}
-                    onPointerCancel={() => pressing.current === 'pointer' && letGo()}
-                    onLostPointerCapture={() => pressing.current === 'pointer' && letGo()}
-                    // Enter or Space on the focused button: a plain roll.
-                    onClick={(e) => e.detail === 0 && rollNow()}
-                  >
-                    {shaking && !shake.sent
-                      ? 'Shaking…'
-                      : rolling || shaking
-                        ? 'Rolling…'
-                        : rollsLeft === 0
-                          ? 'No rolls left'
-                          : turn.rolls === 0
-                            ? 'Roll'
-                            : 'Roll again'}
-                    {canRoll && <kbd aria-hidden="true">Space</kbd>}
-                  </button>
-                </Swap>
-              ) : null}
-            </AnimatePresence>
-            <p className="hint quiet">{hint || ' '}</p>
-          </div>
-          <ReactionFloats reactions={table.reactions} lobby={lobby} />
-        </section>
+                      aria-keyshortcuts="Space"
+                      disabled={!canRoll && !shaking}
+                      onPointerDown={(e) => {
+                        if (e.button !== 0) return;
+                        try {
+                          e.currentTarget.setPointerCapture(e.pointerId);
+                        } catch {
+                          // No capture: letting go elsewhere still ends it below.
+                        }
+                        press('pointer');
+                      }}
+                      onPointerUp={() => pressing.current === 'pointer' && letGo()}
+                      onPointerCancel={() => pressing.current === 'pointer' && letGo()}
+                      onLostPointerCapture={() => pressing.current === 'pointer' && letGo()}
+                      // Enter or Space on the focused button: a plain roll.
+                      onClick={(e) => e.detail === 0 && rollNow()}
+                    >
+                      {shaking && !shake.sent
+                        ? 'Shaking…'
+                        : rolling || shaking
+                          ? 'Rolling…'
+                          : rollsLeft === 0
+                            ? 'No rolls left'
+                            : turn.rolls === 0
+                              ? 'Roll'
+                              : 'Roll again'}
+                      {canRoll && <kbd aria-hidden="true">Space</kbd>}
+                    </button>
+                  </Swap>
+                ) : null}
+              </AnimatePresence>
+              <p className="hint quiet">{hint || ' '}</p>
+            </div>
+            <ReactionFloats reactions={table.reactions} lobby={lobby} />
+          </section>
 
-        <section
-          className="pad-col"
-          aria-label={`${name(viewed)}'s score pad`}
-          style={tintVars(viewedTint, theme)}
-        >
-          <PadTabs
-            lobby={lobby}
-            cdnBase={cdnBase}
-            seat={seat}
-            viewed={viewed}
-            onView={setViewed}
-            up={up}
-            done={(s) => isPlayerDone(game, s)}
-            pulses={pulses}
-          />
-          <div id={PAD_PANEL_ID} role="tabpanel" aria-labelledby={padTabId(viewed)}>
-            <h2 className="pad-title">{mine ? 'Your pad' : `${name(viewed)}'s pad`}</h2>
-            <AnimatePresence initial={false}>
-              {lookingAway && (
-                <Swap className="look-only" role="note">
-                  <p>You can only write on your own pad.</p>
-                  <button type="button" onClick={() => setViewed(seat)}>
-                    Back to your pad
-                  </button>
-                </Swap>
-              )}
-            </AnimatePresence>
-            <div className="pad-sheet">
-              <table className="pad">
-                <thead>
-                  <tr>
-                    <th scope="col" className="box-col">
-                      <span className="sr-only">Box</span>
-                    </th>
-                    {player.cards.map((_, c) => (
-                      <th key={c} scope="col">
-                        Card {c + 1}
-                        {game.setup.multipliers && multi ? (
-                          <span className="mult"> ×{c + 1}</span>
-                        ) : null}
+          <section
+            className="pad-col"
+            aria-label={`${name(viewed)}'s score pad`}
+            style={tintVars(viewedTint, theme)}
+          >
+            <PadTabs
+              lobby={lobby}
+              cdnBase={cdnBase}
+              seat={seat}
+              viewed={viewed}
+              onView={setViewed}
+              up={up}
+              done={(s) => isPlayerDone(game, s)}
+              pulses={pulses}
+            />
+            <div id={PAD_PANEL_ID} role="tabpanel" aria-labelledby={padTabId(viewed)}>
+              <h2 className="pad-title">{mine ? 'Your pad' : `${name(viewed)}'s pad`}</h2>
+              <AnimatePresence initial={false}>
+                {lookingAway && (
+                  <Swap className="look-only" role="note">
+                    <p>You can only write on your own pad.</p>
+                    <button type="button" onClick={() => setViewed(seat)}>
+                      Back to your pad
+                    </button>
+                  </Swap>
+                )}
+              </AnimatePresence>
+              <div className="pad-sheet">
+                <table className="pad">
+                  <thead>
+                    <tr>
+                      <th scope="col" className="box-col">
+                        <span className="sr-only">Box</span>
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {BOXES.map((box, row) => (
-                    <Fragment key={box}>
-                      {row === UPPER_COUNT && (
-                        <tr className="upper-row">
-                          <th scope="row">Upper bonus</th>
-                          {player.cards.map((card, c) => {
-                            const upper = cardTotal(card, c, false).upper;
-                            const earned = upper >= UPPER_BONUS_THRESHOLD;
-                            return (
-                              <td
-                                key={c}
-                                aria-label={
-                                  earned
-                                    ? `Card ${c + 1} upper bonus: earned, ${UPPER_BONUS} points`
-                                    : `Card ${c + 1} upper bonus: ${upper} of ${UPPER_BONUS_THRESHOLD}`
-                                }
-                              >
-                                {earned ? (
-                                  <motion.span
-                                    className="bonus-tag"
-                                    initial={{ scale: 0.4, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={SPRING.pop}
-                                  >
-                                    +{UPPER_BONUS}
-                                  </motion.span>
-                                ) : (
-                                  <span className="upper-progress" aria-hidden="true">
-                                    <span className="count">
-                                      {upper}/{UPPER_BONUS_THRESHOLD}
+                      {player.cards.map((_, c) => (
+                        <th key={c} scope="col">
+                          Card {c + 1}
+                          {game.setup.multipliers && multi ? (
+                            <span className="mult"> ×{c + 1}</span>
+                          ) : null}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {BOXES.map((box, row) => (
+                      <Fragment key={box}>
+                        {row === UPPER_COUNT && (
+                          <tr className="upper-row">
+                            <th scope="row">Upper bonus</th>
+                            {player.cards.map((card, c) => {
+                              const upper = cardTotal(card, c, false).upper;
+                              const earned = upper >= UPPER_BONUS_THRESHOLD;
+                              return (
+                                <td
+                                  key={c}
+                                  aria-label={
+                                    earned
+                                      ? `Card ${c + 1} upper bonus: earned, ${UPPER_BONUS} points`
+                                      : `Card ${c + 1} upper bonus: ${upper} of ${UPPER_BONUS_THRESHOLD}`
+                                  }
+                                >
+                                  {earned ? (
+                                    <motion.span
+                                      className="bonus-tag"
+                                      initial={{ scale: 0.4, opacity: 0 }}
+                                      animate={{ scale: 1, opacity: 1 }}
+                                      transition={SPRING.pop}
+                                    >
+                                      +{UPPER_BONUS}
+                                    </motion.span>
+                                  ) : (
+                                    <span className="upper-progress" aria-hidden="true">
+                                      <span className="count">
+                                        {upper}/{UPPER_BONUS_THRESHOLD}
+                                      </span>
                                     </span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        )}
+                        <tr className={row === UPPER_COUNT ? 'lower-start' : ''}>
+                          <th scope="row">
+                            <span className="box-label">
+                              {row < UPPER_COUNT && <DieGlyph n={row + 1} />}
+                              {BOX_LABELS[box].short}
+                              {BOX_POINTS[box] !== undefined && (
+                                <span className="box-points" aria-hidden="true">
+                                  {BOX_POINTS[box]}
+                                </span>
+                              )}
+                            </span>
+                          </th>
+                          {player.cards.map((card, c) => {
+                            const filled = card.boxes[box];
+                            const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
+                            if (filled !== undefined) {
+                              const isNew = fresh.has(`${c}:${box}`);
+                              return (
+                                <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
+                                  {isNew && <span className="wash" aria-hidden="true" />}
+                                  <span className={`score${isNew ? ' developing' : ''}`}>
+                                    {filled}
                                   </span>
-                                )}
+                                </td>
+                              );
+                            }
+                            const option = options?.[c]?.boxes.get(box);
+                            if (!option) return <td key={c} aria-label={`${label}: open`} />;
+                            const chosen = pick?.card === c && pick.box === box;
+                            const bonus = option.allowed && options![c]!.bonus;
+                            const scores = option.allowed && option.value > 0;
+                            return (
+                              <td key={c}>
+                                <button
+                                  type="button"
+                                  className={[
+                                    'preview',
+                                    scores ? 'scores' : 'zero',
+                                    chosen ? 'chosen' : '',
+                                  ].join(' ')}
+                                  style={{ ['--i' as string]: row + c }}
+                                  disabled={!option.allowed}
+                                  aria-pressed={chosen}
+                                  aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}${chosen ? '. Press again to write it in' : ''}`}
+                                  onClick={() => {
+                                    if (chosen) return write();
+                                    setConfirming(false);
+                                    setPick({ card: c, box, value: option.value });
+                                  }}
+                                >
+                                  {bonus && <span className="bonus-tag">+100</span>}
+                                  {chosen && <CheckIcon />}
+                                  {option.value}
+                                </button>
                               </td>
                             );
                           })}
                         </tr>
-                      )}
-                      <tr className={row === UPPER_COUNT ? 'lower-start' : ''}>
-                        <th scope="row">
-                          <span className="box-label">
-                            {row < UPPER_COUNT && <DieGlyph n={row + 1} />}
-                            {BOX_LABELS[box].short}
-                            {BOX_POINTS[box] !== undefined && (
-                              <span className="box-points" aria-hidden="true">
-                                {BOX_POINTS[box]}
-                              </span>
-                            )}
-                          </span>
-                        </th>
-                        {player.cards.map((card, c) => {
-                          const filled = card.boxes[box];
-                          const label = `Card ${c + 1} ${BOX_LABELS[box].long}`;
-                          if (filled !== undefined) {
-                            const isNew = fresh.has(`${c}:${box}`);
-                            return (
-                              <td key={c} className="filled" aria-label={`${label}: ${filled}`}>
-                                {isNew && <span className="wash" aria-hidden="true" />}
-                                <span className={`score${isNew ? ' developing' : ''}`}>
-                                  {filled}
-                                </span>
-                              </td>
-                            );
-                          }
-                          const option = options?.[c]?.boxes.get(box);
-                          if (!option) return <td key={c} aria-label={`${label}: open`} />;
-                          const chosen = pick?.card === c && pick.box === box;
-                          const bonus = option.allowed && options![c]!.bonus;
-                          const scores = option.allowed && option.value > 0;
-                          return (
-                            <td key={c}>
-                              <button
-                                type="button"
-                                className={[
-                                  'preview',
-                                  scores ? 'scores' : 'zero',
-                                  chosen ? 'chosen' : '',
-                                ].join(' ')}
-                                style={{ ['--i' as string]: row + c }}
-                                disabled={!option.allowed}
-                                aria-pressed={chosen}
-                                aria-label={`${label}, ${option.value} points${bonus ? ' plus a 100 point Yatzy bonus' : ''}${chosen ? '. Press again to write it in' : ''}`}
-                                onClick={() => {
-                                  if (chosen) return write();
-                                  setConfirming(false);
-                                  setPick({ card: c, box, value: option.value });
-                                }}
-                              >
-                                {bonus && <span className="bonus-tag">+100</span>}
-                                {chosen && <CheckIcon />}
-                                {option.value}
-                              </button>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    </Fragment>
-                  ))}
-                  <tr className="bonus-row">
-                    <th scope="row">Yatzy bonus</th>
-                    {player.cards.map((card, c) => (
-                      <td
-                        key={c}
-                        aria-label={`Card ${c + 1} Yatzy bonuses: ${card.yatzyBonuses}, ${card.yatzyBonuses * YATZY_BONUS} points`}
-                      >
-                        <span className="bonus-boxes" aria-hidden="true">
-                          {/* Three boxes like a paper pad, and another for each bonus past them. */}
-                          {Array.from({ length: Math.max(3, card.yatzyBonuses) }, (_, i) => (
-                            <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
-                              {i < card.yatzyBonuses ? <CheckIcon /> : null}
-                            </span>
-                          ))}
-                        </span>
-                      </td>
+                      </Fragment>
                     ))}
-                  </tr>
-                </tbody>
-              </table>
+                    <tr className="bonus-row">
+                      <th scope="row">Yatzy bonus</th>
+                      {player.cards.map((card, c) => (
+                        <td
+                          key={c}
+                          aria-label={`Card ${c + 1} Yatzy bonuses: ${card.yatzyBonuses}, ${card.yatzyBonuses * YATZY_BONUS} points`}
+                        >
+                          <span className="bonus-boxes" aria-hidden="true">
+                            {/* Three boxes like a paper pad, and another for each bonus past them. */}
+                            {Array.from({ length: Math.max(3, card.yatzyBonuses) }, (_, i) => (
+                              <span key={i} className={i < card.yatzyBonuses ? 'earned' : ''}>
+                                {i < card.yatzyBonuses ? <CheckIcon /> : null}
+                              </span>
+                            ))}
+                          </span>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </section>
-      </div>
-    </main>
+          </section>
+        </div>
+      </main>
+    </>
   );
 }
 

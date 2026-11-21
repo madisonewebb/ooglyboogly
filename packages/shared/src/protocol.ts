@@ -150,6 +150,8 @@ export interface Snapshot {
   version: string;
   /** The user this connection belongs to. */
   you: SessionUser;
+  /** Once the game has finished and been paid: what everyone earned. */
+  payout?: PayoutMessage;
 }
 
 /** Each accepted move, in order. index = its position in the move log. */
@@ -169,6 +171,26 @@ export type ErrorCode =
 export interface ErrorMessage {
   code: ErrorCode;
   message: string;
+}
+
+/* ---------- Coins ---------- */
+
+/** Server → every client when a finished game has been paid. */
+export const MSG_PAYOUT = 'payout';
+
+/** What one seat earned, and why. Only seats that were actually paid are listed. */
+export interface SeatPayoutInfo {
+  userId: string;
+  coins: number;
+  finish: number;
+  win: number;
+  yatzy: number;
+}
+
+export interface PayoutMessage {
+  seats: SeatPayoutInfo[];
+  /** The receiving player's new coin total; null for someone who was not paid (watching). */
+  balance: number | null;
 }
 
 /* ---------- Reactions ---------- */
@@ -210,8 +232,11 @@ export interface ReactionMessage {
 /** One sticker per person this often, at most; extras are dropped quietly. */
 export const REACTION_COOLDOWN_MS = 1200;
 
+/** Guest sessions (local dev and e2e only) have ids starting with "guest-". */
+export const isGuestId = (id: string): boolean => id.startsWith('guest-');
+
 /** Discord CDN avatar URL. Inside Discord, `cdnBase` is the /discord-cdn URL mapping. */
 export function avatarUrl(user: SessionUser, cdnBase: string, size = 64): string | null {
-  if (user.avatar === null || user.id.startsWith('guest-')) return null;
+  if (user.avatar === null || isGuestId(user.id)) return null;
   return `${cdnBase}/avatars/${user.id}/${user.avatar}.png?size=${size}`;
 }
