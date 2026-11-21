@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 8090;
@@ -17,6 +19,13 @@ export default defineConfig({
     command: 'node ../apps/server/dist/index.mjs',
     url: `http://127.0.0.1:${PORT}/health`,
     reuseExistingServer: !process.env['CI'],
-    env: { PORT: String(PORT), GIT_SHA: 'e2e', WEB_DIST: '../apps/web/dist', GUEST_LOGIN: 'true' },
+    env: {
+      PORT: String(PORT),
+      GIT_SHA: 'e2e',
+      WEB_DIST: '../apps/web/dist',
+      GUEST_LOGIN: 'true',
+      // Its own database: test games pay coins, and must not touch the dev one in data/.
+      DATA_DIR: path.join(tmpdir(), 'rollhouse-e2e-data'),
+    },
   },
 });

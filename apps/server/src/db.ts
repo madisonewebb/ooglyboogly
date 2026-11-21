@@ -4,7 +4,9 @@ import { DatabaseSync } from 'node:sqlite';
 import type { PayoutBreakdown } from '@rollhouse/rules';
 
 /**
- * The game database: a boot log, and the coins players earn. The payouts table
+ * The game database: a boot log, and the coins players earn. (The coin tables are
+ * `wallets` and `payouts`. An earlier, reverted version of coins left a `players`
+ * table with other columns in some databases, so that name must not be reused.) The payouts table
  * is the record of every coin paid; a player's balance is the running sum of it
  * (and, once there is a shop, minus what they spend). Drizzle arrives later.
  */
@@ -22,7 +24,7 @@ export function openDatabase(dataDir: string): DatabaseSync {
       version TEXT NOT NULL,
       started_at TEXT NOT NULL
     );
-    CREATE TABLE IF NOT EXISTS players (
+    CREATE TABLE IF NOT EXISTS wallets (
       user_id TEXT PRIMARY KEY,
       coins INTEGER NOT NULL DEFAULT 0 CHECK (coins >= 0),
       created_at TEXT NOT NULL,
@@ -70,7 +72,7 @@ export function payOut(db: DatabaseSync, gameId: string, rows: readonly PayoutRo
      VALUES (?, ?, ?, ?, ?) ON CONFLICT (game_id, user_id) DO NOTHING`,
   );
   const credit = db.prepare(
-    `INSERT INTO players (user_id, coins, created_at, updated_at) VALUES (?, ?, ?, ?)
+    `INSERT INTO wallets (user_id, coins, created_at, updated_at) VALUES (?, ?, ?, ?)
      ON CONFLICT (user_id) DO UPDATE SET coins = coins + excluded.coins,
                                          updated_at = excluded.updated_at`,
   );
@@ -94,7 +96,7 @@ export function payOut(db: DatabaseSync, gameId: string, rows: readonly PayoutRo
 
 /** A player's coins; 0 for someone who has never earned any. */
 export function getBalance(db: DatabaseSync, userId: string): number {
-  const row = db.prepare('SELECT coins FROM players WHERE user_id = ?').get(userId) as
+  const row = db.prepare('SELECT coins FROM wallets WHERE user_id = ?').get(userId) as
     { coins: number } | undefined;
   return row?.coins ?? 0;
 }

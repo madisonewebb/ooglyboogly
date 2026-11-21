@@ -39,7 +39,7 @@ Standards confidence: medium. There is no `AGENTS.md`, `CONTRIBUTING.md` or pull
 
 1. Three spec requirements have no explicit planned test.
    - Missing item (a): Unit 2, "shall give each game a unique id (a random UUID) when the host starts it". Task 2.6 builds it, but no test asserts that payout rows carry a UUID `game_id`, or that two games get different ids.
-   - Missing item (b): Unit 2, "shall never create `players` rows for guests when it is disabled". Task 2.8 says the guest is skipped, but not that no `players` row is created.
+   - Missing item (b): Unit 2, "shall never create `wallets` rows for guests when it is disabled". Task 2.8 says the guest is skipped, but not that no `wallets` row is created.
    - Missing item (c): Unit 3, "shall keep its current layout, motion and reduced-motion behavior". Tasks 3.7 and 3.9 implement and screenshot it, but nothing tests reduced motion or confirms the existing Results behavior.
    - File section to edit: `## Tasks > 2.0 > 2.8` (add the two assertions), `## Tasks > 3.0 > 3.7` and `### 3.0 Proof Artifact(s)` (add a reduced-motion check).
    - Acceptance condition: 2.8 names both assertions; a proof artifact names a Playwright check run with reduced motion emulated that shows the coin line is visible straight away, and states that the existing `game.spec.ts` Results assertions still pass.
@@ -60,7 +60,7 @@ Standards confidence: medium. There is no `AGENTS.md`, `CONTRIBUTING.md` or pull
 
 Proposed edits, if you approve:
 
-1. In 2.8, add: payout rows carry a UUID `game_id` and two games get different ids; a guest skipped with `guestPayouts: false` leaves no `players` row.
+1. In 2.8, add: payout rows carry a UUID `game_id` and two games get different ids; a guest skipped with `guestPayouts: false` leaves no `wallets` row.
 2. In the 3.0 proof artifacts and 3.7, add a Playwright check with reduced motion emulated, and a line stating that the existing `game.spec.ts` Results assertions must still pass.
 3. In 2.7, add the try and catch with logging, and a room test for a throwing database.
 4. In 3.5 and 4.1, add the `null` payout test and the "Results first, coins after" assertion.
@@ -68,7 +68,7 @@ Proposed edits, if you approve:
 ## Re-Audit Delta (Run 2)
 
 - Changed gate statuses since previous run:
-  - Requirement-to-test traceability: FAIL to PASS. Task 2.8 now asserts a UUID `game_id` per game, different ids for two games, and no `players` row for a skipped guest. The 3.0 proof artifacts and task 4.1 now include a reduced-motion Playwright check and require the existing `game.spec.ts` Results assertions to pass.
+  - Requirement-to-test traceability: FAIL to PASS. Task 2.8 now asserts a UUID `game_id` per game, different ids for two games, and no `wallets` row for a skipped guest. The 3.0 proof artifacts and task 4.1 now include a reduced-motion Playwright check and require the existing `game.spec.ts` Results assertions to pass.
   - Regression-risk blind spots: both flags resolved in the plan. Task 2.7 wraps settlement in a try and catch that logs, with a throwing-database test in 2.8. Tasks 3.5 and 4.1 add the null-payout test and the "Results first, coins after" assertion.
 - Still-failing REQUIRED gates: none.
 - Newly introduced findings: none.

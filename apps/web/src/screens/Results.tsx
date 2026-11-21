@@ -1,19 +1,23 @@
 import { animate, motion, type MotionStyle, useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { type GameState, playerTotal, type PlayerTotal, UPPER_BONUS } from '@rollhouse/rules';
-import type { Lobby } from '@rollhouse/shared';
+import type { Lobby, PayoutMessage } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
 import { Sparkles } from '../Sparkles';
 import { tintOf, tintVars } from '../tint';
-import { CrownIcon } from '../icons';
+import { CauldronCoinIcon, CrownIcon } from '../icons';
+import { balanceText, type CoinLine, coinLineFor } from '../payoutView';
 import { playCelebrate } from '../sound';
 import { SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
+import '../payout.css';
 
 interface Props {
   game: GameState;
   lobby: Lobby;
   cdnBase: string;
+  /** What the game paid; null until it arrives, and when nobody was paid. */
+  payout: PayoutMessage | null;
 }
 
 /** "Upper bonus +35", saying which cards earned it when there's more than one; null if none did. */
@@ -43,8 +47,30 @@ function CountUp({ value, delay }: { value: number; delay: number }) {
   return <>{shown}</>;
 }
 
-export function Results({ game, lobby, cdnBase }: Props) {
+/** What one player earned. The payout can land just after the final move, so it fades in. */
+function CoinNote({ line, still }: { line: CoinLine | null; still: boolean | null }) {
+  if (!line) return null;
+  return (
+    <motion.p
+      className="coin-note"
+      data-testid="coin-line"
+      initial={still ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <span className="coin-icon">
+        <CauldronCoinIcon />
+      </span>
+      <strong className="coin-amount">{line.label}</strong>
+      <span className="coin-why">{line.breakdown}</span>
+    </motion.p>
+  );
+}
+
+export function Results({ game, lobby, cdnBase, payout }: Props) {
   const { theme } = usePrefs();
+  const still = useReducedMotion();
+  const balance = balanceText(payout);
   const multi = game.setup.cardsPerPlayer > 1;
   const rows = lobby.seats
     .map((s, i) => {
@@ -102,6 +128,7 @@ export function Results({ game, lobby, cdnBase }: Props) {
                 </strong>
               </div>
               {bonus && <p className="quiet bonus-note">{bonus}</p>}
+              <CoinNote line={coinLineFor(payout, seat.user.id)} still={still} />
               {multi && (
                 <table className="card-totals">
                   <tbody>
@@ -119,6 +146,20 @@ export function Results({ game, lobby, cdnBase }: Props) {
           );
         })}
       </ol>
+      {balance && (
+        <motion.p
+          className="coin-balance"
+          data-testid="coin-balance"
+          initial={still ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <span className="coin-icon">
+            <CauldronCoinIcon />
+          </span>
+          {balance}
+        </motion.p>
+      )}
       <p className="quiet relaunch">Close and relaunch the Activity to play again.</p>
     </main>
   );

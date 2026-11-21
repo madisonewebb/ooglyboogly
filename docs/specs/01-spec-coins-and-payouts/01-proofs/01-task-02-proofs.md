@@ -2,14 +2,14 @@
 
 ## Task Summary
 
-This task makes coins real. The database gains `players` and `payouts` tables. The table room gives each game a UUID when the host starts it, and when the final move lands it pays every seat in one transaction. Nothing a client sends can start or change a payout, and a failing database cannot stop a game from ending.
+This task makes coins real. The database gains `wallets` and `payouts` tables. The table room gives each game a UUID when the host starts it, and when the final move lands it pays every seat in one transaction. Nothing a client sends can start or change a payout, and a failing database cannot stop a game from ending.
 
 ## What This Task Proves
 
 - A payout writes one row per player and raises each balance in a single transaction, and paying the same game again changes nothing.
 - Balances survive closing and reopening the database.
 - A full two-player game through the real room pays both seats once, names the game with a UUID, and gives the winner a bonus.
-- Spectators and guests (when guest payouts are off) are paid nothing and get no `players` row, an unfinished game pays nothing, and a seat that has disconnected by the end is still paid.
+- Spectators and guests (when guest payouts are off) are paid nothing and get no `wallets` row, an unfinished game pays nothing, and a seat that has disconnected by the end is still paid.
 - A client that sends an invented message such as `payout` is disconnected and nothing is paid.
 - If recording fails, both players still see the game finish and the error is logged.
 
@@ -54,6 +54,8 @@ pnpm exec vitest run apps/server/src/rooms/TableRoom.test.ts
 **Why it matters:** The tests use temporary databases; this shows the actual `rollhouse.db` file is written by the running server.
 
 **Command:** a temporary driver script played the game against `GUEST_LOGIN=true DATA_DIR=<scratch> tsx src/index.ts`, then a read-only query listed the tables (the `sqlite3` CLI is not installed here, so the query used `node:sqlite`). Ids are shortened and guest-only.
+
+**Note:** this run was made before the balance table was renamed from `players` to `wallets` (see the table-name note in the tasks file), so the second heading below still says `players`; the data is the same table under its earlier name.
 
 **Result summary:** One game id appears on both rows. The winner earned 6 coins (finish 3 plus win 3) and the other player 3, and the balances match.
 

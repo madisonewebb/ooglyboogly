@@ -32,12 +32,12 @@ describe('payouts', () => {
   };
   const breakdown = { finish: 10, win: 10, yatzy: 3 };
 
-  it('creates the players and payouts tables', () => {
+  it('creates the wallets and payouts tables', () => {
     const { db } = open();
     const names = db
       .prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")
       .all() as { name: string }[];
-    expect(names.map((n) => n.name)).toEqual(expect.arrayContaining(['players', 'payouts']));
+    expect(names.map((n) => n.name)).toEqual(expect.arrayContaining(['wallets', 'payouts']));
     db.close();
   });
 
@@ -111,6 +111,23 @@ describe('payouts', () => {
     expect(getBalance(again, 'a')).toBe(12);
     expect(payOut(again, 'g1', [{ userId: 'a', coins: 12, breakdown }])).toBe(false);
     expect(getBalance(again, 'a')).toBe(12);
+    again.close();
+  });
+
+  it('works in a database left with the old reverted coins tables', () => {
+    // An earlier version of coins (since reverted) made a `players` table with other
+    // columns and a `ledger`. Those may still sit in staging or production.
+    const { dir, db } = open();
+    db.exec(`
+      CREATE TABLE players (user_id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        coins INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
+      CREATE TABLE ledger (id INTEGER PRIMARY KEY, user_id TEXT NOT NULL, delta INTEGER NOT NULL,
+        reason TEXT NOT NULL, game_id TEXT, at TEXT NOT NULL, UNIQUE (user_id, game_id, reason));
+    `);
+    db.close();
+    const again = openDatabase(dir);
+    expect(payOut(again, 'g1', [{ userId: 'a', coins: 9, breakdown }])).toBe(true);
+    expect(getBalance(again, 'a')).toBe(9);
     again.close();
   });
 

@@ -65,6 +65,15 @@ export const CheckIcon = () => (
   </Icon>
 );
 
+/** A coin stamped with a little cauldron: what players earn for finishing and winning. */
+export const CauldronCoinIcon = () => (
+  <Icon width="1.1em" height="1.1em" strokeWidth={1.8}>
+    <circle cx="12" cy="12" r="9.5" />
+    <path d="M7.6 11.2h8.8v1.5a4.4 4.4 0 0 1-8.8 0z" fill="currentColor" />
+    <path d="M6.8 11.2h10.4M9.2 17.2l-.6 1.2M14.8 17.2l.6 1.2M10 8.6c-.7-.9.7-1.5 0-2.5M13.8 8.6c-.7-.9.7-1.5 0-2.5" />
+  </Icon>
+);
+
 export const CrownIcon = () => (
   <Icon width="1em" height="1em" strokeWidth={2}>
     <path d="M3.5 8.5 7.5 12 12 5.5l4.5 6.5 4-3.5-2 10h-13z" fill="currentColor" />

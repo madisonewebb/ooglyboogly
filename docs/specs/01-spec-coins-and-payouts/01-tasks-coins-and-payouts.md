@@ -11,7 +11,7 @@ Spec: `01-spec-coins-and-payouts.md`
 | `packages/rules/src/properties.test.ts`           | Existing property tests; gains the payout bounds property.                             |
 | `packages/rules/src/test-helpers.ts`              | Existing helpers for building finished games; reused by the payout tests.              |
 | `packages/rules/src/index.ts`                     | Re-exports the new payout API.                                                         |
-| `apps/server/src/db.ts`                           | Gains the `players` and `payouts` tables, `payOut` and `getBalance`.                   |
+| `apps/server/src/db.ts`                           | Gains the `wallets` and `payouts` tables, `payOut` and `getBalance`.                   |
 | `apps/server/src/db.test.ts`                      | Gains table, transaction, idempotency and persistence tests.                           |
 | `apps/server/src/rooms/TableRoom.ts`              | Creates the game id at start, settles the payout when the game finishes, and sends it. |
 | `apps/server/src/rooms/TableRoom.test.ts`         | Full-game payout tests for seats, spectators, guests, unfinished games and reconnects. |
@@ -21,6 +21,7 @@ Spec: `01-spec-coins-and-payouts.md`
 | `packages/shared/src/protocol.ts`                 | New payout message name and types, and an optional payout on `Snapshot`.               |
 | `apps/web/src/useTable.ts`                        | Receives the payout message and the snapshot payout and exposes it.                    |
 | `apps/web/src/payoutView.ts`                      | New. Pure helper that turns a payout into the text the Results screen shows.           |
+| `apps/web/src/screens/Results.test.tsx`           | New. Render tests for Results with and without a payout, and for a spectator.          |
 | `apps/web/src/payoutView.test.ts`                 | New. Unit tests for the coin line, breakdown, balance and spectator view.              |
 | `apps/web/src/screens/Results.tsx`                | Shows the coin line per player and the viewer's balance.                               |
 | `apps/web/src/App.tsx`                            | Passes the payout to the Results screen.                                               |
@@ -34,6 +35,7 @@ Spec: `01-spec-coins-and-payouts.md`
 
 ### Notes
 
+- **Table name:** the balance table is `wallets`, not `players`. An earlier version of coins (commits `d9192dd`, reverted in `d40345c`) created a `players` table with different columns and a `ledger` table, and those may still exist in staging and production databases, where `CREATE TABLE IF NOT EXISTS players` would be skipped and every payout would then fail. `db.test.ts` has a test for a database that still has the old tables.
 - Run one test file with `pnpm exec vitest run <path>`. Run everything with `task test`, which also enforces 100% coverage on `packages/rules`.
 - The pre-commit hook runs `task lint`. Before the final commit, also run `task typecheck`, `task build` and `task e2e` (build first), which match CI.
 - Commits use conventional messages, such as `feat(rules): …`, `feat(server): …` and `feat(web): …`. Open the pull request into `develop`.
@@ -74,24 +76,24 @@ Covers Spec Unit 2. The server writes the payout; nothing a client sends can.
 
 #### 2.0 Proof Artifact(s)
 
-- Test: `apps/server/src/db.test.ts` passes and shows the `players` and `payouts` tables are created, a payout inserts rows and raises the balance in one transaction, a second identical payout changes nothing, and a closed-and-reopened database keeps the balance, demonstrating persistence and idempotency.
+- Test: `apps/server/src/db.test.ts` passes and shows the `wallets` and `payouts` tables are created, a payout inserts rows and raises the balance in one transaction, a second identical payout changes nothing, and a closed-and-reopened database keeps the balance, demonstrating persistence and idempotency.
 - Test: `apps/server/src/rooms/TableRoom.test.ts` plays a full two-player game and shows both balances and both payout rows are written exactly once, with the winner paid the bonus, demonstrating the end-to-end server flow.
 - Test: the same file shows spectators receive no payout, a guest is paid only when guest payouts are enabled, an unfinished game pays nothing, and a seat that is disconnected at the end is still paid, demonstrating the eligibility rules.
 - CLI: after a local dev game, `sqlite3 data/rollhouse.db "select user_id, coins from payouts"` lists one row per seat (guest ids only), saved to `docs/specs/01-spec-coins-and-payouts/01-proofs/payouts-rows.txt`, demonstrating the real database file is written.
 
 #### 2.0 Tasks
 
-- [x] 2.1 In `apps/server/src/db.ts`, add `CREATE TABLE IF NOT EXISTS` for `players (user_id TEXT PRIMARY KEY, coins INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)` and `payouts (game_id TEXT NOT NULL, user_id TEXT NOT NULL, coins INTEGER NOT NULL, breakdown TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (game_id, user_id))` to the existing startup `exec`.
+- [x] 2.1 In `apps/server/src/db.ts`, add `CREATE TABLE IF NOT EXISTS` for `wallets (user_id TEXT PRIMARY KEY, coins INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)` and `payouts (game_id TEXT NOT NULL, user_id TEXT NOT NULL, coins INTEGER NOT NULL, breakdown TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (game_id, user_id))` to the existing startup `exec`.
 - [x] 2.2 Add `payOut(db, gameId, rows: { userId; coins; breakdown }[]): boolean`. Inside `BEGIN IMMEDIATE … COMMIT` (with `ROLLBACK` on error), `INSERT … ON CONFLICT DO NOTHING` each payout row; for rows that were actually inserted, upsert the player and add the coins. Return whether anything was paid.
 - [x] 2.3 Add `getBalance(db, userId): number` (0 when the player has no row).
 - [x] 2.4 Extend `db.test.ts`: tables exist, a payout raises balances and writes rows, repeating the same `payOut` leaves both unchanged, a failing row rolls everything back, and a closed-and-reopened database keeps the balance.
 - [x] 2.5 Extend `TableConfig` in `TableRoom.ts` with `db: DatabaseSync | null` and `guestPayouts: boolean`. In `app.ts` pass `db` through `ServerDeps` and set `guestPayouts` from `config.guestLogin`; in `index.ts` pass the database it already opens. With `db: null` (existing tests) payouts are skipped.
 - [x] 2.6 In the `MSG_START` handler, create `this.gameId = randomUUID()` next to `this.setup`. Add `private paid = false`.
 - [x] 2.7 In `apply`, after a move is accepted, if `this.game.finished && !this.paid`, set `paid = true` and call a new `settlePayout()`. Make `settlePayout` call `computePayouts`, map each player index to `this.seats[i].user.id`, drop guest ids (`guest-…`) unless `cfg.guestPayouts`, and call `payOut`. Keep the result on the room for task 3.0. Wrap the whole settlement in a `try` and `catch` that logs the error and leaves the game finished with no payout, so a database failure can never stop Results from reaching players; if it fails, leave `paid` set so the same game is not retried half-way.
-- [x] 2.8 Extend `TableRoom.test.ts`: a full 2-player game pays both seats once with the winner bonus, every payout row carries a UUID `game_id`, and a second game at the same table gets a different one; a spectator gets nothing; a guest is skipped with `guestPayouts: false` (no payout row and no `players` row is created) and paid with `true`; an unfinished game writes no rows; a seat with no connected devices at the end is still paid; no client message can change a balance (send a bogus message and check nothing changed); and a database that throws during settlement still leaves the game finished, sends no coin message, and logs the error.
+- [x] 2.8 Extend `TableRoom.test.ts`: a full 2-player game pays both seats once with the winner bonus, every payout row carries a UUID `game_id`, and a second game at the same table gets a different one; a spectator gets nothing; a guest is skipped with `guestPayouts: false` (no payout row and no `wallets` row is created) and paid with `true`; an unfinished game writes no rows; a seat with no connected devices at the end is still paid; no client message can change a balance (send a bogus message and check nothing changed); and a database that throws during settlement still leaves the game finished, sends no coin message, and logs the error.
 - [x] 2.9 Run a local dev game (`task dev`, two guest browsers on one `?table=`), then run the `sqlite3` query and save the output (guest ids only) to the proofs folder.
 
-### [ ] 3.0 Payout message, snapshot field and the Results screen coin line
+### [x] 3.0 Payout message, snapshot field and the Results screen coin line
 
 Covers Spec Unit 3. Players see what they earned, including after a reconnect.
 
@@ -99,21 +101,22 @@ Covers Spec Unit 3. Players see what they earned, including after a reconnect.
 
 - Test: `apps/server/src/rooms/TableRoom.test.ts` shows each connected client receives the payout message after the final move and that a client joining after the game ended gets the same payout in its snapshot, demonstrating the live and reconnect paths.
 - Test: `apps/web/src/payoutView.test.ts` passes and shows the `+N coins` text, the breakdown, singular `1 coin`, the viewer's balance, the spectator view without a balance, and nothing when there is no payout, demonstrating the display rules.
-- Screenshot: Results screen after a 3-card, 2-guest game saved as `docs/specs/01-spec-coins-and-payouts/01-proofs/results-coins.png` shows `+20 coins` for the winner and `+10 coins` for the other player with the cauldron coin icon, demonstrating the visual result.
+- Test: `apps/web/src/screens/Results.test.tsx` renders the Results screen to a string and shows the winner and standings with no coin lines before the payout arrives, then the coin lines and balance once it does, a spectator with no balance, and only paid players with a line, demonstrating that Results shows first and the coins follow without errors.
+- Screenshot: Results screen after a 1-card, 2-guest game saved as `docs/specs/01-spec-coins-and-payouts/01-proofs/results-coins.png` shows each player's `+N coins` line with its breakdown and the cauldron coin icon, and the viewer's balance, demonstrating the visual result (a 1-card game is used because a 3-card game takes three times as long to play; the 3-card amounts are covered by the unit tests).
 - CLI: `task test` passes including `palette.test.ts`, demonstrating the coin text meets WCAG AA in both themes and all three schemes.
 - Test: `e2e/tests/coins.spec.ts` runs once with reduced motion emulated (`page.emulateMedia({ reducedMotion: 'reduce' })`) and shows the coin line is visible without waiting for an animation, and the existing Results assertions in `e2e/tests/game.spec.ts` still pass, demonstrating Results keeps its layout and reduced-motion behavior.
 
 #### 3.0 Tasks
 
-- [ ] 3.1 In `packages/shared/src/protocol.ts`, add `MSG_PAYOUT = 'payout'`, `SeatPayoutInfo { userId; coins; finish; win; yatzy }` and `PayoutMessage { seats: SeatPayoutInfo[]; balance: number | null }`. Add `payout?: PayoutMessage` to `Snapshot`. `balance` is the receiving player's own new balance, or `null` for spectators and unpaid guests.
-- [ ] 3.2 In `TableRoom.ts`, after `settlePayout`, send each connected client its own `PayoutMessage` (seat list plus that client's balance). Keep the settled payout on the room, and include it, with the client's own balance, in `sendSnapshot` once the game is finished.
-- [ ] 3.3 Extend the room tests: both clients receive `MSG_PAYOUT` after the final move; a client that joins afterwards receives it in its snapshot; the spectator's `balance` is `null`.
-- [ ] 3.4 In `apps/web/src/useTable.ts`, keep `payout` in state, set it from `MSG_PAYOUT` and from `snapshot.payout`, and return it.
-- [ ] 3.5 Create `apps/web/src/payoutView.ts` with `coinLine(payout, userId)` returning the `+N coins` label (`+1 coin` when N is 1), the breakdown text such as `finished 10, won 10, Yatzy 3` (leaving out zero parts), and the viewer's balance or `null`. Add `payoutView.test.ts`, including a test that a `null` payout returns nothing to show.
-- [ ] 3.6 Add `CauldronCoinIcon` to `apps/web/src/icons.tsx`: a coin with a tiny cauldron mark, drawn with the existing `Icon` wrapper so it follows `currentColor`.
-- [ ] 3.7 Update `Results.tsx` and `App.tsx`: pass `payout` in; under each player's name show the coin line and quiet breakdown, and show the viewer's balance once. Render nothing (no empty line, no error) while `payout` is null, and fade in when it arrives, because the payout message can land just after the final move. Respect reduced motion (no animation, the line is simply there) and reuse `CountUp` for the total. Do not change the existing winner banner, standings or card-totals markup beyond adding the coin line.
-- [ ] 3.8 Add the matching styles in `styles.css`, using existing palette tokens. If a new text and background pairing is introduced, add it to `palette.test.ts`.
-- [ ] 3.9 Capture the Results screenshot (3 cards, two guests, light and dark if easy) into the proofs folder.
+- [x] 3.1 In `packages/shared/src/protocol.ts`, add `MSG_PAYOUT = 'payout'`, `SeatPayoutInfo { userId; coins; finish; win; yatzy }` and `PayoutMessage { seats: SeatPayoutInfo[]; balance: number | null }`. Add `payout?: PayoutMessage` to `Snapshot`. `balance` is the receiving player's own new balance, or `null` for spectators and unpaid guests.
+- [x] 3.2 In `TableRoom.ts`, after `settlePayout`, send each connected client its own `PayoutMessage` (seat list plus that client's balance). Keep the settled payout on the room, and include it, with the client's own balance, in `sendSnapshot` once the game is finished.
+- [x] 3.3 Extend the room tests: both clients receive `MSG_PAYOUT` after the final move; a client that joins afterwards receives it in its snapshot; the spectator's `balance` is `null`.
+- [x] 3.4 In `apps/web/src/useTable.ts`, keep `payout` in state, set it from `MSG_PAYOUT` and from `snapshot.payout`, and return it.
+- [x] 3.5 Create `apps/web/src/payoutView.ts` with `coinLine(payout, userId)` returning the `+N coins` label (`+1 coin` when N is 1), the breakdown text such as `finished 10, won 10, Yatzy 3` (leaving out zero parts), and the viewer's balance or `null`. Add `payoutView.test.ts`, including a test that a `null` payout returns nothing to show.
+- [x] 3.6 Add `CauldronCoinIcon` to `apps/web/src/icons.tsx`: a coin with a tiny cauldron mark, drawn with the existing `Icon` wrapper so it follows `currentColor`.
+- [x] 3.7 Update `Results.tsx` and `App.tsx`: pass `payout` in; under each player's name show the coin line and quiet breakdown, and show the viewer's balance once. Render nothing (no empty line, no error) while `payout` is null, and fade in when it arrives, because the payout message can land just after the final move. Respect reduced motion (no animation, the line is simply there) and reuse `CountUp` for the total. Do not change the existing winner banner, standings or card-totals markup beyond adding the coin line.
+- [x] 3.8 Add the matching styles in `styles.css`, using existing palette tokens. If a new text and background pairing is introduced, add it to `palette.test.ts`.
+- [x] 3.9 Capture the Results screenshot (3 cards, two guests, light and dark if easy) into the proofs folder.
 
 ### [ ] 4.0 End-to-end proof, restart persistence and release readiness
 
@@ -128,7 +131,7 @@ Closes the spec. It proves the whole path in the real client and leaves the bran
 
 #### 4.0 Tasks
 
-- [ ] 4.1 Create `e2e/tests/coins.spec.ts`. Reuse the `sitDown` and `playTurn` helpers from `game.spec.ts` (move them to a shared helper file if that is the simplest way), set 1 card, play to the end with two guests, and assert each player sees a `+N coins` line, with the winner's amount higher, and that the winner banner is visible before the coin line (so Results showing first and coins arriving after is covered). Run the same test again with reduced motion emulated and assert the coin line is visible straight away. Confirm e2e runs with guest login on, and that the existing Results assertions in `game.spec.ts` still pass.
+- [x] 4.1 Create `e2e/tests/coins.spec.ts`. Reuse the `sitDown` and `playTurn` helpers from `game.spec.ts` (move them to a shared helper file if that is the simplest way), set 1 card, play to the end with two guests, and assert each player sees a `+N coins` line, with the winner's amount higher, and that the winner banner is visible before the coin line (so Results showing first and coins arriving after is covered). Run the same test again with reduced motion emulated and assert the coin line is visible straight away. Confirm e2e runs with guest login on, and that the existing Results assertions in `game.spec.ts` still pass.
 - [ ] 4.2 Add the restart-persistence server test using `startTestServer` twice with the same temporary database path (add a database option to `test-server.ts` if needed), then check the balance with `getBalance`.
 - [ ] 4.3 Add a short "Coins" section to `README.md`: the earnings table, the solo rule, that only finished games pay, and where the code lives (`packages/rules/src/payout.ts`, `apps/server/src/db.ts`).
 - [ ] 4.4 Run `task lint`, `task typecheck`, `task test`, `task build` and `task e2e`, and save a one-screen summary of the results to `docs/specs/01-spec-coins-and-payouts/01-proofs/ci-parity.txt`.

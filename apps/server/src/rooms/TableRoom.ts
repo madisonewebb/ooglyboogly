@@ -26,11 +26,13 @@ import {
   type Lobby,
   type LobbySettings,
   type MoveMessage,
+  type PayoutMessage,
   MSG_ERROR,
   MSG_TINT,
   MSG_HOLD,
   MSG_LOBBY,
   MSG_MOVE,
+  MSG_PAYOUT,
   MSG_ROLL,
   MSG_SCORE,
   MSG_SETTINGS,
@@ -45,7 +47,7 @@ import {
   type SessionUser,
   type Snapshot,
 } from '@rollhouse/shared';
-import { type PayoutRow, payOut } from '../db';
+import { getBalance, type PayoutRow, payOut } from '../db';
 import { rollDice } from '../dice';
 import { verifySession } from '../session';
 
@@ -146,6 +148,10 @@ export function createTableRoom(cfg: TableConfig) {
     gameId = '';
     /** Set once the game's payout has been tried, so it is never tried twice. */
     private paid = false;
+    /** What was paid, once it has been: sent to everyone, and to anyone who joins later. */
+    private settled: PayoutMessage['seats'] | null = null;
+    /** Each paid player's balance right after the payout, so joining never needs the database. */
+    private balances = new Map<string, number>();
     private emptyTimer: { clear(): void } | null = null;
     /** When each user last sent a sticker, for the cooldown. */
     private lastReaction = new Map<string, number>();
@@ -339,6 +345,12 @@ export function createTableRoom(cfg: TableConfig) {
       };
     }
 
+    /** The payout as one client sees it: everyone's earnings, and their own balance. */
+    private payoutFor(client: Client): PayoutMessage {
+      const { id } = client.auth as SessionUser;
+      return { seats: this.settled!, balance: this.balances.get(id) ?? null };
+    }
+
     private sendSnapshot(client: Client) {
       const body: Snapshot = {
         lobby: this.lobby(),
@@ -346,6 +358,7 @@ export function createTableRoom(cfg: TableConfig) {
         moves: this.moves,
         version: cfg.version,
         you: client.auth as SessionUser,
+        ...(this.settled ? { payout: this.payoutFor(client) } : {}),
       };
       client.send(MSG_SNAPSHOT, body);
     }
@@ -420,7 +433,11 @@ export function createTableRoom(cfg: TableConfig) {
           if (isGuestId(user.id) && !cfg.guestPayouts) return [];
           return [{ userId: user.id, coins: p.total, breakdown: p.breakdown }];
         });
-        payOut(cfg.db, this.gameId, rows);
+        if (rows.length > 0 && payOut(cfg.db, this.gameId, rows)) {
+          this.settled = rows.map((r) => ({ userId: r.userId, coins: r.coins, ...r.breakdown }));
+          for (const r of rows) this.balances.set(r.userId, getBalance(cfg.db, r.userId));
+          for (const client of this.clients) client.send(MSG_PAYOUT, this.payoutFor(client));
+        }
       } catch (err) {
         console.error(`payout failed for game ${this.gameId}`, err);
       }

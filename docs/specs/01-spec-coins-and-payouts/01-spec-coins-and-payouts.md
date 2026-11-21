@@ -48,12 +48,12 @@ Oogly Boogly has no player accounts beyond a Discord id, and nothing a player do
 
 **Functional Requirements:**
 
-- The system shall create `players` (Discord id, coin balance, created and updated times) and `payouts` (game id, user id, coins, breakdown as JSON, time) tables in the existing SQLite database, with a unique key on `(game_id, user_id)`.
+- The system shall create `wallets` (Discord id, coin balance, created and updated times) and `payouts` (game id, user id, coins, breakdown as JSON, time) tables in the existing SQLite database, with a unique key on `(game_id, user_id)`.
 - The system shall give each game a unique id (a random UUID) when the host starts it, held by the room next to the move log.
 - The system shall, when the server applies the final move and the game becomes finished, compute payouts with the Unit 1 function and write all payout rows and balance updates in a single database transaction.
 - The system shall never pay the same `(game_id, user_id)` twice, even if the payout code runs again, and shall treat a repeated payout as a no-op rather than an error.
 - The system shall pay only seated players, and shall pay nothing to spectators.
-- The system shall pay guests (ids starting with `guest-`) only when guest login is enabled (local dev and e2e), and shall never create `players` rows for guests when it is disabled.
+- The system shall pay guests (ids starting with `guest-`) only when guest login is enabled (local dev and e2e), and shall never create `wallets` rows for guests when it is disabled.
 - The system shall pay nothing for a game that never finishes, including when the room is abandoned or the server restarts mid-game.
 - The system shall keep paying a seat whose player is disconnected when the game finishes, because the seat is fixed once the game starts.
 - The system shall keep a client from sending anything that changes a balance: no client message creates, edits or requests a payout.
@@ -113,7 +113,8 @@ The coin line on the Results screen follows the existing look: the same name pla
 - **Idempotency:** the unique key on `(game_id, user_id)` is the real guard. Use `INSERT … ON CONFLICT DO NOTHING` and update the balance only for rows that were inserted, all in one transaction (`BEGIN IMMEDIATE`), so a crash cannot leave a payout without a balance update or the reverse.
 - **Identity:** use `SessionUser.id` (the Discord id) as the player key. The session is signed by the server, so the id cannot be forged by a client.
 - **Money is integers:** store coins as integer columns and compute with integer math. The `round` and `floor` rules above must be implemented exactly so the test table passes.
-- **Ledger first:** the balance in `players` is a cache of the sum of `payouts` (and, from spec 02, of purchases). Keep the payout rows as the source of truth so a balance can be audited or rebuilt.
+- **Ledger first:** the balance in `wallets` is a cache of the sum of `payouts` (and, from spec 02, of purchases). Keep the payout rows as the source of truth so a balance can be audited or rebuilt.
+- **Table names and the earlier coins version:** an earlier implementation of coins (commit `d9192dd`, reverted by `d40345c`) created a `players` table (`user_id, name, coins, updated_at`) and a `ledger` table. They may still exist in staging and production databases. `CREATE TABLE IF NOT EXISTS players` would skip silently there and every payout would then fail, so the balance table is named `wallets`. Old balances are not migrated.
 - **Migrations:** `db.ts` currently says Drizzle arrives in a later milestone. This spec keeps plain `CREATE TABLE IF NOT EXISTS` statements to match the file as it is; moving to Drizzle is a separate decision (see Open Questions).
 - **Protocol:** add a payout message name and types to `protocol.ts` next to the existing ones, and an optional payout field to `Snapshot`. Bump nothing else; clients built for another server version already reload on a version mismatch.
 - **Tests with time:** the room tests already run a real game; extend them rather than building a second harness.

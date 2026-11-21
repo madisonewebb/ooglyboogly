@@ -17,11 +17,13 @@ import {
   type ErrorMessage,
   type Lobby,
   type MoveMessage,
+  type PayoutMessage,
   MSG_ERROR,
   MSG_TINT,
   MSG_HOLD,
   MSG_LOBBY,
   MSG_MOVE,
+  MSG_PAYOUT,
   MSG_ROLL,
   MSG_SCORE,
   MSG_SETTINGS,
@@ -61,6 +63,8 @@ class Player {
   moves: Move[] = [];
   errors: ErrorMessage[] = [];
   reactions: ReactionMessage[] = [];
+  /** The latest payout message, once the game has been paid. */
+  payout: PayoutMessage | null = null;
   /** The tumble seed of each roll message, in order. */
   tumbles: (number | undefined)[] = [];
   constructor(
@@ -80,6 +84,7 @@ class Player {
     });
     room.onMessage(MSG_ERROR, (e: ErrorMessage) => this.errors.push(e));
     room.onMessage(MSG_REACTION, (r: ReactionMessage) => this.reactions.push(r));
+    room.onMessage(MSG_PAYOUT, (m: PayoutMessage) => (this.payout = m));
   }
 
   get game(): GameState {
@@ -413,7 +418,7 @@ describe('coin payouts', () => {
       user_id: string;
       coins: number;
     }[];
-  const playerRows = (db: DatabaseSync) => db.prepare('SELECT user_id FROM players').all();
+  const playerRows = (db: DatabaseSync) => db.prepare('SELECT user_id FROM wallets').all();
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
   /** Plays a 1-card game to the end, one 13-turn pass for everyone. */
@@ -542,6 +547,71 @@ describe('coin payouts', () => {
     expect(payouts(db).map((r) => [r.user_id, r.coins])).toEqual([['u-Madi', 1]]);
   });
 
+  it('tells every client what was earned, and each their own balance', async () => {
+    const db = openDb();
+    await withDb(db);
+    const a = await join('Madi');
+    const b = await join('Mom');
+    await startGame(a, [b], { cardsPerPlayer: 1 });
+    const c = await join('Mema');
+    await playOut([a, b]);
+    await until(() => [a, b, c].every((p) => p.payout !== null), 'the payout message');
+
+    const expected = computePayouts(a.game);
+    const bySeat = (seat: number) => ({
+      userId: seat === a.seat ? 'u-Madi' : 'u-Mom',
+      coins: expected[seat]!.total,
+      ...expected[seat]!.breakdown,
+    });
+    const seats = [bySeat(a.seat), bySeat(b.seat)].sort((x, y) => x.userId.localeCompare(y.userId));
+    for (const p of [a, b, c]) {
+      expect([...p.payout!.seats].sort((x, y) => x.userId.localeCompare(y.userId))).toEqual(seats);
+    }
+    expect(a.payout!.balance).toBe(getBalance(db, 'u-Madi'));
+    expect(b.payout!.balance).toBe(getBalance(db, 'u-Mom'));
+    // A spectator sees what everyone earned but has no balance of their own.
+    expect(c.payout!.balance).toBeNull();
+  });
+
+  it('puts the payout in the snapshot of anyone who joins or comes back later', async () => {
+    const db = openDb();
+    await withDb(db);
+    const a = await join('Madi');
+    const b = await join('Mom');
+    await startGame(a, [b], { cardsPerPlayer: 1 });
+    await playOut([a, b]);
+    await until(() => a.payout !== null && b.payout !== null, 'the payout message');
+
+    const back = await join('Madi'); // the same player, on a new device
+    expect(back.snapshot!.payout).toEqual(a.payout);
+    const late = await join('Gran');
+    expect(late.snapshot!.payout!.balance).toBeNull();
+    expect(late.snapshot!.payout!.seats).toEqual(a.payout!.seats);
+  });
+
+  it('sends no payout before the game is finished', async () => {
+    const db = openDb();
+    await withDb(db);
+    const a = await join('Madi');
+    const b = await join('Mom');
+    await startGame(a, [b], { cardsPerPlayer: 1 });
+    await playTurn(a);
+    await playTurn(b);
+    expect(a.payout).toBeNull();
+    expect((await join('Gran')).snapshot!.payout).toBeUndefined();
+  });
+
+  it('sends no payout when nobody was paid', async () => {
+    const db = openDb();
+    await withDb(db);
+    const g = await join('Gus', 'inst-1', 'guest-gus');
+    await startGame(g, [], { cardsPerPlayer: 1 });
+    await playOut([g]);
+    await new Promise((r) => setTimeout(r, 50));
+    expect(g.payout).toBeNull();
+    expect((await join('Hal', 'inst-1', 'guest-hal')).snapshot!.payout).toBeUndefined();
+  });
+
   it('ends the game normally, and logs, when the payout cannot be recorded', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const db = openDb();
@@ -554,6 +624,9 @@ describe('coin payouts', () => {
     expect(a.game.finished).toBe(true);
     expect(b.game.finished).toBe(true);
     expect(a.errors).toEqual([]);
+    expect(a.payout).toBeNull();
+    expect(b.payout).toBeNull();
+    expect((await join('Late')).snapshot!.payout).toBeUndefined();
     expect(error).toHaveBeenCalledWith(expect.stringMatching(/payout failed/), expect.anything());
   });
 });
