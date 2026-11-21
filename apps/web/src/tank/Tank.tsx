@@ -37,7 +37,7 @@ interface Props {
   /** Whose tank, for screen readers: "Mom's tank". */
   label: string;
   className?: string;
-  ref?: Ref<TankHandle>;
+  ref?: Ref<TankHandle> | undefined;
 }
 
 const FLAKE_COLORS = ['#D69A45', '#B8503A', '#E6C46A', '#8A6A3A'];
