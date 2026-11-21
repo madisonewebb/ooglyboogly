@@ -45,7 +45,7 @@ Spec: `03-spec-dice-skins-and-brews.md`
 - [x] 1.2 Write `look.ts` (`lookOf`, `resolveEquipped`) and `devCosmetics.ts`.
 - [x] 1.3 Write `parseCosmeticsOverride.ts` and its tests; write `look.test.ts`.
 
-### [ ] 2.0 Dice skins in the scene
+### [x] 2.0 Dice skins in the scene
 
 #### 2.0 Proof Artifact(s)
 
@@ -54,12 +54,12 @@ Spec: `03-spec-dice-skins-and-brews.md`
 
 #### 2.0 Tasks
 
-- [ ] 2.1 Add `domeGeometry` to `dieModel.ts`, keep `pipGeometry` output identical, test it.
-- [ ] 2.2 Write `skinTextures.ts` and `skinRig.ts` (materials, eyes shader, glow pulse, glints).
-- [ ] 2.3 Wire the rig into `Dice`, add the `look` prop, `equipped` on `DiceTray`, the line in `Game.tsx`.
-- [ ] 2.4 Idle redraw interval with reduced-motion and visibility guards.
+- [x] 2.1 Add `domeGeometry` to `dieModel.ts`, keep `pipGeometry` output identical, test it.
+- [x] 2.2 Write `skinTextures.ts` and `skinRig.ts` (materials, eyes shader, glow pulse, glints).
+- [x] 2.3 Wire the rig into `Dice`, add the `look` prop, `equipped` on `DiceTray`, the line in `Game.tsx`.
+- [x] 2.4 Idle redraw interval with reduced-motion and visibility guards.
 
-### [ ] 3.0 Brews and the Yatzy effects
+### [x] 3.0 Brews and the Yatzy effects
 
 #### 3.0 Proof Artifact(s)
 
@@ -68,11 +68,11 @@ Spec: `03-spec-dice-skins-and-brews.md`
 
 #### 3.0 Tasks
 
-- [ ] 3.1 Write `particles.ts` (rising shader and star points).
-- [ ] 3.2 Write `Brew.tsx` (liquid, layers, fade with tip, comet) and mount it in `Cup` and the scene.
-- [ ] 3.3 Flip the nine `available` flags and add the flags test.
+- [x] 3.1 Write `particles.ts` (rising shader and star points).
+- [x] 3.2 Write `Brew.tsx` (liquid, layers, fade with tip, comet) and mount it in `Cup` and the scene.
+- [x] 3.3 Flip the nine `available` flags and add the flags test.
 
-### [ ] 4.0 Lab pickers, dev override, screenshots and performance notes
+### [x] 4.0 Lab pickers, dev override, screenshots and performance notes
 
 #### 4.0 Proof Artifact(s)
 
@@ -80,6 +80,6 @@ Spec: `03-spec-dice-skins-and-brews.md`
 
 #### 4.0 Tasks
 
-- [ ] 4.1 Add pickers, Yatzy button, hold-cauldron toggle and `cosmetics.css` to the lab.
-- [ ] 4.2 Capture screenshots of every item with Playwright.
-- [ ] 4.3 Run all gates, write the proofs and the validation report.
+- [x] 4.1 Add pickers, Yatzy button, hold-cauldron toggle and `cosmetics.css` to the lab.
+- [x] 4.2 Capture screenshots of every item with Playwright.
+- [x] 4.3 Run all gates, write the proofs and the validation report.
