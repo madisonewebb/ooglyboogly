@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.6.0](https://github.com/madisonewebb/ooglyboogly/compare/v0.5.0...v0.6.0) (2026-11-21)
+
+
+### Features
+
+* rename the app to Oogly Boogly ([#49](https://github.com/madisonewebb/ooglyboogly/issues/49)) ([d3d5593](https://github.com/madisonewebb/ooglyboogly/commit/d3d5593f8e6923ae11f22eb59b82fd984368f16e))
+* **web:** hold Roll to shake, a chime on your turn, and no snap after a roll ([#43](https://github.com/madisonewebb/ooglyboogly/issues/43)) ([d9b765e](https://github.com/madisonewebb/ooglyboogly/commit/d9b765e32f3d50859689aa847d5aaeb723bb0e6a))
+* **web:** retheme to Lavender evening, modern plum and lavender ([#48](https://github.com/madisonewebb/ooglyboogly/issues/48)) ([ec71eb0](https://github.com/madisonewebb/ooglyboogly/commit/ec71eb0afeb21264b6a00a8b5a0bf5e7eaed7847))
+* **web:** retheme to Sunprint, cyanotype blue and white ([#46](https://github.com/madisonewebb/ooglyboogly/issues/46)) ([f83f7b5](https://github.com/madisonewebb/ooglyboogly/commit/f83f7b53d479628754709f6c96c2896621b152ea))
+* **web:** revamp the table with jelly dice, real tumbles and one motion system ([#41](https://github.com/madisonewebb/ooglyboogly/issues/41)) ([fa2ecfa](https://github.com/madisonewebb/ooglyboogly/commit/fa2ecfa511aa5a199dc5350fe60b516ca494b80f))
+
+
+### Bug Fixes
+
+* uncap Yatzy bonuses, explain the joker rule, and drop Undo ([#44](https://github.com/madisonewebb/ooglyboogly/issues/44)) ([d0ebcc8](https://github.com/madisonewebb/ooglyboogly/commit/d0ebcc89b7146cbb620846a67ea17139e290fa3e))
+* **web:** take actions that are animating out out of reach ([#42](https://github.com/madisonewebb/ooglyboogly/issues/42)) ([50df4f8](https://github.com/madisonewebb/ooglyboogly/commit/50df4f85d615dfabb78c2053792170ee3ca1e196))
+
 ## [0.5.0](https://github.com/madisonewebb/rollhouse/compare/v0.4.0...v0.5.0) (2026-11-19)
 
 
