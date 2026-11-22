@@ -30,6 +30,9 @@ import { BOX_LABELS, BOX_POINTS } from '../labels';
 import { playBonus, playPop, playTurn, unlockAudio } from '../sound';
 import { DURATION, EASE_OUT, SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
+import { PowersBar } from '../powers/PowersBar';
+import { usablePowers } from '../powers/powersView';
+import { useWallet } from '../shop/WalletContext';
 import type { Table } from '../useTable';
 import { PAD_PANEL_ID, padTabId, PadTabs } from './PadTabs';
 
@@ -173,6 +176,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const canAct = seat !== null && active.includes(seat);
   const myTray = trayPlayer === seat && canAct;
   const paradeStage = useParadeStage(game, lobby);
+  const wallet = useWallet();
+  const usable = usablePowers(game, seat, wallet);
 
   // Your turn starting (the first one too) gets a little chime and a pulse on your face.
   const myTurn = turns ? up === seat : canAct;
@@ -531,6 +536,12 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                   </Swap>
                 ) : null}
               </AnimatePresence>
+              <PowersBar
+                wallet={wallet}
+                usable={usable}
+                cards={game.setup.cardsPerPlayer}
+                send={table.send}
+              />
               <p className="hint quiet">{hint || ' '}</p>
             </div>
             <ReactionFloats reactions={table.reactions} lobby={lobby} />
