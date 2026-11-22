@@ -28,14 +28,15 @@ describe('the reaction picker', () => {
     expect(stickersFor(['cauldronCrew', 'moonlitCharms'])).toHaveLength(STICKER_IDS.length + 6);
   });
 
-  it('renders its button, closed', () => {
+  it('renders the hotbar, with the editor closed', () => {
     const html = renderToString(
       <WalletContext.Provider value={wallet({ owned: ['cauldronCrew'] })}>
         <ReactionPicker send={noop} />
       </WalletContext.Provider>,
     );
-    expect(html).toContain('Send a sticker');
-    expect(html).not.toContain('sticker-tray');
+    expect(html).toContain('hotbar-slot');
+    expect(html).toContain('Cheering (1)');
+    expect(html).not.toContain('hotbar-editor');
   });
 
   it('has art and a label for every sticker, free or from a pack', () => {
