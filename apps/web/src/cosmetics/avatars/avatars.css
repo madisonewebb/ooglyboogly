@@ -1,0 +1,96 @@
+/* The avatar: a canvas (or the flat SVG standing in for it) of a fixed size. */
+.avatar-figure {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+}
+
+.avatar-figure canvas,
+.avatar-flat {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-figure canvas[hidden] {
+  display: none;
+}
+
+.pad-tab .avatar-figure {
+  margin-inline: -0.2rem;
+}
+
+.seat .avatar-figure {
+  margin-block: -0.2rem;
+}
+
+/* The flat avatar bobs and bounces too, unless motion is reduced. */
+@media (prefers-reduced-motion: no-preference) {
+  .avatar-flat.idle {
+    animation: avatar-bob 3.4s ease-in-out infinite;
+  }
+
+  .avatar-flat.mood-happy {
+    animation: avatar-hop 1.1s ease-out 1;
+  }
+
+  .avatar-flat.mood-droop {
+    animation: avatar-droop 2.4s ease-in-out 1;
+    transform-origin: 50% 100%;
+  }
+}
+
+@keyframes avatar-bob {
+  50% {
+    transform: translateY(-3%);
+  }
+}
+
+@keyframes avatar-hop {
+  25% {
+    transform: translateY(-18%);
+  }
+  50% {
+    transform: translateY(0) scaleY(0.92);
+  }
+  75% {
+    transform: translateY(-8%);
+  }
+}
+
+@keyframes avatar-droop {
+  25%,
+  70% {
+    transform: scaleY(0.88) rotate(4deg);
+  }
+}
+
+.avatar-bench {
+  display: grid;
+  gap: 1rem;
+  height: auto;
+  align-content: start;
+}
+
+.bench-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bench-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--pad);
+  text-align: center;
+  font-size: 0.9rem;
+}

@@ -12,6 +12,9 @@ import {
   type SettingsIntent,
 } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
+import { AvatarFigure } from '../cosmetics/avatars/AvatarFigure';
+import { devCosmetics } from '../cosmetics/devCosmetics';
+import { resolveEquipped } from '../cosmetics/look';
 import { BrandBar, Welcome } from '../Brand';
 import { tintVars } from '../tint';
 import { saveTint } from '../tintPrefs';
@@ -169,6 +172,12 @@ export function Lobby({ lobby, table, userId, cdnBase }: Props) {
                           </span>
                         )}
                       </span>
+                      <AvatarFigure
+                        equipped={resolveEquipped(seat.equipped, devCosmetics())}
+                        tint={seat.tint}
+                        size={72}
+                        seed={lobby.seats.indexOf(seat)}
+                      />
                       <span className="seat-name">
                         {seat.user.name}
                         {lookLine(seat.equipped) && (

@@ -27,6 +27,13 @@ const CelebrationBench =
         import('./cosmetics/CelebrationBench').then((m) => ({ default: m.CelebrationBench })),
       )
     : null;
+// The avatar bench (`?avatars`), under the same gate.
+const AvatarBench =
+  import.meta.env.DEV || import.meta.env.VITE_LAB === '1'
+    ? lazy(() =>
+        import('./cosmetics/avatars/AvatarBench').then((m) => ({ default: m.AvatarBench })),
+      )
+    : null;
 installThemeCss();
 
 const root = document.getElementById('root');
@@ -35,7 +42,11 @@ createRoot(root).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
       <PrefsProvider>
-        {CelebrationBench && new URLSearchParams(location.search).has('celebrations') ? (
+        {AvatarBench && new URLSearchParams(location.search).has('avatars') ? (
+          <Suspense fallback={null}>
+            <AvatarBench />
+          </Suspense>
+        ) : CelebrationBench && new URLSearchParams(location.search).has('celebrations') ? (
           <Suspense fallback={null}>
             <CelebrationBench />
           </Suspense>

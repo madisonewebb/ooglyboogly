@@ -880,7 +880,7 @@ describe('the shop', () => {
       { slot: 'diceSkin', item: 'bone' },
       { slot: 'diceSkin', item: 'swamp' },
       { slot: 'diceSkin', item: 'ghost' },
-      { slot: 'hat', item: 'swamp' },
+      { slot: 'sidekick', item: 'swamp' },
       { item: 'swamp' },
       'swamp',
     ]) {
