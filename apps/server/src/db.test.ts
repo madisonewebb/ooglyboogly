@@ -171,12 +171,12 @@ describe('the shop', () => {
         blurb: '',
         available: true,
       },
-      toad: {
-        id: 'toad',
-        slot: 'pet',
-        name: 'Toad',
+      swamp: {
+        id: 'swamp',
+        slot: 'brew',
+        name: 'Swamp',
         rarity: 'common',
-        price: 60,
+        price: 40,
         blurb: '',
         available: true,
       },
@@ -212,9 +212,9 @@ describe('the shop', () => {
     expect(table(db, 'inventory')).toEqual([
       expect.objectContaining({ user_id: 'a', item_id: 'violetMurk', price_paid: 40 }),
     ]);
-    // A pet costs its own tier, from the catalog.
-    expect(buyItem(db, 'a', 'toad', forSale)).toEqual({ ok: true });
-    expect(getBalance(db, 'a')).toBe(0);
+    // Every item costs its own catalog price.
+    expect(buyItem(db, 'a', 'swamp', forSale)).toEqual({ ok: true });
+    expect(getBalance(db, 'a')).toBe(20);
     db.close();
   });
 
@@ -281,16 +281,16 @@ describe('the shop', () => {
   it('equips an owned item in its slot, replacing the one there, and unequips', () => {
     const { db } = open(1000);
     buyItem(db, 'a', 'bone', forSale);
-    buyItem(db, 'a', 'toad', forSale);
+    buyItem(db, 'a', 'swamp', forSale);
     db.prepare("INSERT INTO inventory VALUES ('a', 'obsidian', 40, 'now')").run();
     expect(equipItem(db, 'a', 'diceSkin', 'bone')).toEqual({ ok: true });
-    expect(equipItem(db, 'a', 'pet', 'toad')).toEqual({ ok: true });
-    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'bone', pet: 'toad' });
+    expect(equipItem(db, 'a', 'brew', 'swamp')).toEqual({ ok: true });
+    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'bone', brew: 'swamp' });
     // One item per slot.
     expect(equipItem(db, 'a', 'diceSkin', 'obsidian')).toEqual({ ok: true });
-    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'obsidian', pet: 'toad' });
+    expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'obsidian', brew: 'swamp' });
     expect(table(db, 'equipped')).toHaveLength(2);
-    expect(equipItem(db, 'a', 'pet', null)).toEqual({ ok: true });
+    expect(equipItem(db, 'a', 'brew', null)).toEqual({ ok: true });
     expect(getEquipped(db, 'a')).toEqual({ diceSkin: 'obsidian' });
     // Taking off an empty slot is fine.
     expect(equipItem(db, 'a', 'brew', null)).toEqual({ ok: true });
@@ -299,21 +299,24 @@ describe('the shop', () => {
 
   it('refuses to equip what is not owned, not in that slot, or not real', () => {
     const { db } = open(100);
-    buyItem(db, 'a', 'toad', forSale);
+    buyItem(db, 'a', 'swamp', forSale);
     expect(equipItem(db, 'a', 'diceSkin', 'bone')).toEqual(fail('NOT_OWNED'));
-    expect(equipItem(db, 'a', 'diceSkin', 'toad')).toEqual(fail('UNKNOWN_ITEM'));
-    expect(equipItem(db, 'a', 'pet', 'violetMurk')).toEqual(fail('UNKNOWN_ITEM'));
-    expect(equipItem(db, 'a', 'pet', 7)).toEqual(fail('UNKNOWN_ITEM'));
-    expect(equipItem(db, 'a', 'hat', 'toad')).toEqual(fail('BAD_INTENT'));
+    expect(equipItem(db, 'a', 'diceSkin', 'swamp')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(equipItem(db, 'a', 'brew', 'bone')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(equipItem(db, 'a', 'brew', 7)).toEqual(fail('UNKNOWN_ITEM'));
+    expect(equipItem(db, 'a', 'hat', 'swamp')).toEqual(fail('BAD_INTENT'));
+    // Pets are gone from the shop, so the slot is no longer one.
+    expect(equipItem(db, 'a', 'pet', 'toad')).toEqual(fail('BAD_INTENT'));
     // Someone else's item is not yours.
-    expect(equipItem(db, 'b', 'pet', 'toad')).toEqual(fail('NOT_OWNED'));
+    expect(equipItem(db, 'b', 'brew', 'swamp')).toEqual(fail('NOT_OWNED'));
     expect(getEquipped(db, 'a')).toEqual({});
     db.close();
   });
 
-  it('ignores an equipped row whose item has left the catalog', () => {
+  it('ignores an equipped row whose item or slot has left the catalog (pets, for one)', () => {
     const { db } = open();
-    db.prepare("INSERT INTO equipped VALUES ('a', 'pet', 'dragon')").run();
+    db.prepare("INSERT INTO equipped VALUES ('a', 'pet', 'toad')").run();
+    db.prepare("INSERT INTO equipped VALUES ('a', 'diceSkin', 'dragon')").run();
     db.prepare("INSERT INTO equipped VALUES ('a', 'brew', 'swamp')").run();
     expect(getEquipped(db, 'a')).toEqual({ brew: 'swamp' });
     db.close();

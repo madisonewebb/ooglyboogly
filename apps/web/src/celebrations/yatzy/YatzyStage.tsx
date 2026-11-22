@@ -1,6 +1,6 @@
 import type { GameState } from '@rollhouse/rules';
 import { GhostParade } from '../../cosmetics/celebrations/GhostParade';
-import type { ParadeCue } from '../../cosmetics/pets/stage';
+import type { ParadeCue } from '../../cosmetics/celebrations/stage';
 import { useYatzyCelebration } from './useYatzyCelebration';
 import { YatzyCelebration } from './YatzyCelebration';
 
@@ -9,7 +9,7 @@ interface Props {
   /** A seat's display name. */
   name(seat: number): string;
   reduced: boolean;
-  /** The equipped Ghost Parade to play, if the roller has one (from the pet stage). */
+  /** The equipped Ghost Parade to play, if the roller has one (from the parade stage). */
   parade: ParadeCue | null;
   endParade(): void;
 }

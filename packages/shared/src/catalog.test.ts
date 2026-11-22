@@ -25,16 +25,16 @@ describe('catalog', () => {
 
   it('keeps the agreed starter prices', () => {
     expect(itemById('bone')!.price).toBe(40);
-    expect(itemById('toad')!.price).toBe(60);
-    expect(itemById('ghostCheerleader')!.price).toBe(400);
+    expect(itemById('ghostParade')!.price).toBe(100);
   });
 
   it('finds items and checks slots', () => {
     expect(itemById('nope')).toBeUndefined();
-    expect(isSlot('pet')).toBe(true);
+    expect(isSlot('celebration')).toBe(true);
     expect(isSlot('hat')).toBe(false);
-    expect(fitsSlot('pet', 'toad')).toBe(true);
-    expect(fitsSlot('brew', 'toad')).toBe(false);
-    expect(fitsSlot('pet', 7)).toBe(false);
+    expect(isSlot('pet')).toBe(false);
+    expect(fitsSlot('celebration', 'ghostParade')).toBe(true);
+    expect(fitsSlot('brew', 'ghostParade')).toBe(false);
+    expect(fitsSlot('brew', 7)).toBe(false);
   });
 });

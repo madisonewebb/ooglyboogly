@@ -42,7 +42,7 @@ describe('Shop', () => {
     const html = shop(wallet());
     expect(html).toContain('data-testid="shop-balance"');
     expect(html).toMatch(/shop-balance"[^>]*>.*?55/);
-    for (const title of ['Dice skins', 'Brews', 'Pets', 'Celebrations']) {
+    for (const title of ['Dice skins', 'Brews', 'Celebrations']) {
       expect(html).toContain(title);
     }
     const bone = card(html, 'bone');
@@ -50,8 +50,8 @@ describe('Shop', () => {
     expect(bone).toContain('Common');
     expect(bone).toContain('40');
     expect(bone).toContain('Ivory dice with ink-black pips.');
-    expect(card(html, 'ghostCheerleader')).toContain('Legendary');
-    expect(card(html, 'ghostCheerleader')).toContain('400');
+    expect(card(html, 'ghostParade')).toContain('Spooky');
+    expect(card(html, 'ghostParade')).toContain('100');
   });
 
   it('shows coming-soon items as disabled with no Buy and no pin', () => {
@@ -136,13 +136,13 @@ describe('Shop', () => {
   });
 
   it('shows what you own, with Wear it or Take off', () => {
-    const w = wallet({ owned: ['violetMurk', 'bone', 'toad'], equipped: { diceSkin: 'bone' } });
+    const w = wallet({ owned: ['violetMurk', 'bone', 'swamp'], equipped: { diceSkin: 'bone' } });
     const html = shop(w);
     expect(card(html, 'violetMurk')).toContain('>Owned<');
     expect(card(html, 'violetMurk')).toContain('Wear it');
     expect(card(html, 'bone')).toContain('Owned, wearing it');
     expect(card(html, 'bone')).toContain('Take off');
-    expect(card(html, 'toad')).toContain('Wear it');
+    expect(card(html, 'swamp')).toContain('Wear it');
   });
 
   it('marks the pinned goal and shows its bar', () => {
@@ -202,7 +202,7 @@ describe('the lobby', () => {
         user: { id: 'u-a', name: 'Ada', avatar: null },
         connected: true,
         tint: 'rose',
-        equipped: { diceSkin: 'bone', pet: 'toad' },
+        equipped: { diceSkin: 'bone', brew: 'swamp' },
       },
       { user: { id: 'u-b', name: 'Bea', avatar: null }, connected: true, tint: 'fern' },
     ],
@@ -225,7 +225,7 @@ describe('the lobby', () => {
     expect(html).toContain('data-testid="lobby-balance"');
     expect(html).toContain('Open the shop');
     expect(html).toContain('Saving for');
-    expect(html).toContain('Bone, Toad');
+    expect(html).toContain('Bone, Swamp');
     // Bea wears nothing, so no look line for her.
     expect(html.match(/seat-look/g)).toHaveLength(1);
   });

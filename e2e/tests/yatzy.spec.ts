@@ -13,7 +13,7 @@ import { sitDown } from './helpers';
 test('the Yatzy bench and its preview exist only on the dev server and in lab builds', async ({
   page,
 }) => {
-  await page.goto('/?pets&yatzy=1&roller=Madi');
+  await page.goto('/?celebrations&yatzy=1&roller=Madi');
   // The bench page is not in the production build: this is the ordinary app.
   await expect(page.getByLabel('Your name')).toBeVisible();
   await expect(page.getByRole('button', { name: /^Yatzy/ })).toHaveCount(0);

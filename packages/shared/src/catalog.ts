@@ -1,22 +1,21 @@
 /**
  * The shop's catalog: every cosmetic a player can buy, and what each costs.
  * This file is a contract shared by the shop (spec 02), dice skins and brews
- * (spec 03) and pets and celebrations (spec 04). Colors, models and art live in
+ * (spec 03) and celebrations (spec 04). Colors, models and art live in
  * the web client; this file holds only ids, names, rarity and price.
  */
 
 /** What a player can wear. One item per slot is equipped at a time; none means the default look. */
-export const SLOTS = ['diceSkin', 'brew', 'pet', 'celebration'] as const;
+export const SLOTS = ['diceSkin', 'brew', 'celebration'] as const;
 export type Slot = (typeof SLOTS)[number];
 
 export const RARITIES = ['common', 'spooky', 'legendary'] as const;
 export type Rarity = (typeof RARITIES)[number];
 
-/** Price in coins by slot and rarity. Pets cost half again as much as skins and brews. */
+/** Price in coins by slot and rarity. */
 export const PRICES: Record<Slot, Record<Rarity, number>> = {
   diceSkin: { common: 40, spooky: 100, legendary: 300 },
   brew: { common: 40, spooky: 100, legendary: 300 },
-  pet: { common: 60, spooky: 150, legendary: 400 },
   celebration: { common: 40, spooky: 100, legendary: 300 },
 };
 
@@ -90,21 +89,7 @@ export const BREWS: readonly Item[] = [
   ),
 ];
 
-/** Spec 04 owns the available flags of the next two lists. */
-export const PETS: readonly Item[] = [
-  item('pet', 'toad', 'Toad', 'common', 'Sits on the rim and croaks at good rolls.', true),
-  item('pet', 'blackCat', 'Black Cat', 'spooky', 'Watches the dice, and swats at a bust.', true),
-  item('pet', 'bat', 'Bat', 'spooky', 'Hangs from the rim and flaps when you score.', true),
-  item(
-    'pet',
-    'ghostCheerleader',
-    'Ghost Cheerleader',
-    'legendary',
-    'Cheers every score, wildly on a Yatzy.',
-    true,
-  ),
-];
-
+/** Spec 04 owns the available flags of this list. */
 export const CELEBRATIONS: readonly Item[] = [
   item(
     'celebration',
@@ -116,7 +101,7 @@ export const CELEBRATIONS: readonly Item[] = [
   ),
 ];
 
-export const CATALOG: readonly Item[] = [...DICE_SKINS, ...BREWS, ...PETS, ...CELEBRATIONS];
+export const CATALOG: readonly Item[] = [...DICE_SKINS, ...BREWS, ...CELEBRATIONS];
 
 export type ItemId = string;
 

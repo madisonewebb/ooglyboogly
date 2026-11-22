@@ -1,8 +1,8 @@
 /**
- * The Yatzy celebration on the dev bench (`?pets`, dev server and VITE_LAB=1
+ * The Yatzy celebration on the dev bench (`?celebrations`, dev server and VITE_LAB=1
  * builds only; this file is imported only by the bench, so it is not in
  * production). A roller name field, a Yatzy button and the key Y. URL:
- * ?pets&yatzy=1&roller=Madi starts it on load. It owns its own state, so
+ * ?celebrations&yatzy=1&roller=Madi starts it on load. It owns its own state, so
  * playing it re-renders nothing else on the page, like the real thing.
  */
 import { useCallback, useEffect, useState } from 'react';

@@ -20,10 +20,12 @@ const Lab =
   import.meta.env.DEV || import.meta.env.VITE_LAB === '1'
     ? lazy(() => import('./Lab').then((m) => ({ default: m.Lab })))
     : null;
-// The pet and parade bench (`?pets`), under the same gate.
-const PetBench =
+// The celebration bench (`?celebrations`), under the same gate.
+const CelebrationBench =
   import.meta.env.DEV || import.meta.env.VITE_LAB === '1'
-    ? lazy(() => import('./cosmetics/PetBench').then((m) => ({ default: m.PetBench })))
+    ? lazy(() =>
+        import('./cosmetics/CelebrationBench').then((m) => ({ default: m.CelebrationBench })),
+      )
     : null;
 installThemeCss();
 
@@ -33,9 +35,9 @@ createRoot(root).render(
   <StrictMode>
     <MotionConfig reducedMotion="user">
       <PrefsProvider>
-        {PetBench && new URLSearchParams(location.search).has('pets') ? (
+        {CelebrationBench && new URLSearchParams(location.search).has('celebrations') ? (
           <Suspense fallback={null}>
-            <PetBench />
+            <CelebrationBench />
           </Suspense>
         ) : Lab && location.search.includes('lab') ? (
           <Suspense fallback={null}>

@@ -23,15 +23,6 @@ const GLYPHS: Record<Slot, ReactNode> = {
       <path d="M26 21c-3-4 3-6 0-11M38 21c-3-4 3-6 0-11" />
     </>
   ),
-  pet: (
-    <>
-      <ellipse cx="32" cy="42" rx="11" ry="9" />
-      <ellipse cx="16" cy="29" rx="4.5" ry="6" />
-      <ellipse cx="27" cy="20" rx="4.5" ry="6" />
-      <ellipse cx="37" cy="20" rx="4.5" ry="6" />
-      <ellipse cx="48" cy="29" rx="4.5" ry="6" />
-    </>
-  ),
   celebration: (
     <>
       <path d="M32 8l5 15 15 5-15 5-5 15-5-15-15-5 15-5z" />

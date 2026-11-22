@@ -751,7 +751,7 @@ describe('the shop', () => {
   /** The real catalog, except that these two items are coming soon whatever the catalog says today. */
   const soonLookup = (id: unknown): ShopEntry | undefined => {
     const e = shopEntry(id);
-    return e && ['bone', 'ghostCheerleader'].includes(e.id) ? { ...e, available: false } : e;
+    return e && ['bone', 'ghostParade'].includes(e.id) ? { ...e, available: false } : e;
   };
 
   it('refuses what is coming soon, unknown, unaffordable or malformed', async () => {
@@ -761,7 +761,7 @@ describe('the shop', () => {
     const codes: string[] = [];
     for (const body of [
       { item: 'bone' },
-      { item: 'ghostCheerleader' },
+      { item: 'ghostParade' },
       { item: 'nothing' },
       { item: 5 },
       {},
@@ -842,7 +842,7 @@ describe('the shop', () => {
   it('equips and unequips an owned item, and the whole table sees it', async () => {
     const db = openDb(0);
     own(db, 'u-Madi', 'bone');
-    own(db, 'u-Madi', 'toad');
+    own(db, 'u-Madi', 'swamp');
     await withDb(db);
     const a = await join('Madi');
     const b = await join('Mom');
@@ -852,37 +852,37 @@ describe('the shop', () => {
     expect(on.error).toBeNull();
     expect(on.wallet.equipped).toEqual({ diceSkin: 'bone' });
     await until(() => b.lobby!.seats[0]!.equipped?.diceSkin === 'bone', 'Mom to see it');
-    await shop(a, MSG_EQUIP, { slot: 'pet', item: 'toad' });
-    await until(() => b.lobby!.seats[0]!.equipped?.pet === 'toad', 'the pet');
+    await shop(a, MSG_EQUIP, { slot: 'brew', item: 'swamp' });
+    await until(() => b.lobby!.seats[0]!.equipped?.brew === 'swamp', 'the brew');
     expect(b.lobby!.seats[1]).not.toHaveProperty('equipped');
 
     await shop(a, MSG_EQUIP, { slot: 'diceSkin', item: null });
     await until(() => b.lobby!.seats[0]!.equipped?.diceSkin === undefined, 'it to come off');
-    expect(b.lobby!.seats[0]!.equipped).toEqual({ pet: 'toad' });
+    expect(b.lobby!.seats[0]!.equipped).toEqual({ brew: 'swamp' });
 
     // It is remembered: a new connection sits down wearing it.
     await a.room.leave();
     await until(() => b.lobby!.seats.length === 1, 'Madi to leave');
     const again = await join('Madi');
     expect(again.lobby!.seats.find((s) => s.user.id === 'u-Madi')!.equipped).toEqual({
-      pet: 'toad',
+      brew: 'swamp',
     });
-    expect(again.wallet!.equipped).toEqual({ pet: 'toad' });
+    expect(again.wallet!.equipped).toEqual({ brew: 'swamp' });
   });
 
   it('refuses to equip what you do not own, in the wrong slot, or that does not exist', async () => {
     const db = openDb(0);
-    own(db, 'u-Madi', 'toad');
+    own(db, 'u-Madi', 'swamp');
     await withDb(db);
     const a = await join('Madi');
     const codes: string[] = [];
     for (const body of [
       { slot: 'diceSkin', item: 'bone' },
-      { slot: 'diceSkin', item: 'toad' },
+      { slot: 'diceSkin', item: 'swamp' },
       { slot: 'diceSkin', item: 'ghost' },
-      { slot: 'hat', item: 'toad' },
-      { item: 'toad' },
-      'toad',
+      { slot: 'hat', item: 'swamp' },
+      { item: 'swamp' },
+      'swamp',
     ]) {
       codes.push((await shop(a, MSG_EQUIP, body)).error!.code);
     }

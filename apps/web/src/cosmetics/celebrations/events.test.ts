@@ -12,16 +12,9 @@ import {
   type CelebrationMemo,
   celebrationStep,
   eventsBetween,
-  isPetId,
+  type GameEvent,
   isYatzyEvent,
-  PET_IDS,
-  PET_POSES,
-  type PetEvent,
-  petMood,
-  petOwner,
-  poseFor,
-  reactsTo,
-} from './mood';
+} from './events';
 
 const setup = (over: Partial<GameSetup> = {}): GameSetup => ({
   players: 2,
@@ -37,13 +30,13 @@ const roll = (player: number, ...values: Die[]): Move => ({ type: 'roll', player
 const score = (player: number, box: Box): Move => ({ type: 'score', player, card: 0, box });
 const last = (g: GameState, m: Move) => eventsBetween(g, applyMove(g, m));
 
-const rolled = (dice: Die[], rollNumber = 1): PetEvent => ({
+const rolled = (dice: Die[], rollNumber = 1): GameEvent => ({
   kind: 'roll',
   player: 0,
   dice,
   rollNumber,
 });
-const scored = (box: Box, value: number, yatzyBonus = false): PetEvent => ({
+const scored = (box: Box, value: number, yatzyBonus = false): GameEvent => ({
   kind: 'score',
   player: 0,
   box,
@@ -150,42 +143,6 @@ describe('isYatzyEvent', () => {
   });
 });
 
-describe('petMood', () => {
-  it('cheers a Yatzy, rolled or written', () => {
-    expect(petMood(rolled([6, 6, 6, 6, 6]))).toBe('cheer');
-    expect(petMood(scored('yatzy', 50))).toBe('cheer');
-  });
-
-  it('is happy about four of a kind, a full house and straights', () => {
-    expect(petMood(rolled([4, 4, 4, 4, 1]))).toBe('happy');
-    expect(petMood(rolled([2, 2, 5, 5, 5]))).toBe('happy');
-    expect(petMood(rolled([1, 2, 3, 4, 6]))).toBe('happy');
-    expect(petMood(rolled([2, 3, 4, 5, 6]))).toBe('happy');
-  });
-
-  it('is happy about any score above zero', () => {
-    expect(petMood(scored('ones', 3))).toBe('happy');
-  });
-
-  it('is sad about a zero, a bust', () => {
-    expect(petMood(scored('fullHouse', 0))).toBe('sad');
-  });
-
-  it('is sad about a last roll with nothing in it, but only the last', () => {
-    expect(petMood(rolled([1, 2, 4, 4, 6], 3))).toBe('sad');
-    expect(petMood(rolled([1, 2, 4, 4, 6], 2))).toBe(null);
-  });
-
-  it('is not sad about a last roll with three of a kind in it', () => {
-    expect(petMood(rolled([1, 2, 4, 4, 4], 3))).toBe(null);
-  });
-
-  it('says nothing about an ordinary roll or an undo', () => {
-    expect(petMood(rolled([1, 1, 2, 3, 6], 1))).toBe(null);
-    expect(petMood({ kind: 'undo', player: 0 })).toBe(null);
-  });
-});
-
 describe('celebrationStep', () => {
   const roll6 = rolled([6, 6, 6, 6, 6]);
 
@@ -218,38 +175,5 @@ describe('celebrationStep', () => {
     expect(celebrationStep(scored('chance', 20), null)).toEqual({ fire: false, memo: null });
     const memo: CelebrationMemo = { player: 0, rolled: true };
     expect(celebrationStep({ kind: 'undo', player: 0 }, memo)).toEqual({ fire: false, memo });
-  });
-});
-
-describe('who the pet is', () => {
-  it('follows whoever just acted in Take turns, while they react', () => {
-    expect(petOwner('turns', 1, 0)).toBe(0);
-    expect(petOwner('turns', 1, null)).toBe(1);
-  });
-
-  it('stays with the tray player in Everyone at once', () => {
-    expect(petOwner('together', 1, 0)).toBe(1);
-  });
-
-  it('reacts to everyone in Take turns, and only to the tray player at once', () => {
-    const e = rolled([1, 2, 3, 4, 5]);
-    expect(reactsTo('turns', 1, e)).toBe(true);
-    expect(reactsTo('together', 1, e)).toBe(false);
-    expect(reactsTo('together', 0, e)).toBe(true);
-  });
-});
-
-describe('pets and poses', () => {
-  it('lists the four catalog pets', () => {
-    expect(PET_IDS).toEqual(['toad', 'blackCat', 'bat', 'ghostCheerleader']);
-    expect(isPetId('toad')).toBe(true);
-    expect(isPetId('dragon')).toBe(false);
-  });
-
-  it('gives only the ghost cheerleader a cheer; the others are happy', () => {
-    expect(poseFor('ghostCheerleader', 'cheer')).toBe('cheer');
-    expect(poseFor('toad', 'cheer')).toBe('happy');
-    expect(poseFor('bat', 'sad')).toBe('sad');
-    for (const pet of PET_IDS) expect(PET_POSES[pet].slice(0, 3)).toEqual(['idle', 'happy', 'sad']);
   });
 });

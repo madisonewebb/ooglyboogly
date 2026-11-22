@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { GhostBody } from '../pets/placeholders';
+import { GhostBody } from './GhostBody';
 import { PARADE_ART } from './artIndex';
 import { paradeAnnouncement, paradeDuration, paradePlan } from './paradePlan';
 import './parade.css';

@@ -1,0 +1,15 @@
+/* The dev celebration bench: the tray, and the buttons that start each celebration. */
+.celebration-bench.screen.game {
+  display: grid;
+  gap: 1.5rem;
+  height: auto;
+}
+
+.celebration-bench .table-layout {
+  grid-template-columns: minmax(0, 34rem);
+  height: 30rem;
+}
+
+.bench-row {
+  flex-wrap: wrap;
+}

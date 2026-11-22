@@ -45,9 +45,9 @@ describe('cardState', () => {
   });
 
   it('says owned, and worn when it is equipped in its slot', () => {
-    const w = wallet({ owned: ['bone', 'toad', 'violetMurk'], equipped: { diceSkin: 'bone' } });
+    const w = wallet({ owned: ['bone', 'swamp', 'violetMurk'], equipped: { diceSkin: 'bone' } });
     expect(cardState(entry('bone'), w)).toEqual({ kind: 'owned', worn: true });
-    expect(cardState(entry('toad'), w)).toEqual({ kind: 'owned', worn: false });
+    expect(cardState(entry('swamp'), w)).toEqual({ kind: 'owned', worn: false });
     // A pack is owned but is never worn.
     expect(cardState(entry('violetMurk'), w)).toEqual({ kind: 'owned', worn: false });
   });
@@ -91,7 +91,7 @@ describe('shopSections', () => {
   it('lists each slot, leaves out the sticker packs while they are off, and shows every entry once', () => {
     // Sticker packs are switched off (PACKS_FOR_SALE), so their section is left out, not shown empty.
     expect(PACKS_FOR_SALE).toBe(false);
-    expect(sections.map((s) => s.key)).toEqual(['diceSkin', 'brew', 'pet', 'celebration']);
+    expect(sections.map((s) => s.key)).toEqual(['diceSkin', 'brew', 'celebration']);
     expect(sections.flatMap((s) => s.entries.map((e) => e.id)).sort()).toEqual(
       SHOP_ENTRIES.map((e) => e.id).sort(),
     );
@@ -99,12 +99,7 @@ describe('shopSections', () => {
 
   it('shows the prices from the catalog tiers', () => {
     expect(sections[0]!.entries.map((e) => e.price)).toEqual([40, 40, 100, 100, 300]);
-    expect(sections[2]!.entries.map((e) => e.price)).toEqual([
-      PRICES.pet.common,
-      PRICES.pet.spooky,
-      PRICES.pet.spooky,
-      PRICES.pet.legendary,
-    ]);
+    expect(sections[2]!.entries.map((e) => e.price)).toEqual([PRICES.celebration.spooky]);
   });
 });
 
@@ -131,8 +126,8 @@ describe('lookLine', () => {
   it('names what is worn, or nothing', () => {
     expect(lookLine(undefined)).toBeNull();
     expect(lookLine({})).toBeNull();
-    expect(lookLine({ diceSkin: 'bone', pet: 'toad' })).toBe('Bone, Toad');
-    expect(lookLine({ pet: 'removed-item' })).toBeNull();
+    expect(lookLine({ diceSkin: 'bone', brew: 'swamp' })).toBe('Bone, Swamp');
+    expect(lookLine({ pet: 'toad' } as never)).toBeNull();
   });
 });
 
@@ -140,7 +135,7 @@ describe('withPayoutBalance', () => {
   const payout = (balance: number | null): PayoutMessage => ({ seats: [], balance });
 
   it('takes the new balance from a payout', () => {
-    const w = wallet({ balance: 3, owned: ['violetMurk'], goal: 'toad' });
+    const w = wallet({ balance: 3, owned: ['violetMurk'], goal: 'swamp' });
     expect(withPayoutBalance(w, payout(13))).toEqual({ ...w, balance: 13 });
   });
 

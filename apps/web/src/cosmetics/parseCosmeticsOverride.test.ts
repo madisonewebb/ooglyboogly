@@ -31,16 +31,17 @@ describe('parseCosmeticsOverride', () => {
     });
   });
 
-  it('accepts pets and celebrations too, for the other specs', () => {
-    expect(parseCosmeticsOverride('?cosmetics=pet:toad,celebration:ghostParade')).toEqual({
-      pet: 'toad',
+  it('accepts a celebration too', () => {
+    expect(parseCosmeticsOverride('?cosmetics=celebration:ghostParade')).toEqual({
       celebration: 'ghostParade',
     });
   });
 
   it('skips malformed pairs and wrong-slot ids, then reads the next valid one', () => {
-    expect(parseCosmeticsOverride('?cosmetics=hat:toad,pet:ghostParade,pet,:,pet:bat')).toEqual({
-      pet: 'bat',
+    expect(
+      parseCosmeticsOverride('?cosmetics=hat:toad,brew:ghostParade,brew,:,brew:swamp'),
+    ).toEqual({
+      brew: 'swamp',
     });
   });
 });

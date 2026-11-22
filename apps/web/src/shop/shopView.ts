@@ -76,7 +76,6 @@ export interface Section {
 const SLOT_SECTIONS: { slot: Slot; title: string; blurb: string }[] = [
   { slot: 'diceSkin', title: 'Dice skins', blurb: 'A new look for all five dice.' },
   { slot: 'brew', title: 'Brews', blurb: 'What bubbles in the cauldron.' },
-  { slot: 'pet', title: 'Pets', blurb: 'A friend on the rim of the cauldron.' },
   { slot: 'celebration', title: 'Celebrations', blurb: 'How your big moments are marked.' },
 ];
 
@@ -122,7 +121,7 @@ export function goalProgress(wallet: WalletMessage | null): GoalProgress | null 
   };
 }
 
-/** "Bone, Toad": what a player has on, for the seat list. Null when nothing. */
+/** "Bone, Swamp": what a player has on, for the seat list. Null when nothing. */
 export function lookLine(equipped: Equipped | undefined): string | null {
   const names = Object.values(equipped ?? {})
     .map((id) => shopEntry(id)?.name)

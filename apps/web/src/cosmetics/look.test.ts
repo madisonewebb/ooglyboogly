@@ -38,7 +38,7 @@ describe('seat to look', () => {
   it('picks the skin and the brew independently', () => {
     expect(lookOf({ diceSkin: 'gilded' })).toEqual({ skin: 'gilded', brew: null });
     expect(lookOf({ brew: 'swamp' })).toEqual({ skin: null, brew: 'swamp' });
-    expect(lookOf({ diceSkin: 'googly', brew: 'starwater', pet: 'toad' })).toEqual({
+    expect(lookOf({ diceSkin: 'googly', brew: 'starwater', celebration: 'ghostParade' })).toEqual({
       skin: 'googly',
       brew: 'starwater',
     });

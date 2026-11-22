@@ -85,14 +85,14 @@ shaped `players` table in some databases.
 
 Coins are spent in the shop, opened from the lobby with **Open the shop**. The lobby and the shop
 both show your balance. Prices are fixed (`packages/shared/src/catalog.ts`): skins, brews and
-celebrations cost 40 / 100 / 300 coins and pets 60 / 150 / 400 (common, spooky, legendary), so a
+celebrations cost 40 / 100 / 300 coins (common, spooky, legendary), so a
 common item takes about three games with one win.
 
 - **Buying** takes two taps (Buy, then confirm). The server prices every purchase from the catalog
   and does it in one database transaction, so a retry or a double tap never charges twice and the
   balance never goes below zero. Items marked `available: false` show as "coming soon" and cannot
   be bought.
-- **Wearing**: one item per slot (dice skin, brew, pet, celebration); an empty slot is the default
+- **Wearing**: one item per slot (dice skin, brew, celebration); an empty slot is the default
   look. What a player wears is in `Seat.equipped`, which everyone at the table sees. It can only be
   changed in the lobby, before the game starts.
 - **Goal pin**: pin one item to see a progress bar toward it in the lobby. It is stored on the
