@@ -437,8 +437,8 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                   ))}
                 </span>
               ) : null}
-              <ReactionPicker send={table.send} />
             </div>
+            <ReactionPicker send={table.send} />
 
             <DiceTray
               values={dice ?? [null, null, null, null, null]}

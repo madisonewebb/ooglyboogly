@@ -20,6 +20,15 @@ import sleeping from './art/stickers/sleeping_ghost.webp';
 import steamingGarbage from './art/stickers/steaming_garbage.webp';
 import stressed from './art/stickers/stressed_ghost.webp';
 import sunglasses from './art/stickers/sunglasses_ghost.webp';
+import {
+  DEFAULT_SLOTS,
+  isTypingTarget,
+  loadSlots,
+  MAX_SLOTS,
+  moveSlot,
+  saveSlots,
+  toggleSlot,
+} from './hotbar';
 import { playPop } from './sound';
 import { usePrefs } from './theme/prefs';
 
@@ -38,60 +47,106 @@ export const STICKERS: Record<StickerId, { art: string; label: string }> = {
 /** How long a sticker floats before it's gone. */
 const FLOAT_MS = 2600;
 
-/** The sticker button and its tray. Picking one sends it and closes the tray. */
+/** The hotbar: your favorite stickers in a row, one click (or key 1-9) each. */
 export function ReactionPicker({ send }: { send: (type: string, body: unknown) => void }) {
-  const [open, setOpen] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const toggle = useRef<HTMLButtonElement>(null);
+  const [slots, setSlots] = useState(loadSlots);
+  const [editing, setEditing] = useState(false);
+  const sendRef = useRef(send);
+  sendRef.current = send;
+
+  const update = (next: StickerId[]) => {
+    setSlots(next);
+    saveSlots(next);
+  };
 
   useEffect(() => {
-    if (!open) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      setOpen(false);
-      toggle.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || isTypingTarget(e.target)) return;
+      if (!/^[1-9]$/.test(e.key)) return;
+      const id = slots[Number(e.key) - 1];
+      if (id) sendRef.current(MSG_REACT, { sticker: id });
     };
-    const outside = (e: PointerEvent) => {
-      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
-    };
-    addEventListener('keydown', close);
-    addEventListener('pointerdown', outside);
-    wrap.current?.querySelector<HTMLButtonElement>('.sticker-tray button')?.focus();
-    return () => {
-      removeEventListener('keydown', close);
-      removeEventListener('pointerdown', outside);
-    };
-  }, [open]);
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [slots]);
 
   return (
-    <div className="reaction-picker" ref={wrap}>
-      <button
-        ref={toggle}
-        type="button"
-        className="icon react-toggle"
-        aria-label="Send a sticker"
-        title="Send a sticker"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-      >
-        <img src={cheering} alt="" width={30} height={30} />
-      </button>
-      {open && (
-        <div className="sticker-tray" role="group" aria-label="Stickers">
-          {STICKER_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-label={STICKERS[id].label}
-              title={STICKERS[id].label}
-              onClick={() => {
-                send(MSG_REACT, { sticker: id });
-                setOpen(false);
-              }}
-            >
-              <img src={STICKERS[id].art} alt="" width={64} height={64} />
-            </button>
-          ))}
+    <div className="hotbar">
+      <div className="hotbar-row" role="group" aria-label="Stickers">
+        {slots.map((id, i) => (
+          <button
+            key={id}
+            type="button"
+            className="hotbar-slot"
+            aria-label={`${STICKERS[id].label} (${i + 1})`}
+            title={`${STICKERS[id].label} (${i + 1})`}
+            aria-keyshortcuts={String(i + 1)}
+            onClick={() => send(MSG_REACT, { sticker: id })}
+          >
+            <img src={STICKERS[id].art} alt="" width={36} height={36} />
+            <span className="hotbar-key" aria-hidden="true">
+              {i + 1}
+            </span>
+          </button>
+        ))}
+        <button
+          type="button"
+          className="hotbar-edit"
+          title="Choose favorite stickers"
+          aria-expanded={editing}
+          onClick={() => setEditing((e) => !e)}
+        >
+          {editing ? 'Done' : 'Edit'}
+        </button>
+      </div>
+      {editing && (
+        <div className="hotbar-editor">
+          <p className="hotbar-hint">Tap a sticker to add or remove it. Arrows reorder.</p>
+          <ol className="hotbar-order">
+            {slots.map((id, i) => (
+              <li key={id}>
+                <button
+                  type="button"
+                  aria-label={`Move ${STICKERS[id].label} left`}
+                  disabled={i === 0}
+                  onClick={() => update(moveSlot(slots, i, -1))}
+                >
+                  ‹
+                </button>
+                <img src={STICKERS[id].art} alt="" width={28} height={28} />
+                <button
+                  type="button"
+                  aria-label={`Move ${STICKERS[id].label} right`}
+                  disabled={i === slots.length - 1}
+                  onClick={() => update(moveSlot(slots, i, 1))}
+                >
+                  ›
+                </button>
+              </li>
+            ))}
+          </ol>
+          <div className="hotbar-pool" role="group" aria-label="All stickers">
+            {STICKER_IDS.map((id) => {
+              const on = slots.includes(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className="hotbar-slot"
+                  aria-pressed={on}
+                  aria-label={STICKERS[id].label}
+                  title={STICKERS[id].label}
+                  disabled={!on && slots.length >= MAX_SLOTS}
+                  onClick={() => update(toggleSlot(slots, id))}
+                >
+                  <img src={STICKERS[id].art} alt="" width={36} height={36} />
+                </button>
+              );
+            })}
+          </div>
+          <button type="button" onClick={() => update([...DEFAULT_SLOTS])}>
+            Reset to defaults
+          </button>
         </div>
       )}
     </div>
