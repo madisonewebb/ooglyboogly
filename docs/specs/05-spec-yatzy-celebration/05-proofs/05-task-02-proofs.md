@@ -77,4 +77,4 @@ pnpm exec vitest run apps/web/src/celebrations apps/web/src/theme
 
 ## Reproduce
 
-`pnpm -F @rollhouse/web exec vite --port 5199`, then `node shots.mjs` and `node longtask.mjs` from this folder (Playwright is in `e2e/node_modules`; the scripts import it by path).
+`pnpm -F @rollhouse/web exec vite --port 5199`, then `node shots.mjs` and `node longtask.mjs` (the scripts here are saved as `.txt` so the repo linter ignores them: copy them without the `.txt`; Playwright is in `e2e/node_modules` and they import it by path).
