@@ -1,0 +1,269 @@
+/*
+ * The Yatzy celebration: confetti, a big YATZY! banner and a glow on the tray.
+ * Fixed over everything and click-through, so dice and buttons stay usable.
+ * Only transform, translate, rotate and opacity animate, so it stays on the
+ * compositor: cheap on phones and with a software renderer. Colors are palette
+ * variables, so every theme and scheme gets its own.
+ */
+.yatzy {
+  --stage-y: 26vh;
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  overflow: hidden;
+  pointer-events: none;
+  /* Nothing in here changes the layout or paint of the page beneath. */
+  contain: strict;
+}
+
+/* A soft wash of the accent behind everything, brightest as the burst goes off. */
+.yatzy-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 40%,
+    color-mix(in srgb, var(--accent) 38%, transparent),
+    color-mix(in srgb, var(--strong) 14%, transparent) 45%,
+    transparent 72%
+  );
+  will-change: opacity;
+  animation: yatzy-glow 3600ms ease-out both;
+}
+
+.yatzy-confetti {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+}
+
+.yatzy-piece {
+  --size: 0.6rem;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--size);
+  height: var(--size);
+  translate: 0 0;
+  opacity: 0;
+  animation: yatzy-fly 3300ms linear var(--delay, 0ms) both;
+}
+
+.yatzy-piece[data-color='accent'] {
+  background: var(--accent);
+}
+.yatzy-piece[data-color='strong'] {
+  background: var(--strong);
+}
+.yatzy-piece[data-color='option'] {
+  background: var(--option);
+  outline: 1px solid color-mix(in srgb, var(--strong) 50%, transparent);
+}
+.yatzy-piece[data-color='pip'] {
+  background: var(--pip);
+}
+
+.yatzy-piece.strip {
+  width: calc(var(--size) * 0.55);
+  height: calc(var(--size) * 1.5);
+  border-radius: 0.15rem;
+}
+.yatzy-piece.dot {
+  border-radius: 50%;
+}
+.yatzy-piece.star,
+.yatzy-star {
+  /* A four-point star, like the sparkles. */
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  border-radius: 0;
+}
+.yatzy-piece.star {
+  width: calc(var(--size) * 1.8);
+  height: calc(var(--size) * 1.8);
+}
+
+/* Out to the top of the arc quickly, then fall, turning all the way. */
+@keyframes yatzy-fly {
+  0% {
+    translate: 0 0;
+    rotate: 0deg;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.1, 0.7, 0.3, 1);
+  }
+  32% {
+    translate: var(--bx) var(--by);
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    translate: var(--fx) var(--fy);
+    rotate: var(--turns);
+    opacity: 0;
+  }
+}
+
+@keyframes yatzy-glow {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.yatzy-banner {
+  position: absolute;
+  left: 50%;
+  top: var(--stage-y);
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  max-width: 94vw;
+  translate: -50% -50%;
+  text-align: center;
+  animation: yatzy-banner 3600ms ease-out both;
+}
+
+.yatzy-word {
+  padding: 0.05em 0.45em 0.1em;
+  border-radius: 1.2rem;
+  background: var(--band);
+  color: var(--on-band);
+  border: 0.18rem solid var(--accent);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(3.4rem, 17vw, 8.5rem);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  box-shadow:
+    0 0.6rem 2rem color-mix(in srgb, var(--shadow) 45%, transparent),
+    0 0 2.5rem color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.yatzy-who {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.3rem 1.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 4.6vw, 1.9rem);
+  box-shadow: 0 0.3rem 1rem color-mix(in srgb, var(--shadow) 35%, transparent);
+}
+
+/* Pops in with a little overshoot, holds, then fades. */
+@keyframes yatzy-banner {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+    rotate: -5deg;
+  }
+  9% {
+    opacity: 1;
+    scale: 1.14;
+    rotate: 2deg;
+  }
+  15% {
+    scale: 1;
+    rotate: 0deg;
+  }
+  84% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+/* The tray glows, and gives one small shake as the burst goes off. */
+:root[data-yatzy] .tray-col {
+  animation: yatzy-tray 3600ms ease-out both;
+}
+:root[data-yatzy='burst'] .tray-col {
+  animation-name: yatzy-tray, yatzy-shake;
+  animation-duration: 3600ms, 520ms;
+}
+
+@keyframes yatzy-tray {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  12%,
+  70% {
+    box-shadow: 0 0 2.4rem 0.4rem color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+}
+
+@keyframes yatzy-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  15% {
+    translate: -5px 2px;
+  }
+  35% {
+    translate: 5px -2px;
+  }
+  55% {
+    translate: -3px 1px;
+  }
+  75% {
+    translate: 3px -1px;
+  }
+}
+
+/*
+ * Reduced motion: no flying, no shake, no animation at all. The banner and a
+ * still ring of stars simply stand there until the timer removes them (the
+ * global reduced-motion rule would cut any animation to 1ms and, with a fill,
+ * leave it invisible, so nothing here animates).
+ */
+.yatzy.still .yatzy-glow {
+  opacity: 0.8;
+  animation: none;
+}
+.yatzy.still .yatzy-banner {
+  animation: none;
+}
+:root[data-yatzy='still'] .tray-col {
+  animation: none;
+  box-shadow: 0 0 2rem 0.2rem color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.yatzy-ring {
+  position: absolute;
+  left: 50%;
+  top: var(--stage-y);
+  --rx: clamp(10rem, 44vw, 24rem);
+  --ry: clamp(5rem, 16vw, 8rem);
+}
+
+.yatzy-star {
+  position: absolute;
+  left: -0.7rem;
+  top: -0.7rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  background: var(--accent);
+  translate: calc(cos(var(--angle)) * var(--rx)) calc(sin(var(--angle)) * var(--ry));
+}
+.yatzy-star:nth-child(even) {
+  background: var(--strong);
+  width: 1rem;
+  height: 1rem;
+  left: -0.5rem;
+  top: -0.5rem;
+}

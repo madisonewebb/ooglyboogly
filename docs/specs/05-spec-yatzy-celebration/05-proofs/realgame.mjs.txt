@@ -1,0 +1,110 @@
+import { chromium } from '/home/madi/projects/ooglyboogly-wt/yatzy-celebration/e2e/node_modules/@playwright/test/index.mjs';
+import { randomUUID } from 'node:crypto';
+const BASE = 'http://127.0.0.1:8102';
+const OUT = '/home/madi/projects/ooglyboogly-wt/yatzy-celebration/docs/specs/05-spec-yatzy-celebration/05-proofs/shots/';
+const MAX_TURNS = Number(process.argv[2] ?? 13);
+const browser = await chromium.launch();
+const table = `real-${randomUUID()}`;
+async function seat(name, reduced = false) {
+  const ctx = await browser.newContext({ viewport: { width: 1100, height: 800 }, reducedMotion: reduced ? 'reduce' : 'no-preference' });
+  await ctx.addInitScript(() => {
+    try { localStorage.setItem('rollhouse:prefs', JSON.stringify({ fastRolls: true, volume: 0 })); } catch {}
+    window.__log = []; window.__long = [];
+    new PerformanceObserver((l) => { for (const e of l.getEntries()) window.__long.push([Math.round(e.startTime), Math.round(e.duration)]); }).observe({ type: 'longtask', buffered: true });
+    const seen = new Set();
+    const tick = () => {
+      for (const id of ['yatzy-celebration', 'ghost-parade']) {
+        const on = !!document.querySelector(`[data-testid="${id}"]`);
+        const k = id + on;
+        if (on && !seen.has(id)) { seen.add(id); window.__log.push([id, 'on', Math.round(performance.now())]); }
+        if (!on && seen.has(id)) { seen.delete(id); window.__log.push([id, 'off', Math.round(performance.now())]); }
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/?table=${table}&cosmetics=celebration:ghostParade`);
+  await page.getByLabel('Your name').fill(name);
+  await page.getByRole('button', { name: 'Sit down' }).click();
+  await page.getByRole('heading', { name: /At the table/ }).waitFor();
+  return page;
+}
+const madi = await seat('Madi');
+const mom = await seat('Mom');
+await mom.getByRole('button', { name: 'Heather', exact: true }).first().click();
+await madi.getByRole('button', { name: '1', exact: true }).click();
+await madi.getByRole('button', { name: 'Start game' }).click();
+await mom.getByRole('table').waitFor();
+
+const rollsDone = (p) => p.getByRole('button', { name: /^Die 1, rolling/ }).waitFor({ state: 'detached', timeout: 60000 }).catch(() => {});
+async function rollOnce(p) {
+  await p.getByRole('button', { name: /^Roll \(/ }).click();
+  await p.waitForFunction(() => !document.querySelector('button.die[aria-label*="rolling"]'), null, { timeout: 60000 });
+  await p.waitForTimeout(150);
+}
+async function dice(p) {
+  return p.$$eval('button.die', (bs) => bs.map((b) => ({ v: Number(/: (\d)/.exec(b.getAttribute('aria-label'))?.[1]), held: b.getAttribute('aria-pressed') === 'true' })));
+}
+async function score(p) {
+  await p.getByRole('tab', { name: 'You', exact: true }).click();
+  const filled = p.getByRole('region', { name: /score pad/ }).locator('td.filled');
+  const before = await filled.count();
+  const options = await p.$$eval('button.preview:not([disabled])', (bs) => bs.map((b, i) => [i, Number(b.textContent)]));
+  const best = options.sort((a, b) => b[1] - a[1])[0];
+  await p.locator('button.preview:not([disabled])').nth(best[0]).click();
+  await p.getByRole('button', { name: /^Write it in/ }).click();
+  if (best[1] === 0) { await p.getByRole('button', { name: 'Yes, put 0' }).click(); }
+  return filled;
+}
+let yatzyTurn = null;
+let shot = false;
+for (let turn = 1; turn <= MAX_TURNS; turn++) {
+  await madi.getByRole('tab', { name: 'You', exact: true }).click();
+  const filled = madi.getByRole('region', { name: /score pad/ }).locator('td.filled');
+  const before = await filled.count();
+  for (let r = 0; r < 3; r++) {
+    await rollOnce(madi);
+    const d = await dice(madi);
+    if (new Set(d.map((x) => x.v)).size === 1) { yatzyTurn = turn; break; }
+    if (r === 2) break;
+    const counts = {}; d.forEach((x) => (counts[x.v] = (counts[x.v] ?? 0) + 1));
+    const target = Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]);
+    const btns = madi.locator('button.die');
+    for (let i = 0; i < 5; i++) if ((d[i].v === target) !== d[i].held) await btns.nth(i).click();
+  }
+  if (yatzyTurn === turn) {
+    // The roll has just landed: look for the celebration on both screens.
+    const t0 = Date.now();
+    await Promise.all([madi, mom].map((p) => p.waitForSelector('[data-testid="yatzy-celebration"]', { timeout: 6000 }).then(() => true).catch(() => false))).then((r) => console.log('celebration seen on Madi, Mom:', r.join(', '), 'after', Date.now() - t0, 'ms'));
+    await madi.waitForTimeout(300);
+    await madi.screenshot({ path: OUT + 'realgame-roller-screen.png' });
+    await mom.screenshot({ path: OUT + 'realgame-watcher-screen.png' });
+    shot = true;
+    await madi.waitForTimeout(4200); // let the burst end and the parade begin
+    await madi.screenshot({ path: OUT + 'realgame-roller-after-burst.png' });
+  }
+  await score(madi);
+  await madi.waitForTimeout(300);
+  // Mom takes her turn: roll once, write in the first box.
+  await mom.getByRole('tab', { name: 'You', exact: true }).click();
+  await mom.getByRole('button', { name: /^Roll \(/ }).click();
+  await mom.waitForFunction(() => !document.querySelector('button.die[aria-label*="rolling"]'), null, { timeout: 60000 });
+  await mom.locator('button.preview:not([disabled])').first().click();
+  await mom.getByRole('button', { name: /^Write it in/ }).click();
+  if (await mom.getByRole('button', { name: 'Yes, put 0' }).count()) await mom.getByRole('button', { name: 'Yes, put 0' }).click();
+  console.log('turn', turn, 'done', yatzyTurn ? '(Yatzy on turn ' + yatzyTurn + ')' : '');
+  if (shot) break;
+}
+for (const [n, p] of [['Madi', madi], ['Mom', mom]]) {
+  console.log(n, 'log', JSON.stringify(await p.evaluate(() => window.__log)), 'longtasks', JSON.stringify(await p.evaluate(() => window.__long)));
+}
+// Reconnect: reload the roller's page; the old Yatzy must not play again.
+if (shot) {
+  await madi.reload();
+  await madi.getByRole('table').waitFor();
+  await madi.waitForTimeout(1500);
+  console.log('after reload, celebration on page:', await madi.locator('[data-testid="yatzy-celebration"]').count(), 'parade:', await madi.locator('[data-testid="ghost-parade"]').count());
+}
+console.log('yatzyTurn', yatzyTurn);
+await browser.close();

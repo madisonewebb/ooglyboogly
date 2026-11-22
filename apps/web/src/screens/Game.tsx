@@ -19,7 +19,7 @@ import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { BrandBar } from '../Brand';
 import { Avatar } from '../Avatar';
 import { ReactionFloats, ReactionPicker } from '../Reactions';
-import { GhostParade } from '../cosmetics/celebrations/GhostParade';
+import { YatzyStage } from '../celebrations/yatzy/YatzyStage';
 import { devCosmetics } from '../cosmetics/devCosmetics';
 import { resolveEquipped } from '../cosmetics/look';
 import { PetLayer } from '../cosmetics/pets/PetLayer';
@@ -714,15 +714,13 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
           </section>
         </div>
       </main>
-      {petStage.parade && (
-        <GhostParade
-          key={petStage.parade.id}
-          id={petStage.parade.id}
-          name={name(petStage.parade.player)}
-          reduced={reducedMotion}
-          onDone={petStage.endParade}
-        />
-      )}
+      <YatzyStage
+        game={game}
+        name={name}
+        reduced={reducedMotion}
+        parade={petStage.parade}
+        endParade={petStage.endParade}
+      />
     </>
   );
 }

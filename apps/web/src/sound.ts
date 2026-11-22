@@ -337,3 +337,41 @@ export function playCelebrate() {
   );
   burst(a, out, a.currentTime + 0.3, 'highpass', 6000, 0.5, 0.05, 0.6);
 }
+
+/**
+ * The notes of the Yatzy fanfare: [frequency in Hz, start in seconds, gain,
+ * decay in seconds]. A rising C major arpeggio and a held, shimmering chord.
+ * The quiet version for reduced motion is three soft bells.
+ */
+export const YATZY_FANFARE: readonly (readonly [number, number, number, number])[] = [
+  [523, 0, 0.1, 0.9],
+  [659, 0.1, 0.1, 0.9],
+  [784, 0.2, 0.1, 0.9],
+  [1047, 0.3, 0.11, 1.1],
+  [1319, 0.42, 0.1, 1.3],
+  [1568, 0.54, 0.1, 1.5],
+  [2093, 0.66, 0.08, 1.8],
+];
+export const YATZY_FANFARE_QUIET: readonly (readonly [number, number, number, number])[] = [
+  [784, 0, 0.05, 0.6],
+  [988, 0.12, 0.05, 0.6],
+  [1319, 0.24, 0.05, 0.9],
+];
+
+/**
+ * The big Yatzy fanfare, once, as the celebration starts: a soft drum thump, a
+ * run of bells and a bright shimmer. It goes through the master volume like
+ * every other sound, so the volume slider and mute apply, and it says nothing
+ * until the browser has allowed audio.
+ */
+export function playYatzyFanfare(quiet = false) {
+  const ok = audio();
+  if (!ok) return;
+  const { a, out } = ok;
+  const at = a.currentTime;
+  if (!quiet) thump(a, out, at, 120, 0.22, 0.28);
+  for (const [freq, start, gain, decay] of quiet ? YATZY_FANFARE_QUIET : YATZY_FANFARE) {
+    bell(a, out, at + start, freq, gain, decay);
+  }
+  if (!quiet) burst(a, out, at + 0.62, 'highpass', 6500, 0.5, 0.05, 1.2);
+}
