@@ -81,7 +81,24 @@ export interface UndoMove {
   player: number;
 }
 
-export type Move = RollMove | HoldMove | ScoreMove | UndoMove;
+/**
+ * Super power: once the rolls are spent, the player gets a fresh set of rolls
+ * this turn, keeping the dice and holds they have.
+ */
+export interface ExtraTurnMove {
+  type: 'extraTurn';
+  player: number;
+}
+
+/** Super power: reopens a box on the player's own card that was scratched (scored 0). */
+export interface UnscratchMove {
+  type: 'unscratch';
+  player: number;
+  card: number;
+  box: Box;
+}
+
+export type Move = RollMove | HoldMove | ScoreMove | UndoMove | ExtraTurnMove | UnscratchMove;
 
 export interface Card {
   /** Filled boxes and the points written in them. */
@@ -136,7 +153,9 @@ export type RuleErrorCode =
   | 'BAD_BOX'
   | 'BOX_FILLED'
   | 'JOKER_FORCED'
-  | 'NOTHING_TO_UNDO';
+  | 'NOTHING_TO_UNDO'
+  | 'ROLLS_LEFT'
+  | 'NOT_A_ZERO';
 
 export class RuleError extends Error {
   readonly code: RuleErrorCode;

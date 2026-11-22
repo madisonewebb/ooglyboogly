@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
   MSG_BUY,
+  MSG_BUY_POWER,
   MSG_EQUIP,
   MSG_GOAL,
+  type Power,
+  POWERS,
   type ShopEntry,
   type WalletMessage,
 } from '@rollhouse/shared';
@@ -18,7 +21,9 @@ import {
   shopSections,
   stateLabel,
 } from './shopView';
+import { haveLabel, powerCardState, stockOf } from '../powers/powersView';
 import './shop.css';
+import '../powers/powers.css';
 
 type Send = (type: string, body?: unknown) => void;
 
@@ -131,6 +136,123 @@ export function ShopCard({ entry, wallet, send, confirming, setConfirming }: Car
   );
 }
 
+/** Line glyphs for the two powers: an hourglass, and a pen crossing out a zero. */
+const POWER_GLYPHS: Record<Power['id'], ReactNode> = {
+  extraTurn: (
+    <>
+      <path d="M18 10h28M18 54h28" />
+      <path d="M20 10c0 14 12 14 12 22s-12 8-12 22M44 10c0 14-12 14-12 22s12 8 12 22" />
+    </>
+  ),
+  unscratch: (
+    <>
+      <ellipse cx="28" cy="32" rx="12" ry="17" />
+      <path d="M40 50l12-12M46 56l8-2-2-8" />
+    </>
+  ),
+};
+
+interface PowerCardProps {
+  power: Power;
+  wallet: WalletMessage | null;
+  send: Send;
+  confirming: boolean;
+  setConfirming: (id: string | null) => void;
+}
+
+/** A super power for sale. You can always buy more: the card says how many you hold. */
+export function PowerCard({ power, wallet, send, confirming, setConfirming }: PowerCardProps) {
+  const state = powerCardState(power, wallet);
+  const have = stockOf(wallet, power.id);
+  return (
+    <li
+      className="shop-card"
+      data-testid={`card-${power.id}`}
+      data-state={state.kind}
+      data-kind="power"
+    >
+      <div className="preview preview-glyph" aria-hidden="true">
+        <svg
+          viewBox="0 0 64 64"
+          width="64"
+          height="64"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {POWER_GLYPHS[power.id]}
+        </svg>
+      </div>
+      <div className="card-head">
+        <h4>{power.name}</h4>
+        <span className="rarity">One use</span>
+      </div>
+      <p className="card-blurb">{power.blurb}</p>
+      <p className="price">
+        <CauldronCoinIcon />
+        <span className="amount">{power.price}</span>
+        <span className="sr-only">coins</span>
+      </p>
+      <p className="have" data-testid={`have-${power.id}`}>
+        {haveLabel(have)}
+      </p>
+      <p className="state" data-testid={`state-${power.id}`}>
+        {state.kind === 'afford' && 'You can afford this'}
+        {state.kind === 'short' && `${coinWord(state.missing)} short`}
+        {state.kind === 'closed' && 'Not for sale to guests'}
+      </p>
+      <div className="card-actions">
+        {state.kind === 'closed' && (
+          <button type="button" disabled>
+            Not available
+          </button>
+        )}
+        {state.kind === 'short' && (
+          <button
+            type="button"
+            disabled
+            aria-label={`Buy ${power.name}, ${coinWord(state.missing)} short`}
+          >
+            Buy
+          </button>
+        )}
+        {state.kind === 'afford' &&
+          (confirming ? (
+            <div className="confirm" role="group" aria-label={`Confirm buying ${power.name}`}>
+              <p>
+                Spend <strong>{coinWord(power.price)}</strong> on one {power.name}?
+              </p>
+              <button
+                type="button"
+                className="primary"
+                onClick={() => {
+                  setConfirming(null);
+                  send(MSG_BUY_POWER, { power: power.id });
+                }}
+              >
+                Yes, buy it
+              </button>
+              <button type="button" onClick={() => setConfirming(null)}>
+                Not now
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="primary"
+              aria-label={`Buy ${power.name} for ${coinWord(power.price)}`}
+              onClick={() => setConfirming(power.id)}
+            >
+              Buy
+            </button>
+          ))}
+      </div>
+    </li>
+  );
+}
+
 interface Props {
   wallet: WalletMessage | null;
   send: Send;
@@ -182,6 +304,22 @@ export function Shop({ wallet, send, onClose }: Props) {
             </ul>
           </section>
         ))}
+        <section className="panel shop-section" aria-labelledby="h-powers">
+          <h3 id="h-powers">Super powers</h3>
+          <p className="quiet">One use each. Buy as many as you like and use them in a game.</p>
+          <ul className="shop-grid">
+            {POWERS.map((power) => (
+              <PowerCard
+                key={power.id}
+                power={power}
+                wallet={wallet}
+                send={send}
+                confirming={confirming === power.id}
+                setConfirming={setConfirming}
+              />
+            ))}
+          </ul>
+        </section>
       </main>
     </>
   );

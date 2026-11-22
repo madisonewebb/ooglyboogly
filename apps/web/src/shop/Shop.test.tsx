@@ -16,6 +16,7 @@ import { WalletPanel } from './WalletPanel';
 const wallet = (over: Partial<WalletMessage> = {}): WalletMessage => ({
   balance: 55,
   owned: [],
+  powers: {},
   equipped: {},
   goal: null,
   canBuy: true,

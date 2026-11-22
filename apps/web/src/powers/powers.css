@@ -1,0 +1,58 @@
+/*
+ * Super powers in the game and the shop. Colors come only from the theme
+ * variables, so the pairs the contrast test checks are the only ones used.
+ * Counts are always written as numbers, never by color alone.
+ */
+
+.powers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.4rem;
+}
+
+.power-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--display);
+  font-weight: 600;
+}
+
+.power-count {
+  min-width: 1.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--strong);
+  color: var(--on-strong);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.power-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  text-align: center;
+}
+
+.power-pick p {
+  margin: 0;
+}
+
+.power-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+/* A power's shop card says what you hold. */
+.shop-card .have {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}

@@ -21,6 +21,7 @@ import {
 const wallet = (over: Partial<WalletMessage> = {}): WalletMessage => ({
   balance: 0,
   owned: [],
+  powers: {},
   equipped: {},
   goal: null,
   canBuy: true,

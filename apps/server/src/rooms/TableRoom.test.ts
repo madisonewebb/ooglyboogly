@@ -31,6 +31,8 @@ import {
   MSG_START,
   MSG_UNDO,
   MSG_BUY,
+  MSG_BUY_POWER,
+  MSG_USE_POWER,
   MSG_EQUIP,
   MSG_GOAL,
   MSG_REACT,
@@ -720,9 +722,17 @@ describe('the shop', () => {
       owned: ['violetMurk'],
       equipped: {},
       goal: null,
+      powers: {},
       canBuy: true,
     });
-    expect(b.wallet).toEqual({ balance: 0, owned: [], equipped: {}, goal: null, canBuy: true });
+    expect(b.wallet).toEqual({
+      balance: 0,
+      owned: [],
+      equipped: {},
+      goal: null,
+      powers: {},
+      canBuy: true,
+    });
   });
 
   it('buys at the catalog price, whatever price the client claims', async () => {
@@ -835,7 +845,14 @@ describe('the shop', () => {
 
     t = await startTestServer();
     const none = await join('Madi');
-    expect(none.wallet).toEqual({ balance: 0, owned: [], equipped: {}, goal: null, canBuy: false });
+    expect(none.wallet).toEqual({
+      balance: 0,
+      owned: [],
+      equipped: {},
+      goal: null,
+      powers: {},
+      canBuy: false,
+    });
     expect((await shop(none, MSG_BUY, { item: 'violetMurk' })).error?.code).toBe('SHOP_CLOSED');
   });
 
@@ -986,6 +1003,141 @@ describe('the shop', () => {
     await until(() => a.wallets > before, 'the wallet after the payout');
     expect(a.wallet!.balance).toBe(getBalance(db, 'u-Madi'));
     expect(a.wallet!.balance).toBeGreaterThan(0);
+  });
+
+  describe('super powers', () => {
+    const stock = (db: DatabaseSync, userId: string, power: string, qty: number) =>
+      db.prepare('INSERT INTO power_stock VALUES (?, ?, ?)').run(userId, power, qty);
+    const qty = (db: DatabaseSync, power: string) =>
+      (
+        db
+          .prepare("SELECT qty FROM power_stock WHERE user_id = 'u-Madi' AND power_id = ?")
+          .get(power) as { qty: number } | undefined
+      )?.qty;
+
+    it('sells powers at the listed price, as many as there are coins for', async () => {
+      const db = openDb(150);
+      await withDb(db);
+      const a = await join('Madi');
+      expect(a.wallet!.powers).toEqual({});
+      const one = await shop(a, MSG_BUY_POWER, { power: 'extraTurn', price: 1 });
+      expect(one.error).toBeNull();
+      expect(one.wallet).toMatchObject({ balance: 70, powers: { extraTurn: 1 } });
+      expect((await shop(a, MSG_BUY_POWER, { power: 'unscratch' })).wallet.powers).toEqual({
+        extraTurn: 1,
+        unscratch: 1,
+      });
+      expect((await shop(a, MSG_BUY_POWER, { power: 'extraTurn' })).error?.code).toBe(
+        'NOT_ENOUGH_COINS',
+      );
+      expect((await shop(a, MSG_BUY_POWER, { power: 'nope' })).error?.code).toBe('UNKNOWN_ITEM');
+      expect((await shop(a, MSG_BUY_POWER)).error?.code).toBe('UNKNOWN_ITEM');
+      expect(getBalance(db, 'u-Madi')).toBe(10);
+      expect(qty(db, 'extraTurn')).toBe(1);
+    });
+
+    it('follows the player to another device', async () => {
+      const db = openDb(100);
+      stock(db, 'u-Madi', 'unscratch', 2);
+      await withDb(db);
+      await join('Madi');
+      const other = await join('Madi', 'inst-2', 'u-Madi');
+      expect(other.wallet!.powers).toEqual({ unscratch: 2 });
+    });
+
+    it('spends an extra turn only when it is legal, and keeps the dice', async () => {
+      const db = openDb(0);
+      stock(db, 'u-Madi', 'extraTurn', 1);
+      await withDb(db);
+      const a = await join('Madi');
+      await startGame(a, [], { cardsPerPlayer: 1 });
+      // Not before the rolls are spent: refused, and nothing is used up.
+      expect(await a.expectError(MSG_USE_POWER, { power: 'extraTurn' })).toBe('ROLLS_LEFT');
+      expect(qty(db, 'extraTurn')).toBe(1);
+      for (let i = 0; i < 3; i++) await a.act(MSG_ROLL);
+      const dice = a.game.players[0]!.turn.dice;
+      const used = await shop(a, MSG_USE_POWER, { power: 'extraTurn' });
+      expect(used.error).toBeNull();
+      expect(used.wallet.powers).toEqual({});
+      expect(a.moves.at(-1)).toEqual({ type: 'extraTurn', player: 0 });
+      expect(a.game.players[0]!.turn).toMatchObject({ rolls: 0, dice });
+      expect(qty(db, 'extraTurn')).toBe(0);
+      // And it can roll again.
+      expect(await a.act(MSG_ROLL)).toBe('move');
+      // None left: the move is refused even when it would be legal.
+      for (let i = 0; i < 2; i++) await a.act(MSG_ROLL);
+      const none = await shop(a, MSG_USE_POWER, { power: 'extraTurn' });
+      expect(none.error?.code).toBe('NO_POWER');
+      expect(a.game.players[0]!.turn.rolls).toBe(3);
+    });
+
+    it('reopens a scratched box and spends one unscratch', async () => {
+      const db = openDb(0);
+      stock(db, 'u-Madi', 'unscratch', 2);
+      await withDb(db);
+      const a = await join('Madi');
+      await startGame(a, [], { cardsPerPlayer: 1 });
+      await a.act(MSG_ROLL);
+      const ps = a.game.players[0]!;
+      const zero = cardOptions(ps.cards[0]!, ps.turn.dice!).options.find(
+        (o) => o.allowed && o.value === 0,
+      )!;
+      expect(zero).toBeDefined();
+      await a.act(MSG_SCORE, { card: 0, box: zero.box });
+      // A box that was not scratched is refused, and nothing is used up.
+      const other = zero.box === 'chance' ? 'ones' : 'chance';
+      expect(await a.expectError(MSG_USE_POWER, { power: 'unscratch', card: 0, box: other })).toBe(
+        'NOT_A_ZERO',
+      );
+      expect(qty(db, 'unscratch')).toBe(2);
+      const used = await shop(a, MSG_USE_POWER, { power: 'unscratch', card: 0, box: zero.box });
+      expect(used.error).toBeNull();
+      expect(used.wallet.powers).toEqual({ unscratch: 1 });
+      expect(a.game.players[0]!.cards[0]!.boxes[zero.box]).toBeUndefined();
+    });
+
+    it('refuses for watchers, before the start, bad intents and guests', async () => {
+      const db = openDb(0);
+      stock(db, 'u-Madi', 'extraTurn', 1);
+      stock(db, 'guest-1', 'extraTurn', 1);
+      await withDb(db, { guestPayouts: false });
+      const a = await join('Madi');
+      expect(await a.expectError(MSG_USE_POWER, { power: 'extraTurn' })).toBe('NOT_STARTED');
+      await startGame(a, [], { cardsPerPlayer: 1 });
+      expect(await a.expectError(MSG_USE_POWER)).toBe('BAD_INTENT');
+      expect(await a.expectError(MSG_USE_POWER, { power: 'bone' })).toBe('BAD_INTENT');
+      const eve = await join('Eve', 'inst-1', 'u-Eve');
+      expect(await eve.expectError(MSG_USE_POWER, { power: 'extraTurn' })).toBe('NOT_SEATED');
+      expect((await shop(eve, MSG_BUY_POWER, { power: 'extraTurn' })).error?.code).toBe(
+        'NOT_ENOUGH_COINS',
+      );
+      expect(qty(db, 'extraTurn')).toBe(1);
+      await t!.close();
+
+      // A guest where guests cannot shop, and a table with no database at all.
+      t = await startTestServer({}, { db, table: { guestPayouts: false } });
+      const g = await join('Gia', 'inst-3', 'guest-1');
+      expect((await shop(g, MSG_BUY_POWER, { power: 'extraTurn' })).error?.code).toBe(
+        'SHOP_CLOSED',
+      );
+      await startGame(g, [], { cardsPerPlayer: 1 });
+      expect(await g.expectError(MSG_USE_POWER, { power: 'extraTurn' })).toBe('SHOP_CLOSED');
+    });
+
+    it('answers with an error, not a crash, when the stock cannot be written', async () => {
+      const db = openDb(0);
+      stock(db, 'u-Madi', 'extraTurn', 1);
+      await withDb(db);
+      const a = await join('Madi');
+      await startGame(a, [], { cardsPerPlayer: 1 });
+      for (let i = 0; i < 3; i++) await a.act(MSG_ROLL);
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      db.exec('DROP TABLE power_stock');
+      const { error } = await shop(a, MSG_USE_POWER, { power: 'extraTurn' });
+      expect(error?.code).toBe('SHOP_CLOSED');
+      expect(a.game.players[0]!.turn.rolls).toBe(3);
+      vi.restoreAllMocks();
+    });
   });
 
   it('answers with an error, not a crash, when the database fails', async () => {

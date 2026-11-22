@@ -311,3 +311,129 @@ describe('moves in general', () => {
     expect(replay(s, moves)).toEqual(live);
   });
 });
+
+describe('extra turn', () => {
+  const spent = (over = {}) =>
+    play(newGame(over), roll(0, '12345'), hold(0, 0), roll(0, '6666'), roll(0, '6666'));
+
+  it('gives a fresh set of rolls and keeps the dice and holds', () => {
+    const g = spent();
+    expect(g.players[0]!.turn.rolls).toBe(3);
+    const after = applyMove(g, { type: 'extraTurn', player: 0 });
+    expect(after.players[0]!.turn.rolls).toBe(0);
+    expect(after.players[0]!.turn.dice).toEqual(g.players[0]!.turn.dice);
+    expect(after.players[0]!.turn.held).toEqual(g.players[0]!.turn.held);
+    // Holding works again, and so do three more rolls.
+    const more = play(after, hold(0, 1), roll(0, '666'), roll(0, '666'), roll(0, '666'));
+    expect(more.players[0]!.turn.rolls).toBe(3);
+    expectError(more, roll(0, '666'), 'NO_ROLLS_LEFT');
+  });
+
+  it('is only for spent rolls', () => {
+    expectError(newGame(), { type: 'extraTurn', player: 0 }, 'ROLLS_LEFT');
+    expectError(play(newGame(), roll(0, '12345')), { type: 'extraTurn', player: 0 }, 'ROLLS_LEFT');
+  });
+
+  it('needs it to be your turn in Take turns', () => {
+    const g = play(newGame({ players: 2 }), roll(0, '12345'));
+    expectError(g, { type: 'extraTurn', player: 1 }, 'NOT_YOUR_TURN');
+  });
+
+  it('works in Everyone at once, until you are done', () => {
+    const g = play(newGame({ players: 2, playStyle: 'together' }), roll(1, '1'.repeat(5)));
+    const spent1 = play(g, roll(1, '22222'), roll(1, '33333'));
+    expect(applyMove(spent1, { type: 'extraTurn', player: 1 }).players[1]!.turn.rolls).toBe(0);
+    const full = Object.fromEntries(BOXES.map((b) => [b, 1]));
+    const done = withCard(spent1, 1, 0, card(full));
+    expectError(done, { type: 'extraTurn', player: 1 }, 'PLAYER_DONE');
+  });
+
+  it('is refused once the game is over', () => {
+    const g = { ...spent(), finished: true };
+    expectError(g, { type: 'extraTurn', player: 0 }, 'GAME_OVER');
+  });
+
+  it('can still score afterwards, and score undoes as before', () => {
+    const g = play(spent(), { type: 'extraTurn', player: 0 }, score(0, 'chance'));
+    expect(g.players[0]!.cards[0]!.boxes.chance).toBe(25);
+    expect(applyMove(g, undo(0)).players[0]!.turn.rolls).toBe(0);
+  });
+});
+
+describe('unscratch', () => {
+  const un = (card: number, box: Box, player = 0): Move => ({
+    type: 'unscratch',
+    player,
+    card,
+    box,
+  });
+  const scratched = () =>
+    withCard(newGame({ cardsPerPlayer: 2 }), 0, 1, card({ yatzy: 0, ones: 3 }));
+
+  it('reopens a scratched box so it can be scored again', () => {
+    const g = applyMove(scratched(), un(1, 'yatzy'));
+    expect(g.players[0]!.cards[1]!.boxes).toEqual({ ones: 3 });
+    const again = play(g, roll(0, '11111'), score(0, 'yatzy', 1));
+    expect(again.players[0]!.cards[1]!.boxes.yatzy).toBe(50);
+  });
+
+  it('only reopens a box holding a zero', () => {
+    expectError(scratched(), un(1, 'ones'), 'NOT_A_ZERO');
+    expectError(scratched(), un(1, 'twos'), 'NOT_A_ZERO');
+  });
+
+  it('needs a real card and box', () => {
+    expectError(scratched(), un(2, 'yatzy'), 'BAD_CARD');
+    expectError(scratched(), un(-1, 'yatzy'), 'BAD_CARD');
+    expectError(scratched(), un(1, 'nope' as Box), 'BAD_BOX');
+    expectError(scratched(), un(1, 'yatzy', 3), 'BAD_PLAYER');
+  });
+
+  it('is refused once the game is over', () => {
+    expectError({ ...scratched(), finished: true }, un(1, 'yatzy'), 'GAME_OVER');
+  });
+
+  it('works on a player who is done in Everyone at once', () => {
+    const full = { ...Object.fromEntries(BOXES.map((b) => [b, 1])), yatzy: 0 };
+    const g = withCard(newGame({ players: 2, playStyle: 'together' }), 0, 0, card(full));
+    expect(isPlayerDone(g, 0)).toBe(true);
+    expect(isPlayerDone(applyMove(g, un(0, 'yatzy')), 0)).toBe(false);
+  });
+
+  it('drops the undo window of the score it reopened, and only that one', () => {
+    // Scratch chance with 12345?? Score 'yatzy' with no yatzy: a zero, undoable.
+    const rolled = play(newGame({ cardsPerPlayer: 2 }), roll(0, '12346'));
+    const scored = applyMove(rolled, score(0, 'yatzy', 0));
+    expect(scored.players[0]!.cards[0]!.boxes.yatzy).toBe(0);
+    expect(scored.players[0]!.lastScore).not.toBeNull();
+    // Reopening another card's box leaves the undo alone.
+    const other = withCard(scored, 0, 1, card({ yatzy: 0 }));
+    expect(applyMove(other, un(1, 'yatzy')).players[0]!.lastScore).not.toBeNull();
+    // Reopening the very box clears it, so undo is refused.
+    const reopened = applyMove(scored, un(0, 'yatzy'));
+    expect(reopened.players[0]!.lastScore).toBeNull();
+    expectError(reopened, undo(0), 'NOTHING_TO_UNDO');
+  });
+
+  it('replays with the rest of the moves', () => {
+    const s = setup({ cardsPerPlayer: 1 });
+    const moves: Move[] = [roll(0, '12346'), score(0, 'yatzy'), un(0, 'yatzy'), roll(0, '11111')];
+    expect(replay(s, moves).players[0]!.cards[0]!.boxes).toEqual({});
+  });
+});
+
+describe('turns after a super power', () => {
+  it('skips a player whose cards are full while others still play', () => {
+    const full = Object.fromEntries(BOXES.map((b) => [b, 1]));
+    const almost = { ...full, chance: undefined } as never;
+    delete (almost as Record<string, unknown>)['chance'];
+    let g = newGame({ players: 3 });
+    g = withCard(g, 1, 0, card(full));
+    g = withCard(g, 2, 0, card(almost));
+    g = play(g, roll(0, '12345'), score(0, 'chance'));
+    expect(g.pointer).toBe(2);
+    g = play(g, roll(2, '12345'), score(2, 'chance'));
+    // Seat 0 still has boxes; seat 1 is done and is passed over.
+    expect(g.pointer).toBe(0);
+  });
+});

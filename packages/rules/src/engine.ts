@@ -19,7 +19,9 @@ import {
   ROLLS_PER_TURN,
   RuleError,
   type ScoreMove,
+  type ExtraTurnMove,
   type Turn,
+  type UnscratchMove,
   type UndoMove,
 } from './types';
 
@@ -149,12 +151,26 @@ function roll(state: GameState, move: RollMove): GameState {
 function hold(state: GameState, move: HoldMove): GameState {
   const ps = checkActing(state, move.player);
   const { turn } = ps;
-  if (turn.rolls === 0) fail('MUST_ROLL_FIRST', 'roll before holding dice');
+  if (turn.dice === null) fail('MUST_ROLL_FIRST', 'roll before holding dice');
   if (turn.rolls >= ROLLS_PER_TURN) fail('NO_ROLLS_LEFT', 'no rolls left to hold dice for');
   if (!isInt(move.die, 0, DICE_PER_ROLL - 1)) fail('BAD_DIE', `no die ${move.die}`);
   if (typeof move.held !== 'boolean') fail('BAD_DIE', 'held must be a boolean');
   const held = turn.held.map((h, i) => (i === move.die ? move.held : h));
   return withPlayer(state, move.player, { ...ps, turn: { ...turn, held } });
+}
+
+/**
+ * Take turns: who is up after the seat at `from`. Seats with every box filled
+ * are skipped (only super powers can leave one done while others still play).
+ */
+function nextPointer(state: GameState, from: number): number {
+  if (state.setup.playStyle !== 'turns') return from;
+  const n = state.setup.players;
+  for (let step = 1; step <= n; step++) {
+    const at = (from + step) % n;
+    if (!isPlayerDone(state, state.setup.turnOrder[at]!)) return at;
+  }
+  return (from + 1) % n;
 }
 
 function score(state: GameState, move: ScoreMove): GameState {
@@ -178,10 +194,8 @@ function score(state: GameState, move: ScoreMove): GameState {
     turn: freshTurn(),
     lastScore: { card: move.card, box: move.box, bonus, turn, pointer: state.pointer },
   });
-  const pointer =
-    state.setup.playStyle === 'turns' ? (state.pointer + 1) % state.setup.players : state.pointer;
   const finished = next.players.every((p) => p.cards.every(isCardFull));
-  return { ...next, pointer, finished };
+  return { ...next, pointer: nextPointer(next, state.pointer), finished };
 }
 
 function undo(state: GameState, move: UndoMove): GameState {
@@ -201,6 +215,33 @@ function undo(state: GameState, move: UndoMove): GameState {
   return { ...next, pointer: last.pointer };
 }
 
+/** Spent your rolls and want more: the roll counter starts over, dice and holds stay. */
+function extraTurn(state: GameState, move: ExtraTurnMove): GameState {
+  const ps = checkActing(state, move.player);
+  if (ps.turn.rolls < ROLLS_PER_TURN) fail('ROLLS_LEFT', 'you still have rolls left');
+  return withPlayer(state, move.player, { ...ps, turn: { ...ps.turn, rolls: 0 } });
+}
+
+/** Reopens a scratched box. It needs only a live game, not your turn: it touches no dice. */
+function unscratch(state: GameState, move: UnscratchMove): GameState {
+  const ps = checkPlayer(state, move.player);
+  if (!isInt(move.card, 0, ps.cards.length - 1)) fail('BAD_CARD', `no card ${move.card}`);
+  if (!(BOXES as readonly string[]).includes(move.box)) fail('BAD_BOX', `no box ${move.box}`);
+  const card = ps.cards[move.card]!;
+  if (card.boxes[move.box] !== 0) fail('NOT_A_ZERO', `${move.box} was not scratched`);
+  const boxes = Object.fromEntries(
+    Object.entries(card.boxes).filter(([box]) => box !== move.box),
+  ) as Partial<Record<Box, number>>;
+  // Undoing a score that has just been reopened would have nothing left to take back.
+  const last = ps.lastScore;
+  const reopened = last !== null && last.card === move.card && last.box === move.box;
+  return withPlayer(state, move.player, {
+    ...ps,
+    cards: ps.cards.map((c, i) => (i === move.card ? { ...card, boxes } : c)),
+    lastScore: reopened ? null : last,
+  });
+}
+
 /** Applies one move, or throws a RuleError. Never mutates its input. */
 export function applyMove(state: GameState, move: Move): GameState {
   switch (move.type) {
@@ -212,6 +253,10 @@ export function applyMove(state: GameState, move: Move): GameState {
       return score(state, move);
     case 'undo':
       return undo(state, move);
+    case 'extraTurn':
+      return extraTurn(state, move);
+    case 'unscratch':
+      return unscratch(state, move);
     default:
       return fail('BAD_MOVE', `unknown move ${(move as { type: unknown }).type}`);
   }
