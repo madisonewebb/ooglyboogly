@@ -69,7 +69,7 @@ function prng(seed: number) {
 }
 
 /** Plays a whole game with random but legal moves, checking invariants on the way. */
-function simulate(setup: GameSetup, seed: number) {
+function simulate(setup: GameSetup, seed: number, powers = false) {
   const r = prng(seed);
   let state: GameState = createGame(setup);
   const moves: Move[] = [];
@@ -86,9 +86,15 @@ function simulate(setup: GameSetup, seed: number) {
     const player = actors[r(actors.length)]!;
     const { turn, cards } = state.players[player]!;
 
+    // Super powers: a fresh set of rolls once they are spent, now and then.
+    if (powers && turn.rolls === ROLLS_PER_TURN && r(3) === 0) {
+      apply({ type: 'extraTurn', player });
+      continue;
+    }
+
     const wantsRoll = turn.rolls === 0 || (turn.rolls < ROLLS_PER_TURN && r(3) > 0);
     if (wantsRoll) {
-      if (turn.rolls > 0) {
+      if (turn.dice !== null) {
         for (let i = 0; i < 5; i++)
           if (r(4) === 0)
             apply({ type: 'hold', player, die: i, held: !state.players[player]!.turn.held[i] });
@@ -120,6 +126,19 @@ function simulate(setup: GameSetup, seed: number) {
       if (r(2) === 0) {
         state = undone;
         moves.push({ type: 'undo', player });
+      }
+    }
+
+    // Super powers: reopen a scratched box now and then (the game goes on longer).
+    if (powers && !state.finished && r(4) === 0) {
+      const mine = state.players[player]!.cards;
+      const zeros = mine.flatMap((c, ci) =>
+        BOXES.filter((b) => c.boxes[b] === 0).map((box) => ({ card: ci, box })),
+      );
+      if (zeros.length > 0) {
+        const z = zeros[r(zeros.length)]!;
+        apply({ type: 'unscratch', player, ...z });
+        expect(state.players[player]!.cards[z.card]!.boxes[z.box]).toBeUndefined();
       }
     }
   }
@@ -187,6 +206,19 @@ describe('whole-game properties', () => {
         },
       ),
       { numRuns: 50 },
+    );
+  });
+});
+
+describe('super power properties', () => {
+  it('still finishes and replays identically when powers are used', () => {
+    fc.assert(
+      fc.property(setupArb, fc.integer(), (setup, seed) => {
+        const { state, moves } = simulate(setup, seed, true);
+        expect(state.players.every((p) => p.cards.every(isCardFull))).toBe(true);
+        expect(replay(setup, moves)).toEqual(state);
+      }),
+      { numRuns: 100 },
     );
   });
 });
