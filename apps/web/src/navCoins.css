@@ -1,0 +1,18 @@
+/* The coin balance at the right of the band, just left of the corner controls. */
+.topbar .nav-coins {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 0.35rem;
+  margin-left: auto;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--on-band);
+}
+
+.topbar .nav-coins svg {
+  flex: none;
+}

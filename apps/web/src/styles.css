@@ -885,8 +885,8 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
   align-items: center;
   min-height: 3.4rem;
   gap: 0.6rem;
-  /* Clear the corner controls. */
-  padding: 0 11rem 0 0.75rem;
+  /* Clear the corner controls (three 2.5rem buttons and their gaps), with a little room before them. */
+  padding: 0 9.9rem 0 0.75rem;
   background: var(--band);
   color: var(--on-band);
   /* Bleeds to the window's edges. */
@@ -899,6 +899,26 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
   display: block;
   height: 2.8rem;
   width: auto;
+}
+
+/* The narrowest phones: a smaller wordmark and buttons, and the balance drops its coin and keeps the number. */
+@media (max-width: 24rem) {
+  .topbar {
+    padding-right: 8.4rem;
+  }
+
+  .band-wordmark {
+    height: 2.2rem;
+  }
+
+  body:has(.topbar) .corner .icon {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .topbar .nav-coins svg {
+    display: none;
+  }
 }
 
 .topbar .wordmark {

@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import {
   type Lobby as LobbyState,
   DEFAULT_SETTINGS,
+  entryWithPacks,
   shopEntry,
   type WalletMessage,
 } from '@rollhouse/shared';
@@ -41,7 +42,7 @@ describe('Shop', () => {
     const html = shop(wallet());
     expect(html).toContain('data-testid="shop-balance"');
     expect(html).toMatch(/shop-balance"[^>]*>.*?55/);
-    for (const title of ['Sticker packs', 'Dice skins', 'Brews', 'Pets', 'Celebrations']) {
+    for (const title of ['Dice skins', 'Brews', 'Pets', 'Celebrations']) {
       expect(html).toContain(title);
     }
     const bone = card(html, 'bone');
@@ -81,41 +82,73 @@ describe('Shop', () => {
     expect(html).toContain('preview-glyph');
   });
 
-  it('lets a player who can afford a pack buy it, and pin it', () => {
-    const html = card(shop(wallet({ balance: 40 })), 'cauldronCrew');
+  it('lets a player who can afford an item buy it, and pin it', () => {
+    const html = card(shop(wallet({ balance: 40 })), 'violetMurk');
     expect(html).toContain('data-state="afford"');
     expect(html).toContain('You can afford this');
-    expect(html).toContain('aria-label="Buy Cauldron Crew for 40 coins"');
-    expect(html).not.toMatch(/Buy Cauldron Crew for 40 coins"[^>]*disabled/);
+    expect(html).toContain('aria-label="Buy Violet Murk for 40 coins"');
+    expect(html).not.toMatch(/Buy Violet Murk for 40 coins"[^>]*disabled/);
     expect(html).toContain('Pin as goal');
-    // The real stickers are the preview.
-    expect(html).toContain('preview-pack');
-    expect(html.match(/<img/g)).toHaveLength(3);
+    expect(html).toContain('preview-glyph');
+  });
+
+  it('leaves the sticker packs out of the shop while they are off', () => {
+    const html = shop(wallet({ balance: 999 }));
+    expect(html).not.toContain('Sticker packs');
+    expect(html).not.toContain('card-cauldronCrew');
+    expect(html).not.toContain('card-moonlitCharms');
+  });
+
+  /** A single card, so a pack can be shown even while the shop is not selling packs. */
+  const lone = (entryId: string, w: WalletMessage): string =>
+    card(
+      renderToString(
+        <PrefsProvider>
+          <ul>
+            <ShopCard
+              entry={entryWithPacks(entryId)!}
+              wallet={w}
+              send={noop}
+              confirming={false}
+              setConfirming={noop}
+            />
+          </ul>
+        </PrefsProvider>,
+      ),
+      entryId,
+    );
+
+  it('still draws a sticker pack card when one is shown: real stickers as the preview, nothing to wear', () => {
+    const buyable = lone('cauldronCrew', wallet({ balance: 40 }));
+    expect(buyable).toContain('data-state="afford"');
+    expect(buyable).toContain('preview-pack');
+    expect(buyable.match(/<img/g)).toHaveLength(3);
+    const owned = lone('cauldronCrew', wallet({ owned: ['cauldronCrew'] }));
+    expect(owned).toContain('>Owned<');
+    expect(owned).not.toContain('Wear it');
   });
 
   it('shows how far short, with the Buy button off', () => {
-    const html = card(shop(wallet({ balance: 25 })), 'moonlitCharms');
+    const html = card(shop(wallet({ balance: 25 })), 'obsidian');
     expect(html).toContain('data-state="short"');
     expect(html).toContain('15 coins short');
-    expect(html).toMatch(
-      /<button[^>]*disabled=""[^>]*aria-label="Buy Moonlit Charms, 15 coins short"/,
-    );
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*aria-label="Buy Obsidian, 15 coins short"/);
   });
 
-  it('shows what you own, with Wear it or Take off for gear and nothing to do for a pack', () => {
-    const w = wallet({ owned: ['cauldronCrew', 'bone', 'toad'], equipped: { diceSkin: 'bone' } });
+  it('shows what you own, with Wear it or Take off', () => {
+    const w = wallet({ owned: ['violetMurk', 'bone', 'toad'], equipped: { diceSkin: 'bone' } });
     const html = shop(w);
-    expect(card(html, 'cauldronCrew')).toContain('>Owned<');
-    expect(card(html, 'cauldronCrew')).not.toContain('Wear it');
+    expect(card(html, 'violetMurk')).toContain('>Owned<');
+    expect(card(html, 'violetMurk')).toContain('Wear it');
     expect(card(html, 'bone')).toContain('Owned, wearing it');
     expect(card(html, 'bone')).toContain('Take off');
     expect(card(html, 'toad')).toContain('Wear it');
   });
 
   it('marks the pinned goal and shows its bar', () => {
-    const html = shop(wallet({ goal: 'moonlitCharms', balance: 10 }));
-    expect(card(html, 'moonlitCharms')).toContain('your goal');
-    expect(card(html, 'moonlitCharms')).toContain('Unpin goal');
+    const html = shop(wallet({ goal: 'obsidian', balance: 10 }));
+    expect(card(html, 'obsidian')).toContain('your goal');
+    expect(card(html, 'obsidian')).toContain('Unpin goal');
     expect(html).toContain('role="progressbar"');
     expect(html).toContain('10 of 40 coins');
   });
@@ -123,14 +156,14 @@ describe('Shop', () => {
   it('explains to a guest that they cannot spend, and offers nothing to buy', () => {
     const html = shop(wallet({ canBuy: false, balance: 0 }));
     expect(html).toContain('Guests cannot spend coins');
-    expect(card(html, 'cauldronCrew')).toContain('data-state="closed"');
-    expect(card(html, 'cauldronCrew')).not.toContain('Pin as goal');
+    expect(card(html, 'violetMurk')).toContain('data-state="closed"');
+    expect(card(html, 'violetMurk')).not.toContain('Pin as goal');
   });
 
   it('renders before the wallet has arrived', () => {
     const html = shop(null);
     expect(html).toContain('The Shop');
-    expect(card(html, 'cauldronCrew')).toContain('data-state="closed"');
+    expect(card(html, 'violetMurk')).toContain('data-state="closed"');
   });
 });
 
@@ -139,7 +172,7 @@ describe('WalletPanel', () => {
     renderToString(<WalletPanel wallet={w} onShop={noop} />);
 
   it('shows the balance, the shop button and the goal bar', () => {
-    const html = panel(wallet({ goal: 'cauldronCrew', balance: 30 }));
+    const html = panel(wallet({ goal: 'violetMurk', balance: 30 }));
     expect(html).toContain('data-testid="lobby-balance"');
     expect(html).toContain('Open the shop');
     expect(html).toContain('30 of 40 coins');
@@ -148,7 +181,7 @@ describe('WalletPanel', () => {
   });
 
   it('says a goal is ready once the coins are there', () => {
-    expect(panel(wallet({ goal: 'cauldronCrew', balance: 99 }))).toContain('Ready to buy');
+    expect(panel(wallet({ goal: 'violetMurk', balance: 99 }))).toContain('Ready to buy');
   });
 
   it('has no goal bar without a goal, and shows nothing where spending is closed', () => {
@@ -188,7 +221,7 @@ describe('the lobby', () => {
     );
 
   it('shows the balance, the goal and the shop button, and what each seat wears', () => {
-    const html = render(wallet({ goal: 'cauldronCrew', balance: 12 }));
+    const html = render(wallet({ goal: 'violetMurk', balance: 12 }));
     expect(html).toContain('data-testid="lobby-balance"');
     expect(html).toContain('Open the shop');
     expect(html).toContain('Saving for');

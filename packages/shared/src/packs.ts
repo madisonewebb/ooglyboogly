@@ -81,26 +81,44 @@ export interface ShopEntry {
   available: boolean;
 }
 
-export const SHOP_ENTRIES: readonly ShopEntry[] = [
-  ...CATALOG.map((i): ShopEntry => ({
-    id: i.id,
-    slot: i.slot,
-    name: i.name,
-    rarity: i.rarity,
-    price: i.price,
-    blurb: i.blurb,
-    available: i.available,
-  })),
-  ...STICKER_PACKS.map((p): ShopEntry => ({
-    id: p.id,
-    slot: null,
-    name: p.name,
-    rarity: p.rarity,
-    price: p.price,
-    blurb: p.blurb,
-    available: p.available,
-  })),
-];
+/**
+ * Whether sticker packs are for sale. They are switched off for now (the shop sells gear only), but
+ * everything else about them stays: anyone who already owns a pack keeps its stickers in the picker,
+ * and turning this on brings the packs back into the shop. Tests use `entryWithPacks` below.
+ */
+export const PACKS_FOR_SALE = false;
+
+const CATALOG_ENTRIES: readonly ShopEntry[] = CATALOG.map((i): ShopEntry => ({
+  id: i.id,
+  slot: i.slot,
+  name: i.name,
+  rarity: i.rarity,
+  price: i.price,
+  blurb: i.blurb,
+  available: i.available,
+}));
+
+const PACK_ENTRIES: readonly ShopEntry[] = STICKER_PACKS.map((p): ShopEntry => ({
+  id: p.id,
+  slot: null,
+  name: p.name,
+  rarity: p.rarity,
+  price: p.price,
+  blurb: p.blurb,
+  available: p.available,
+}));
+
+/** Everything that exists, packs included, whether or not it is for sale right now. */
+export const ALL_SHOP_ENTRIES: readonly ShopEntry[] = [...CATALOG_ENTRIES, ...PACK_ENTRIES];
+
+/** What the shop lists and sells. */
+export const SHOP_ENTRIES: readonly ShopEntry[] = PACKS_FOR_SALE
+  ? ALL_SHOP_ENTRIES
+  : CATALOG_ENTRIES;
 
 export const shopEntry = (id: unknown): ShopEntry | undefined =>
   typeof id === 'string' ? SHOP_ENTRIES.find((e) => e.id === id) : undefined;
+
+/** Like `shopEntry`, but packs are found even while they are not for sale. For tests and for reading what a player owns. */
+export const entryWithPacks = (id: unknown): ShopEntry | undefined =>
+  typeof id === 'string' ? ALL_SHOP_ENTRIES.find((e) => e.id === id) : undefined;

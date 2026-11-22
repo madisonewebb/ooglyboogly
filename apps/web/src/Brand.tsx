@@ -2,17 +2,34 @@ import { lazy, Suspense } from 'react';
 import { BRAND_NAME } from '@rollhouse/shared';
 import wordmark from './art/wordmark.webp';
 import { FlatFace } from './dice/DiceTray';
+import { CauldronCoinIcon } from './icons';
 import { hasWebGL } from './dice/webgl';
+import { useWallet } from './shop/WalletContext';
 import { usePrefs } from './theme/prefs';
+import './navCoins.css';
 
 const LobbyDie = lazy(() => import('./dice/LobbyDie'));
 
-/** The plum band with the wordmark, across the top of every screen. */
+/** The player's coins at the right of the band, wherever they can spend them. */
+export function NavCoins() {
+  const wallet = useWallet();
+  if (!wallet?.canBuy) return null;
+  return (
+    <span className="nav-coins" data-testid="nav-balance">
+      <CauldronCoinIcon />
+      <span className="amount">{wallet.balance}</span>
+      <span className="sr-only">{wallet.balance === 1 ? ' coin' : ' coins'}</span>
+    </span>
+  );
+}
+
+/** The plum band with the wordmark and the coin balance, across the top of every screen. */
 export function BrandBar() {
   return (
     <header className="topbar">
       <h1 className="sr-only">{BRAND_NAME}</h1>
       <img className="band-wordmark" src={wordmark} alt="" width={396} height={128} />
+      <NavCoins />
     </header>
   );
 }

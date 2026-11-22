@@ -21,10 +21,10 @@ async function myId(page: Page): Promise<string> {
   );
 }
 
-const balanceOf = async (page: Page, id: 'lobby-balance' | 'shop-balance') =>
+const balanceOf = async (page: Page, id: 'lobby-balance' | 'shop-balance' | 'nav-balance') =>
   Number(((await page.getByTestId(id).textContent()) ?? '').match(/\d+/)![0]);
 
-test('earn coins, buy a sticker pack in the shop, and use its stickers', async ({
+test('earn coins, buy a skin in the shop, wear it, and see it at the table', async ({
   page,
   browser,
 }) => {
@@ -62,29 +62,33 @@ test('earn coins, buy a sticker pack in the shop, and use its stickers', async (
   await page.goto(`/?table=e2e-${randomUUID()}`);
   await expect(page.getByTestId('lobby-balance')).toBeVisible();
   expect(await balanceOf(page, 'lobby-balance')).toBe(earned);
+  // The band shows the same balance, in the lobby and in the shop.
+  expect(await balanceOf(page, 'nav-balance')).toBe(earned);
   await page.getByRole('button', { name: 'Open the shop' }).click();
   expect(await balanceOf(page, 'shop-balance')).toBe(earned);
+  expect(await balanceOf(page, 'nav-balance')).toBe(earned);
 
-  // Not enough yet: the pack says how short, and cannot be bought. A 40-coin dice skin is out of reach too.
-  const crew = page.getByTestId('card-cauldronCrew');
-  await expect(page.getByTestId('state-cauldronCrew')).toHaveText(`${40 - earned} coins short`);
-  await expect(crew.getByRole('button', { name: /^Buy Cauldron Crew/ })).toBeDisabled();
+  // Sticker packs are switched off for now, so the shop sells gear only.
+  await expect(page.getByRole('heading', { name: 'Sticker packs' })).toHaveCount(0);
+  await expect(page.getByTestId('card-cauldronCrew')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Dice skins' })).toBeVisible();
+
+  // Not enough yet: the skin says how short, and cannot be bought.
+  const bone = page.getByTestId('card-bone');
   await expect(page.getByTestId('state-bone')).toHaveText(`${40 - earned} coins short`);
-  await expect(
-    page.getByTestId('card-bone').getByRole('button', { name: /^Buy Bone/ }),
-  ).toBeDisabled();
-  await expect(page.getByTestId('card-bone')).toContainText('Ivory dice with ink-black pips.');
+  await expect(bone.getByRole('button', { name: /^Buy Bone/ })).toBeDisabled();
+  await expect(bone).toContainText('Ivory dice with ink-black pips.');
 
   // 3. Pin it as a goal, and watch the bar in the lobby.
-  await crew.getByRole('button', { name: 'Pin as goal' }).click();
-  await expect(crew.getByRole('button', { name: 'Unpin goal' })).toBeVisible();
+  await bone.getByRole('button', { name: 'Pin as goal' }).click();
+  await expect(bone.getByRole('button', { name: 'Unpin goal' })).toBeVisible();
   await page.getByRole('button', { name: 'Back to the table' }).click();
-  await expect(page.getByTestId('goal')).toContainText('Cauldron Crew');
+  await expect(page.getByTestId('goal')).toContainText('Bone');
   await expect(page.getByTestId('goal')).toContainText(`${earned} of 40 coins`);
   await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', String(earned));
   await shoot('lobby-goal');
 
-  // 4. Top up. A 1-card game pays too little for a 40-coin pack, so the test adds coins
+  // 4. Top up. A 1-card game pays too little for a 40-coin skin, so the test adds coins
   //    straight to its own temporary database. Nothing else about the purchase is faked.
   const id = await myId(page);
   const db = new DatabaseSync(DB);
@@ -93,36 +97,43 @@ test('earn coins, buy a sticker pack in the shop, and use its stickers', async (
   await page.reload();
   expect(await balanceOf(page, 'lobby-balance')).toBe(earned + 100);
   await page.getByRole('button', { name: 'Open the shop' }).click();
-  await expect(page.getByTestId('state-cauldronCrew')).toHaveText('You can afford this, your goal');
+  await expect(page.getByTestId('state-bone')).toHaveText('You can afford this, your goal');
   await shoot('shop');
 
   // 5. Buy takes two taps. "Not now" spends nothing.
-  await crew.getByRole('button', { name: /^Buy Cauldron Crew/ }).click();
-  await expect(crew).toContainText('Spend 40 coins on Cauldron Crew?');
-  await crew.getByRole('button', { name: 'Not now' }).click();
+  await bone.getByRole('button', { name: /^Buy Bone/ }).click();
+  await expect(bone).toContainText('Spend 40 coins on Bone?');
+  await bone.getByRole('button', { name: 'Not now' }).click();
   expect(await balanceOf(page, 'shop-balance')).toBe(earned + 100);
-  await crew.getByRole('button', { name: /^Buy Cauldron Crew/ }).click();
-  await crew.getByRole('button', { name: 'Yes, buy it' }).click();
-  await expect(page.getByTestId('state-cauldronCrew')).toHaveText('Owned');
+  await bone.getByRole('button', { name: /^Buy Bone/ }).click();
+  await bone.getByRole('button', { name: 'Yes, buy it' }).click();
+  await expect(page.getByTestId('state-bone')).toHaveText('Owned');
   expect(await balanceOf(page, 'shop-balance')).toBe(earned + 60);
-  await expect(crew.getByRole('button', { name: /^Buy/ })).toHaveCount(0);
+  // The band drops with the purchase, without a reload.
+  expect(await balanceOf(page, 'nav-balance')).toBe(earned + 60);
+  await expect(bone.getByRole('button', { name: /^Buy/ })).toHaveCount(0);
 
   // The goal was bought, so the bar is gone. It stays bought after a reload.
   await page.reload();
   await expect(page.getByTestId('goal')).toHaveCount(0);
   expect(await balanceOf(page, 'lobby-balance')).toBe(earned + 60);
 
-  // 6. Use it: a solo game, where the sticker tray now holds the pack's stickers.
-  await page.getByRole('button', { name: '1', exact: true }).click();
-  await page.getByRole('button', { name: 'Start game' }).click();
-  await page.getByRole('button', { name: 'Send a sticker' }).click();
-  const tray = page.getByRole('group', { name: 'Stickers' });
-  await expect(tray.getByRole('button', { name: 'Ribbit' })).toBeVisible();
-  await expect(tray.getByRole('button', { name: 'Cackle' })).toBeVisible();
-  await expect(tray.getByRole('button', { name: 'Cheering' })).toBeVisible();
-  // The other pack is still locked.
-  await expect(tray.getByRole('button', { name: 'Off I go' })).toHaveCount(0);
-  await shoot('sticker-tray');
-  await tray.getByRole('button', { name: 'Ribbit' }).click();
-  await expect(page.locator('.reaction img[alt="Ribbit"]')).toBeVisible();
+  // 6. Wear it: the shop says so, and the lobby shows the look next to the player's name.
+  await page.getByRole('button', { name: 'Open the shop' }).click();
+  await bone.getByRole('button', { name: 'Wear it' }).click();
+  await expect(page.getByTestId('state-bone')).toHaveText('Owned, wearing it');
+  await expect(bone.getByRole('button', { name: 'Take off' })).toBeVisible();
+  await page.getByRole('button', { name: 'Back to the table' }).click();
+  await expect(page.locator('.seat-look')).toContainText('Bone');
+  await shoot('lobby-wearing');
+
+  // It is kept after a reload, and taking it off clears it.
+  await page.reload();
+  await expect(page.locator('.seat-look')).toContainText('Bone');
+  await page.getByRole('button', { name: 'Open the shop' }).click();
+  await expect(page.getByTestId('state-bone')).toHaveText('Owned, wearing it');
+  await bone.getByRole('button', { name: 'Take off' }).click();
+  await expect(page.getByTestId('state-bone')).toHaveText('Owned');
+  await page.getByRole('button', { name: 'Back to the table' }).click();
+  await expect(page.locator('.seat-look')).toHaveCount(0);
 });

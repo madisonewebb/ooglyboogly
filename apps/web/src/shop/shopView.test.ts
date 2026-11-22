@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { PRICES, SHOP_ENTRIES, shopEntry, type WalletMessage } from '@rollhouse/shared';
+import {
+  PACKS_FOR_SALE,
+  PRICES,
+  SHOP_ENTRIES,
+  shopEntry,
+  type PayoutMessage,
+  type WalletMessage,
+} from '@rollhouse/shared';
 import {
   type CardState,
   cardState,
@@ -8,6 +15,7 @@ import {
   lookLine,
   shopSections,
   stateLabel,
+  withPayoutBalance,
 } from './shopView';
 
 const wallet = (over: Partial<WalletMessage> = {}): WalletMessage => ({
@@ -28,27 +36,27 @@ describe('cardState', () => {
   });
 
   it('says afford at exactly the price, and short below it by how many coins', () => {
-    expect(cardState(entry('cauldronCrew'), wallet({ balance: 40 }))).toEqual({ kind: 'afford' });
-    expect(cardState(entry('cauldronCrew'), wallet({ balance: 39 }))).toEqual({
+    expect(cardState(entry('violetMurk'), wallet({ balance: 40 }))).toEqual({ kind: 'afford' });
+    expect(cardState(entry('violetMurk'), wallet({ balance: 39 }))).toEqual({
       kind: 'short',
       missing: 1,
     });
-    expect(cardState(entry('cauldronCrew'), wallet())).toEqual({ kind: 'short', missing: 40 });
+    expect(cardState(entry('violetMurk'), wallet())).toEqual({ kind: 'short', missing: 40 });
   });
 
   it('says owned, and worn when it is equipped in its slot', () => {
-    const w = wallet({ owned: ['bone', 'toad', 'cauldronCrew'], equipped: { diceSkin: 'bone' } });
+    const w = wallet({ owned: ['bone', 'toad', 'violetMurk'], equipped: { diceSkin: 'bone' } });
     expect(cardState(entry('bone'), w)).toEqual({ kind: 'owned', worn: true });
     expect(cardState(entry('toad'), w)).toEqual({ kind: 'owned', worn: false });
     // A pack is owned but is never worn.
-    expect(cardState(entry('cauldronCrew'), w)).toEqual({ kind: 'owned', worn: false });
+    expect(cardState(entry('violetMurk'), w)).toEqual({ kind: 'owned', worn: false });
   });
 
   it('is closed for someone who cannot spend, and before the wallet arrives', () => {
-    expect(cardState(entry('cauldronCrew'), wallet({ canBuy: false, balance: 500 }))).toEqual({
+    expect(cardState(entry('violetMurk'), wallet({ canBuy: false, balance: 500 }))).toEqual({
       kind: 'closed',
     });
-    expect(cardState(entry('cauldronCrew'), null)).toEqual({ kind: 'closed' });
+    expect(cardState(entry('violetMurk'), null)).toEqual({ kind: 'closed' });
     expect(cardState(soon('bone'), null)).toEqual({ kind: 'soon' });
   });
 });
@@ -80,22 +88,18 @@ describe('stateLabel', () => {
 describe('shopSections', () => {
   const sections = shopSections();
 
-  it('lists the packs first, then each slot, with every entry exactly once', () => {
-    expect(sections.map((s) => s.key)).toEqual([
-      'stickers',
-      'diceSkin',
-      'brew',
-      'pet',
-      'celebration',
-    ]);
+  it('lists each slot, leaves out the sticker packs while they are off, and shows every entry once', () => {
+    // Sticker packs are switched off (PACKS_FOR_SALE), so their section is left out, not shown empty.
+    expect(PACKS_FOR_SALE).toBe(false);
+    expect(sections.map((s) => s.key)).toEqual(['diceSkin', 'brew', 'pet', 'celebration']);
     expect(sections.flatMap((s) => s.entries.map((e) => e.id)).sort()).toEqual(
       SHOP_ENTRIES.map((e) => e.id).sort(),
     );
   });
 
   it('shows the prices from the catalog tiers', () => {
-    expect(sections[0]!.entries.map((e) => e.price)).toEqual([40, 40]);
-    expect(sections[3]!.entries.map((e) => e.price)).toEqual([
+    expect(sections[0]!.entries.map((e) => e.price)).toEqual([40, 40, 100, 100, 300]);
+    expect(sections[2]!.entries.map((e) => e.price)).toEqual([
       PRICES.pet.common,
       PRICES.pet.spooky,
       PRICES.pet.spooky,
@@ -109,17 +113,17 @@ describe('goalProgress', () => {
     expect(goalProgress(null)).toBeNull();
     expect(goalProgress(wallet())).toBeNull();
     expect(goalProgress(wallet({ goal: 'gone' }))).toBeNull();
-    expect(goalProgress(wallet({ goal: 'cauldronCrew', owned: ['cauldronCrew'] }))).toBeNull();
+    expect(goalProgress(wallet({ goal: 'violetMurk', owned: ['violetMurk'] }))).toBeNull();
   });
 
   it('counts coins toward the price, rounding down, and caps at full', () => {
-    const at = (balance: number) => goalProgress(wallet({ goal: 'cauldronCrew', balance }))!;
+    const at = (balance: number) => goalProgress(wallet({ goal: 'violetMurk', balance }))!;
     expect(at(0)).toMatchObject({ percent: 0, ready: false });
     expect(at(10)).toMatchObject({ percent: 25, ready: false });
     expect(at(39)).toMatchObject({ percent: 97, ready: false });
     expect(at(40)).toMatchObject({ percent: 100, ready: true });
     expect(at(500)).toMatchObject({ percent: 100, ready: true });
-    expect(at(0).entry.name).toBe('Cauldron Crew');
+    expect(at(0).entry.name).toBe('Violet Murk');
   });
 });
 
@@ -129,5 +133,31 @@ describe('lookLine', () => {
     expect(lookLine({})).toBeNull();
     expect(lookLine({ diceSkin: 'bone', pet: 'toad' })).toBe('Bone, Toad');
     expect(lookLine({ pet: 'removed-item' })).toBeNull();
+  });
+});
+
+describe('withPayoutBalance', () => {
+  const payout = (balance: number | null): PayoutMessage => ({ seats: [], balance });
+
+  it('takes the new balance from a payout', () => {
+    const w = wallet({ balance: 3, owned: ['violetMurk'], goal: 'toad' });
+    expect(withPayoutBalance(w, payout(13))).toEqual({ ...w, balance: 13 });
+  });
+
+  it('leaves everything else in the wallet alone', () => {
+    const w = wallet({ balance: 0, owned: ['bone'], equipped: { diceSkin: 'bone' } });
+    const next = withPayoutBalance(w, payout(6))!;
+    expect(next.owned).toEqual(['bone']);
+    expect(next.equipped).toEqual({ diceSkin: 'bone' });
+    expect(next.canBuy).toBe(true);
+  });
+
+  it('changes nothing for someone who was not paid', () => {
+    const w = wallet({ balance: 9 });
+    expect(withPayoutBalance(w, payout(null))).toBe(w);
+  });
+
+  it('has nothing to update before the wallet has arrived', () => {
+    expect(withPayoutBalance(null, payout(6))).toBeNull();
   });
 });

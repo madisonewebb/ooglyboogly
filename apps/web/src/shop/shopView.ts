@@ -1,5 +1,6 @@
 import {
   type Equipped,
+  type PayoutMessage,
   type Rarity,
   SHOP_ENTRIES,
   type ShopEntry,
@@ -7,6 +8,18 @@ import {
   type Slot,
   type WalletMessage,
 } from '@rollhouse/shared';
+
+/**
+ * The wallet after a finished game paid: the viewer's new balance from the payout message.
+ * A null balance means this player was not paid (watching), so nothing changes.
+ */
+export function withPayoutBalance(
+  wallet: WalletMessage | null,
+  payout: PayoutMessage,
+): WalletMessage | null {
+  if (!wallet || payout.balance === null) return wallet;
+  return { ...wallet, balance: payout.balance };
+}
 
 export const RARITY_LABEL: Record<Rarity, string> = {
   common: 'Common',
@@ -67,7 +80,10 @@ const SLOT_SECTIONS: { slot: Slot; title: string; blurb: string }[] = [
   { slot: 'celebration', title: 'Celebrations', blurb: 'How your big moments are marked.' },
 ];
 
-/** What the shop shows, in order: the things for sale today first, then what is coming. */
+/**
+ * What the shop shows, in order. Sticker packs come first when they are for sale; a section with
+ * nothing in it is left out, so switching the packs off (PACKS_FOR_SALE) takes their section with it.
+ */
 export function shopSections(): Section[] {
   return [
     {
@@ -82,7 +98,7 @@ export function shopSections(): Section[] {
       blurb,
       entries: SHOP_ENTRIES.filter((e) => e.slot === slot),
     })),
-  ];
+  ].filter((section) => section.entries.length > 0);
 }
 
 export interface GoalProgress {

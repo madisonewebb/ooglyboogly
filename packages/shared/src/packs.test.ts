@@ -5,6 +5,9 @@ import {
   PACK_PRICE,
   PACK_STICKER_IDS,
   packOfSticker,
+  ALL_SHOP_ENTRIES,
+  entryWithPacks,
+  PACKS_FOR_SALE,
   SHOP_ENTRIES,
   shopEntry,
   STICKER_PACKS,
@@ -21,7 +24,7 @@ describe('sticker packs', () => {
   });
 
   it('never reuse an id from the catalog or another pack', () => {
-    const ids = SHOP_ENTRIES.map((e) => e.id);
+    const ids = ALL_SHOP_ENTRIES.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toHaveLength(CATALOG.length + STICKER_PACKS.length);
   });
@@ -38,8 +41,19 @@ describe('sticker packs', () => {
     expect(packOfSticker('cheering')).toBeUndefined();
   });
 
+  it('keeps the packs out of the shop while they are switched off', () => {
+    expect(PACKS_FOR_SALE).toBe(false);
+    for (const p of STICKER_PACKS) {
+      expect(SHOP_ENTRIES.map((e) => e.id)).not.toContain(p.id);
+      // Not for sale, so the server's lookup does not know them...
+      expect(shopEntry(p.id)).toBeUndefined();
+      // ...but they still exist, for tests and for what a player already owns.
+      expect(entryWithPacks(p.id)).toMatchObject({ slot: null, price: 40, available: true });
+    }
+    expect(SHOP_ENTRIES).toHaveLength(CATALOG.length);
+  });
+
   it('looks up shop entries by id, and nothing else', () => {
-    expect(shopEntry('cauldronCrew')).toMatchObject({ slot: null, price: 40, available: true });
     expect(shopEntry('bone')).toMatchObject({ slot: 'diceSkin', price: 40 });
     expect(shopEntry('nope')).toBeUndefined();
     expect(shopEntry(7)).toBeUndefined();

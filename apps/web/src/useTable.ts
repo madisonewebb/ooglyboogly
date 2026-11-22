@@ -22,6 +22,7 @@ import {
 import { type Auth, reportError } from './api';
 import { errorText } from './errors';
 import { loadTint } from './tintPrefs';
+import { withPayoutBalance } from './shop/shopView';
 import { store } from './storage';
 
 export type Connection = 'connecting' | 'open' | 'reconnecting' | 'lost';
@@ -134,7 +135,11 @@ export function useTable(auth: Auth): Table {
         room.onMessage(MSG_REACTION, (r: ReactionMessage) =>
           setReactions((prev) => [...prev.slice(-11), r]),
         );
-        room.onMessage(MSG_PAYOUT, (p: PayoutMessage) => setPayout(p));
+        room.onMessage(MSG_PAYOUT, (p: PayoutMessage) => {
+          setPayout(p);
+          // The band shows the balance on every screen, so it must move the moment the game pays.
+          setWallet((w) => withPayoutBalance(w, p));
+        });
         room.onMessage(MSG_WALLET, (w: WalletMessage) => setWallet(w));
         room.onMessage(MSG_ERROR, (e: ErrorMessage) => setError(e));
         room.onDrop(() => setConnection('reconnecting'));
