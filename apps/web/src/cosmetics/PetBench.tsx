@@ -4,11 +4,14 @@
  * parade, and see the whole set side by side. Keys: 1 idle, 2 happy, 3 sad,
  * 4 cheer, P parade. URL: ?pets&cosmetics=pet:bat&pose=sad&hold=1 (hold: stay
  * in the pose instead of settling back to idle) and &parade=1 (start the parade).
+ * The big default Yatzy celebration has its own row (see YatzyBench). Nothing here
+ * is in production builds.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { itemById } from '@rollhouse/shared';
 import { DiceTray } from '../dice/DiceTray';
 import { GhostParade } from './celebrations/GhostParade';
+import { YatzyBench } from '../celebrations/yatzy/YatzyBench';
 import { usePrefs } from '../theme/prefs';
 import { TINTS } from '../theme/palette';
 import { devOverride } from './devOverride';
@@ -105,6 +108,7 @@ export function PetBench() {
               Ghost parade <kbd aria-hidden="true">P</kbd>
             </button>
           </div>
+          <YatzyBench />
         </section>
       </div>
       <section className="bench-gallery" aria-label="Every pet and pose">
