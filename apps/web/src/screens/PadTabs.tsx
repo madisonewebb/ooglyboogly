@@ -2,6 +2,10 @@ import { motion } from 'motion/react';
 import { useRef } from 'react';
 import type { Lobby } from '@rollhouse/shared';
 import { Avatar } from '../Avatar';
+import type { MoodCue } from '../cosmetics/avatars/animation';
+import { AvatarFigure } from '../cosmetics/avatars/AvatarFigure';
+import { devCosmetics } from '../cosmetics/devCosmetics';
+import { resolveEquipped } from '../cosmetics/look';
 import { tintVars } from '../tint';
 import { SPRING } from '../theme/motion';
 import { usePrefs } from '../theme/prefs';
@@ -22,13 +26,15 @@ interface Props {
   done: (seat: number) => boolean;
   /** Per seat, bumped when that player scores somewhere you aren't looking. */
   pulses: Record<number, number>;
+  /** Per seat, the mood that seat's avatar is playing. */
+  moods?: Record<number, MoodCue>;
 }
 
 /**
  * One tab per seated player, at the top of the pad: the way to look at anyone's pad.
  * It also carries who's up and who's away, so the top bar doesn't need its own player row.
  */
-export function PadTabs({ lobby, cdnBase, seat, viewed, onView, up, done, pulses }: Props) {
+export function PadTabs({ lobby, cdnBase, seat, viewed, onView, up, done, pulses, moods }: Props) {
   const { theme } = usePrefs();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const count = lobby.seats.length;
@@ -88,6 +94,13 @@ export function PadTabs({ lobby, cdnBase, seat, viewed, onView, up, done, pulses
               <Avatar user={s.user} cdnBase={cdnBase} tint={s.tint} />
               {pulses[i] ? <span key={pulses[i]} className="tab-dot" aria-hidden="true" /> : null}
             </span>
+            <AvatarFigure
+              equipped={resolveEquipped(s.equipped, devCosmetics())}
+              tint={s.tint}
+              size={44}
+              cue={moods?.[i]}
+              seed={i}
+            />
             <span className="tab-name">{label}</span>
             {i === up && (
               <span className="tab-tag up" aria-hidden="true">

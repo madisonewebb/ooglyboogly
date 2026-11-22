@@ -37,6 +37,17 @@ describe('parseCosmeticsOverride', () => {
     });
   });
 
+  it('accepts the avatar slots', () => {
+    expect(
+      parseCosmeticsOverride('?cosmetics=hat:crown,face:monocle,held:wand,aura:sparkles'),
+    ).toEqual({
+      hat: 'crown',
+      face: 'monocle',
+      held: 'wand',
+      aura: 'sparkles',
+    });
+  });
+
   it('skips malformed pairs and wrong-slot ids, then reads the next valid one', () => {
     expect(
       parseCosmeticsOverride('?cosmetics=hat:toad,brew:ghostParade,brew,:,brew:swamp'),

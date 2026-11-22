@@ -31,10 +31,20 @@ describe('catalog', () => {
   it('finds items and checks slots', () => {
     expect(itemById('nope')).toBeUndefined();
     expect(isSlot('celebration')).toBe(true);
-    expect(isSlot('hat')).toBe(false);
+    expect(isSlot('hat')).toBe(true);
     expect(isSlot('pet')).toBe(false);
     expect(fitsSlot('celebration', 'ghostParade')).toBe(true);
     expect(fitsSlot('brew', 'ghostParade')).toBe(false);
     expect(fitsSlot('brew', 7)).toBe(false);
+    expect(fitsSlot('hat', 'witchHat')).toBe(true);
+    expect(fitsSlot('face', 'witchHat')).toBe(false);
+  });
+
+  it('offers three to five avatar items per avatar slot', () => {
+    for (const slot of ['hat', 'face', 'held', 'aura'] as const) {
+      const n = CATALOG.filter((i) => i.slot === slot).length;
+      expect(n).toBeGreaterThanOrEqual(3);
+      expect(n).toBeLessThanOrEqual(5);
+    }
   });
 });

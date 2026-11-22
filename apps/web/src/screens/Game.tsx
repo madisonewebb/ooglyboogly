@@ -22,6 +22,7 @@ import { ReactionFloats, ReactionPicker } from '../Reactions';
 import { YatzyStage } from '../celebrations/yatzy/YatzyStage';
 import { devCosmetics } from '../cosmetics/devCosmetics';
 import { resolveEquipped } from '../cosmetics/look';
+import { useAvatarMoods } from '../cosmetics/avatars/useAvatarMoods';
 import { useParadeStage } from '../cosmetics/celebrations/useParadeStage';
 import { DiceTray, type RollEvent } from '../dice/DiceTray';
 import { tintOf, tintVars } from '../tint';
@@ -178,6 +179,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
   const paradeStage = useParadeStage(game, lobby);
   const wallet = useWallet();
   const usable = usablePowers(game, seat, wallet);
+  const avatarMoods = useAvatarMoods(game);
 
   // Your turn starting (the first one too) gets a little chime and a pulse on your face.
   const myTurn = turns ? up === seat : canAct;
@@ -561,6 +563,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
               up={up}
               done={(s) => isPlayerDone(game, s)}
               pulses={pulses}
+              moods={avatarMoods}
             />
             <div id={PAD_PANEL_ID} role="tabpanel" aria-labelledby={padTabId(viewed)}>
               <h2 className="pad-title">{mine ? 'Your pad' : `${name(viewed)}'s pad`}</h2>

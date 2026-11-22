@@ -6,7 +6,7 @@
  */
 
 /** What a player can wear. One item per slot is equipped at a time; none means the default look. */
-export const SLOTS = ['diceSkin', 'brew', 'celebration'] as const;
+export const SLOTS = ['diceSkin', 'brew', 'celebration', 'hat', 'face', 'held', 'aura'] as const;
 export type Slot = (typeof SLOTS)[number];
 
 export const RARITIES = ['common', 'spooky', 'legendary'] as const;
@@ -17,6 +17,10 @@ export const PRICES: Record<Slot, Record<Rarity, number>> = {
   diceSkin: { common: 40, spooky: 100, legendary: 300 },
   brew: { common: 40, spooky: 100, legendary: 300 },
   celebration: { common: 40, spooky: 100, legendary: 300 },
+  hat: { common: 40, spooky: 100, legendary: 300 },
+  face: { common: 40, spooky: 100, legendary: 300 },
+  held: { common: 40, spooky: 100, legendary: 300 },
+  aura: { common: 40, spooky: 100, legendary: 300 },
 };
 
 export interface Item {
@@ -96,12 +100,62 @@ export const CELEBRATIONS: readonly Item[] = [
     'ghostParade',
     'Ghost Parade',
     'spooky',
-    'A line of little ghosts marches across on a Yatzy.',
+    'A line of little blobs marches across on a Yatzy.',
     true,
   ),
 ];
 
-export const CATALOG: readonly Item[] = [...DICE_SKINS, ...BREWS, ...CELEBRATIONS];
+/** The avatar's cosmetics, drawn by the web client's avatar scene. */
+export const HATS: readonly Item[] = [
+  item('hat', 'partyHat', 'Party Hat', 'common', 'A striped cone with a gold pom.', true),
+  item('hat', 'bow', 'Bow', 'common', 'A soft lilac bow, tied on top.', true),
+  item('hat', 'witchHat', 'Witch Hat', 'spooky', 'Tall, crooked and buckled.', true),
+  item('hat', 'crown', 'Crown', 'legendary', 'Gold, with a single violet gem.', true),
+];
+
+export const FACES: readonly Item[] = [
+  item('face', 'glasses', 'Round Glasses', 'common', 'Thin gold rims, very studious.', true),
+  item('face', 'mustache', 'Mustache', 'common', 'A magnificent curled mustache.', true),
+  item('face', 'monocle', 'Monocle', 'spooky', 'One lens on a gold chain.', true),
+  item('face', 'eyepatch', 'Eyepatch', 'spooky', 'Mysterious. Possibly a pirate.', true),
+];
+
+export const HELD: readonly Item[] = [
+  item('held', 'wand', 'Wand', 'common', 'A twig with a glowing star tip.', true),
+  item('held', 'lantern', 'Lantern', 'spooky', 'A little lantern with a warm flame.', true),
+  item('held', 'cauldron', 'Tiny Cauldron', 'spooky', 'A pocket cauldron, gently bubbling.', true),
+  item(
+    'held',
+    'crystalBall',
+    'Crystal Ball',
+    'legendary',
+    'It swirls with something unseen.',
+    true,
+  ),
+];
+
+export const AURAS: readonly Item[] = [
+  item('aura', 'sparkles', 'Sparkles', 'common', 'Soft glints that drift upward.', true),
+  item('aura', 'candleFlame', 'Candle Flame', 'spooky', 'A small flame follows close by.', true),
+  item(
+    'aura',
+    'orbitingStars',
+    'Orbiting Stars',
+    'legendary',
+    'Three stars circle overhead.',
+    true,
+  ),
+];
+
+export const CATALOG: readonly Item[] = [
+  ...DICE_SKINS,
+  ...BREWS,
+  ...CELEBRATIONS,
+  ...HATS,
+  ...FACES,
+  ...HELD,
+  ...AURAS,
+];
 
 export type ItemId = string;
 

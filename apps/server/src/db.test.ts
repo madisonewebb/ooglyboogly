@@ -307,9 +307,9 @@ describe('the shop', () => {
     expect(equipItem(db, 'a', 'diceSkin', 'swamp')).toEqual(fail('UNKNOWN_ITEM'));
     expect(equipItem(db, 'a', 'brew', 'bone')).toEqual(fail('UNKNOWN_ITEM'));
     expect(equipItem(db, 'a', 'brew', 7)).toEqual(fail('UNKNOWN_ITEM'));
-    expect(equipItem(db, 'a', 'hat', 'swamp')).toEqual(fail('BAD_INTENT'));
+    expect(equipItem(db, 'a', 'sidekick', 'swamp')).toEqual(fail('BAD_INTENT'));
     // Pets are gone from the shop, so the slot is no longer one.
-    expect(equipItem(db, 'a', 'pet', 'toad')).toEqual(fail('BAD_INTENT'));
+    expect(equipItem(db, 'a', 'sidekick', 'toad')).toEqual(fail('BAD_INTENT'));
     // Someone else's item is not yours.
     expect(equipItem(db, 'b', 'brew', 'swamp')).toEqual(fail('NOT_OWNED'));
     expect(getEquipped(db, 'a')).toEqual({});
@@ -318,7 +318,7 @@ describe('the shop', () => {
 
   it('ignores an equipped row whose item or slot has left the catalog (pets, for one)', () => {
     const { db } = open();
-    db.prepare("INSERT INTO equipped VALUES ('a', 'pet', 'toad')").run();
+    db.prepare("INSERT INTO equipped VALUES ('a', 'sidekick', 'toad')").run();
     db.prepare("INSERT INTO equipped VALUES ('a', 'diceSkin', 'dragon')").run();
     db.prepare("INSERT INTO equipped VALUES ('a', 'brew', 'swamp')").run();
     expect(getEquipped(db, 'a')).toEqual({ brew: 'swamp' });

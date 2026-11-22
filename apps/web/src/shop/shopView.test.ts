@@ -92,7 +92,15 @@ describe('shopSections', () => {
   it('lists each slot, leaves out the sticker packs while they are off, and shows every entry once', () => {
     // Sticker packs are switched off (PACKS_FOR_SALE), so their section is left out, not shown empty.
     expect(PACKS_FOR_SALE).toBe(false);
-    expect(sections.map((s) => s.key)).toEqual(['diceSkin', 'brew', 'celebration']);
+    expect(sections.map((s) => s.key)).toEqual([
+      'diceSkin',
+      'brew',
+      'celebration',
+      'hat',
+      'face',
+      'held',
+      'aura',
+    ]);
     expect(sections.flatMap((s) => s.entries.map((e) => e.id)).sort()).toEqual(
       SHOP_ENTRIES.map((e) => e.id).sort(),
     );
