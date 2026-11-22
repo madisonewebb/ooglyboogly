@@ -8,6 +8,7 @@
  * file holds only ids, names and prices, like catalog.ts.
  */
 import { CATALOG, PRICES, type Rarity, type Slot } from './catalog';
+import { STICKER_IDS, type StickerId } from './protocol';
 
 /** Every pack costs the common tier. */
 export const PACK_PRICE = PRICES.diceSkin.common;
@@ -22,6 +23,11 @@ export const PACK_STICKER_IDS = [
   'broom',
 ] as const;
 export type PackStickerId = (typeof PACK_STICKER_IDS)[number];
+
+/** A sticker anyone may send, or one from a pack. (Whether the sender owns the pack is checked by the server.) */
+export const isSticker = (v: unknown): v is StickerId =>
+  (STICKER_IDS as readonly unknown[]).includes(v) ||
+  (PACK_STICKER_IDS as readonly unknown[]).includes(v);
 
 export interface StickerPack {
   id: string;

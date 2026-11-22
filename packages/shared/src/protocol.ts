@@ -1,6 +1,6 @@
 import type { Box, GameSetup, Move, PlayStyle, RuleErrorCode } from '@rollhouse/rules';
 import type { Equipped, Slot } from './catalog';
-import { PACK_STICKER_IDS, type PackStickerId } from './packs';
+import type { PackStickerId } from './packs';
 import type { TintId } from './tints';
 
 /** Room and message names shared by the server, the web client and the smoke test. */
@@ -268,9 +268,7 @@ export const STICKER_IDS = [
 /** A sticker anyone may send, or one from a sticker pack the sender owns. */
 export type StickerId = (typeof STICKER_IDS)[number] | PackStickerId;
 
-export const isSticker = (v: unknown): v is StickerId =>
-  (STICKER_IDS as readonly unknown[]).includes(v) ||
-  (PACK_STICKER_IDS as readonly unknown[]).includes(v);
+/* `isSticker` lives in packs.ts: this file may only have type imports (see apps/server/src/protocolLoad.test.ts). */
 
 /** Client → server: send a sticker. */
 export const MSG_REACT = 'react';
