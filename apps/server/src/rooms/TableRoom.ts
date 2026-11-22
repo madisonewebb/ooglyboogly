@@ -41,6 +41,9 @@ import {
   MSG_START,
   MSG_UNDO,
   MSG_BUY,
+  MSG_BUY_POWER,
+  MSG_USE_POWER,
+  isPowerId,
   MSG_EQUIP,
   MSG_GOAL,
   MSG_REACT,
@@ -57,6 +60,8 @@ import {
 } from '@rollhouse/shared';
 import {
   buyItem,
+  buyPower,
+  spendPower,
   equipItem,
   getBalance,
   getEquipped,
@@ -347,6 +352,14 @@ export function createTableRoom(cfg: TableConfig) {
         );
       },
 
+      [MSG_BUY_POWER]: (client: Client, intent: unknown) => {
+        this.shop(client, (userId) =>
+          buyPower(cfg.db!, userId, isObject(intent) ? intent['power'] : undefined),
+        );
+      },
+
+      [MSG_USE_POWER]: (client: Client, intent: unknown) => this.usePower(client, intent),
+
       [MSG_EQUIP]: (client: Client, intent: unknown) => {
         const body = isObject(intent) ? intent : {};
         // A seat's look is fixed when the game starts: the lobby is the only time to change it.
@@ -438,7 +451,7 @@ export function createTableRoom(cfg: TableConfig) {
      * database cannot be read the table still works: the shop just shows closed.
      */
     private walletFor(userId: string): WalletMessage {
-      const empty = { balance: 0, owned: [], equipped: {}, goal: null };
+      const empty = { balance: 0, owned: [], equipped: {}, goal: null, powers: {} };
       if (!cfg.db || !this.canShop(userId)) return { ...empty, canBuy: false };
       try {
         return { ...getWallet(cfg.db, userId), canBuy: true };
@@ -470,6 +483,45 @@ export function createTableRoom(cfg: TableConfig) {
       } catch (err) {
         console.error(`shop action failed for ${id}`, err);
         this.sendError(client, 'SHOP_CLOSED', 'the shop could not do that just now');
+      }
+      this.pushWallet(id);
+    }
+
+    /**
+     * Spends one super power on a move. The move is checked against the rules
+     * first, so a power is never used up on something illegal; only then is
+     * one taken out of stock, and the move applied straight after (nothing can
+     * change in between, this all runs in one go). The wallet goes back either way.
+     */
+    private usePower(client: Client, intent: unknown) {
+      const seat = this.seatOf(client);
+      if (seat === null) return;
+      if (!isObject(intent) || !isPowerId(intent['power'])) {
+        return this.sendError(client, 'BAD_INTENT', 'which power?');
+      }
+      const { id } = this.seats[seat]!.user;
+      if (!this.canShop(id)) {
+        return this.sendError(client, 'SHOP_CLOSED', 'you have no powers here');
+      }
+      const power = intent['power'];
+      const move: Move =
+        power === 'extraTurn'
+          ? { type: 'extraTurn', player: seat }
+          : {
+              type: 'unscratch',
+              player: seat,
+              card: intent['card'] as number,
+              box: intent['box'] as (typeof BOXES)[number],
+            };
+      const legal = tryMove(this.game!, move);
+      if (!legal.ok) return this.sendError(client, legal.error.code, legal.error.message);
+      try {
+        const spent = spendPower(cfg.db!, id, power);
+        if (!spent.ok) this.sendError(client, spent.code, spent.message);
+        else this.apply(client, move);
+      } catch (err) {
+        console.error(`using a power failed for ${id}`, err);
+        this.sendError(client, 'SHOP_CLOSED', 'that power could not be used just now');
       }
       this.pushWallet(id);
     }

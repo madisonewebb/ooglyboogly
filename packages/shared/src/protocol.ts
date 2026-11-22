@@ -1,6 +1,7 @@
 import type { Box, GameSetup, Move, PlayStyle, RuleErrorCode } from '@rollhouse/rules';
 import type { Equipped, Slot } from './catalog';
 import type { PackStickerId } from './packs';
+import type { PowerId, PowerStock } from './powers';
 import type { TintId } from './tints';
 
 /** Room and message names shared by the server, the web client and the smoke test. */
@@ -214,13 +215,29 @@ export type ShopErrorCode =
   | 'NOT_AVAILABLE'
   | 'ALREADY_OWNED'
   | 'NOT_ENOUGH_COINS'
-  | 'NOT_OWNED';
+  | 'NOT_OWNED'
+  | 'NO_POWER';
 
 /** Client → server: spend coins on an item or a sticker pack. The server prices it. */
 export const MSG_BUY = 'buy';
 export interface BuyIntent {
   item: string;
 }
+
+/** Client → server: buy one super power (any number of times). The server prices it. */
+export const MSG_BUY_POWER = 'buyPower';
+export interface BuyPowerIntent {
+  power: PowerId;
+}
+
+/**
+ * Client → server: spend one owned super power. `extraTurn` needs nothing more;
+ * `unscratch` names the scratched box to reopen. Refused (and nothing spent)
+ * unless the move is legal right now.
+ */
+export const MSG_USE_POWER = 'usePower';
+export type UsePowerIntent =
+  { power: 'extraTurn' } | { power: 'unscratch'; card: number; box: Box };
 
 /** Client → server: wear an item (or take the slot's item off with `item: null`). Lobby only. */
 export const MSG_EQUIP = 'equip';
@@ -244,6 +261,8 @@ export interface WalletMessage {
   equipped: Equipped;
   /** The pinned item, or null. */
   goal: string | null;
+  /** Super powers in stock. A missing power means none. */
+  powers: PowerStock;
   /** False where this player cannot spend (guests outside dev, or no database). */
   canBuy: boolean;
 }

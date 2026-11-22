@@ -6,6 +6,10 @@ import {
   type Equipped,
   fitsSlot,
   isSlot,
+  type PowerId,
+  powerById,
+  type PowerStock,
+  POWER_IDS,
   type ShopEntry,
   type ShopErrorCode,
   shopEntry,
@@ -65,6 +69,13 @@ export function openDatabase(dataDir: string): DatabaseSync {
       slot TEXT NOT NULL,
       item_id TEXT NOT NULL,
       PRIMARY KEY (user_id, slot)
+    );
+    -- Super powers in stock: a count per (player, power), bought up and used down.
+    CREATE TABLE IF NOT EXISTS power_stock (
+      user_id TEXT NOT NULL,
+      power_id TEXT NOT NULL,
+      qty INTEGER NOT NULL DEFAULT 0 CHECK (qty >= 0),
+      PRIMARY KEY (user_id, power_id)
     );
     -- The item a player is saving up for. Server-side, so it follows them across devices.
     CREATE TABLE IF NOT EXISTS goals (
@@ -206,6 +217,53 @@ export function buyItem(
 }
 
 /**
+ * Buys one super power: takes its price off the balance and adds one to the
+ * stock, in one transaction. Unlike an item it can be bought any number of
+ * times. The price comes from the powers list, never from the caller.
+ */
+export function buyPower(db: DatabaseSync, userId: string, powerId: unknown): ShopResult {
+  const power = powerById(powerId);
+  if (!power) return no('UNKNOWN_ITEM', 'there is no such power');
+  return inTransaction(db, () => {
+    const now = new Date().toISOString();
+    const { changes } = db
+      .prepare(
+        'UPDATE wallets SET coins = coins - ?, updated_at = ? WHERE user_id = ? AND coins >= ?',
+      )
+      .run(power.price, now, userId, power.price);
+    if (Number(changes) === 0) {
+      return no('NOT_ENOUGH_COINS', `${power.name} costs ${power.price} coins`);
+    }
+    db.prepare(
+      `INSERT INTO power_stock (user_id, power_id, qty) VALUES (?, ?, 1)
+       ON CONFLICT (user_id, power_id) DO UPDATE SET qty = qty + 1`,
+    ).run(userId, power.id);
+    return OK;
+  });
+}
+
+/** Takes one power out of stock. Refused, changing nothing, when there is none left. */
+export function spendPower(db: DatabaseSync, userId: string, powerId: PowerId): ShopResult {
+  const { changes } = db
+    .prepare('UPDATE power_stock SET qty = qty - 1 WHERE user_id = ? AND power_id = ? AND qty > 0')
+    .run(userId, powerId);
+  return Number(changes) === 0 ? no('NO_POWER', 'you have none of that power left') : OK;
+}
+
+/** How many of each power a player has. Powers they have none of are left out. */
+export function getPowers(db: DatabaseSync, userId: string): PowerStock {
+  const rows = db
+    .prepare('SELECT power_id, qty FROM power_stock WHERE user_id = ? AND qty > 0')
+    .all(userId) as { power_id: string; qty: number }[];
+  const out: PowerStock = {};
+  for (const id of POWER_IDS) {
+    const row = rows.find((r) => r.power_id === id);
+    if (row) out[id] = row.qty;
+  }
+  return out;
+}
+
+/**
  * Puts an owned item on in its slot, or (item null) takes the slot's item off.
  * The item must be a real catalog item that belongs in that slot, and owned.
  */
@@ -286,5 +344,6 @@ export function getWallet(db: DatabaseSync, userId: string): Omit<WalletMessage,
     owned,
     equipped: getEquipped(db, userId),
     goal: goal?.item_id ?? null,
+    powers: getPowers(db, userId),
   };
 }

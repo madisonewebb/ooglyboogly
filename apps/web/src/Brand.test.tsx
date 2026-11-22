@@ -7,6 +7,7 @@ import { WalletContext } from './shop/WalletContext';
 const wallet = (over: Partial<WalletMessage> = {}): WalletMessage => ({
   balance: 42,
   owned: [],
+  powers: {},
   equipped: {},
   goal: null,
   canBuy: true,

@@ -5,6 +5,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { type ShopEntry, shopEntry } from '@rollhouse/shared';
 import {
   buyItem,
+  buyPower,
+  getPowers,
+  spendPower,
   equipItem,
   getBalance,
   getEquipped,
@@ -357,8 +360,49 @@ describe('the shop', () => {
       owned: ['violetMurk'],
       equipped: {},
       goal: 'obsidian',
+      powers: {},
     });
-    expect(getWallet(db, 'nobody')).toEqual({ balance: 0, owned: [], equipped: {}, goal: null });
+    expect(getWallet(db, 'nobody')).toEqual({
+      balance: 0,
+      owned: [],
+      equipped: {},
+      goal: null,
+      powers: {},
+    });
+    db.close();
+  });
+
+  it('buys powers again and again, never below zero coins', () => {
+    const { db } = open(150);
+    expect(buyPower(db, 'a', 'extraTurn')).toEqual({ ok: true });
+    expect(buyPower(db, 'a', 'unscratch')).toEqual({ ok: true });
+    expect(getBalance(db, 'a')).toBe(10);
+    expect(buyPower(db, 'a', 'extraTurn')).toEqual(fail('NOT_ENOUGH_COINS'));
+    expect(buyPower(db, 'a', 'bone')).toEqual(fail('UNKNOWN_ITEM'));
+    expect(getBalance(db, 'a')).toBe(10);
+    expect(getPowers(db, 'a')).toEqual({ extraTurn: 1, unscratch: 1 });
+    expect(getPowers(db, 'nobody')).toEqual({});
+    // Repeat purchases stack.
+    const rich = open(500).db;
+    for (let i = 0; i < 3; i++) buyPower(rich, 'a', 'unscratch');
+    expect(getPowers(rich, 'a')).toEqual({ unscratch: 3 });
+    expect(getBalance(rich, 'a')).toBe(320);
+    expect(table(rich, 'inventory')).toHaveLength(0);
+    rich.close();
+    db.close();
+  });
+
+  it('spends powers down to zero and no further', () => {
+    const { db } = open(500);
+    buyPower(db, 'a', 'extraTurn');
+    buyPower(db, 'a', 'extraTurn');
+    expect(spendPower(db, 'a', 'extraTurn')).toEqual({ ok: true });
+    expect(getPowers(db, 'a')).toEqual({ extraTurn: 1 });
+    expect(spendPower(db, 'a', 'extraTurn')).toEqual({ ok: true });
+    expect(spendPower(db, 'a', 'extraTurn')).toEqual(fail('NO_POWER'));
+    expect(spendPower(db, 'a', 'unscratch')).toEqual(fail('NO_POWER'));
+    expect(getPowers(db, 'a')).toEqual({});
+    expect(() => db.prepare("UPDATE power_stock SET qty = -1 WHERE user_id = 'a'").run()).toThrow();
     db.close();
   });
 
@@ -374,6 +418,7 @@ describe('the shop', () => {
       balance: 60,
       owned: expect.arrayContaining(['violetMurk', 'swamp']),
       equipped: { brew: 'swamp' },
+      powers: {},
       goal: 'obsidian',
     });
     again.close();
