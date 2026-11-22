@@ -48,6 +48,8 @@ export interface RollPlan {
   /** The dice rolled, in column order. */
   free: readonly number[];
   held: readonly boolean[];
+  /** Which shelf seat each held die sits in; its own index when absent. */
+  seats?: readonly number[] | undefined;
   /** Whether the free dice were showing before (a reroll scoops them up first). */
   hadDice: boolean;
   /**
@@ -123,8 +125,8 @@ function easeOutBack(x: number) {
   return 1 + (c + 1) * (x - 1) ** 3 + c * (x - 1) ** 2;
 }
 
-export const restPos = (die: number, held: boolean): Vec3 => [
-  SLOT_X[die]!,
+export const restPos = (die: number, held: boolean, seat: number = die): Vec3 => [
+  SLOT_X[held ? seat : die]!,
   held ? SHELF_Y + DIE_SIZE / 2 : DIE_SIZE / 2,
   held ? SHELF_Z : TRAY_Z,
 ];
@@ -448,11 +450,12 @@ export function poseAt(plan: RollPlan, die: number, now: number): Pose {
   const t = p.timing;
   const value = plan.values[die] ?? 1;
   const rank = plan.free.indexOf(die);
-  const rest = restPos(die, plan.held[die] ?? false);
+  const rest = restPos(die, plan.held[die] ?? false, plan.seats?.[die]);
 
   if (rank < 0) {
     // Held: stays perfectly still while the others roll, then joins any celebration.
-    const quat = plan.before?.[die] ?? restQuat(value);
+    // Held dice lie in the standard orientation, square to the camera.
+    const quat = restQuat(value);
     return celebrate(plan, t, die, now, {
       pos: rest,
       quat,
@@ -565,8 +568,10 @@ export interface HopPlan {
   toShelf: boolean;
   speed: number;
   reduced: boolean;
-  /** How the die lies, so the hop keeps it. */
+  /** How the die lay in the tray; holding turns it to the standard orientation on the way. */
   quat?: Quat | undefined;
+  /** The shelf seat it hops to or from; its own index when absent. */
+  seat?: number | undefined;
 }
 
 export function hopEnd(h: HopPlan): number {
@@ -574,8 +579,8 @@ export function hopEnd(h: HopPlan): number {
 }
 
 export function hopPose(h: HopPlan, now: number): Pose {
-  const from = restPos(h.die, !h.toShelf);
-  const to = restPos(h.die, h.toShelf);
+  const from = restPos(h.die, !h.toShelf, h.seat);
+  const to = restPos(h.die, h.toShelf, h.seat);
   const span = BASE.hop * h.speed;
   const u = h.reduced ? 1 : clamp01((now - h.start) / span);
   const pos = lerp3(from, to, easeInOut(u));
@@ -588,7 +593,10 @@ export function hopPose(h: HopPlan, now: number): Pose {
   const flip = fromAxisAngle([1, 0, 0], (h.toShelf ? -1 : 1) * Math.sin(Math.PI * u) * 0.35);
   const squash: Vec3 =
     bounce > 0 ? squish(bounce) : [1 - air * 0.05, 1 + air * 0.08, 1 - air * 0.05];
-  return { pos, quat: mul(flip, h.quat ?? restQuat(h.value)), squash, opacity: 1, visible: true };
+  const square = restQuat(h.value);
+  const lying = h.quat ?? square;
+  const turned = h.toShelf ? slerp(lying, square, easeInOut(u)) : lying;
+  return { pos, quat: mul(flip, turned), squash, opacity: 1, visible: true };
 }
 
 /** A die at rest in its column or on the shelf, lying the way it settled. */
@@ -597,8 +605,9 @@ export const restPose = (
   value: number | null,
   held: boolean,
   quat?: Quat | null,
+  seat?: number,
 ): Pose => ({
-  pos: restPos(die, held),
+  pos: restPos(die, held, seat),
   quat: quat ?? restQuat(value ?? 1),
   squash: ONE,
   opacity: 1,
@@ -613,7 +622,7 @@ export const restPose = (
 export function settledQuat(plan: RollPlan, die: number): Quat {
   const value = plan.values[die] ?? 1;
   const rank = plan.free.indexOf(die);
-  if (rank < 0) return plan.before?.[die] ?? restQuat(value);
+  if (rank < 0) return restQuat(value);
   const tidy = plan.reduced || !plan.path ? undefined : prepare(plan).tidyQuat[rank];
   return tidy ?? restQuat(value);
 }

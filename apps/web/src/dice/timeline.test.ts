@@ -175,6 +175,25 @@ describe('a roll', () => {
 });
 
 describe('holding a die', () => {
+  it('hops to the seat it is given and ends square to the camera', () => {
+    const h = { start: 0, die: 1, value: 3, toShelf: true, speed: 1, reduced: false, seat: 4 };
+    const end = hopPose(h, hopEnd(h) + 500);
+    expect(end.pos).toEqual(restPos(1, true, 4));
+    expect(end.pos[0]).toBe(SLOT_X[4]);
+    const askew = mul(fromAxisAngle([0, 1, 0], 0.7), restQuat(3));
+    const tilted = hopPose({ ...h, quat: askew }, hopEnd(h) + 500);
+    sameTurn(tilted.quat, restQuat(3));
+  });
+
+  it('keeps held dice in their seats and standard orientation during a roll', () => {
+    const held = [true, false, false, false, false];
+    const r = { ...plan([2, 4, 4, 4, 4], held, 0), seats: [3, 1, 2, 3, 4] };
+    const pose = poseAt(r, 0, timing(r).end);
+    expect(pose.pos).toEqual(restPos(0, true, 3));
+    sameTurn(pose.quat, restQuat(2));
+    sameTurn(settledQuat(r, 0), restQuat(2));
+  });
+
   it('hops from the tray to the shelf in an arc', () => {
     const h = { start: 0, die: 1, value: 3, toShelf: true, speed: 1, reduced: false };
     const mid = hopPose(h, hopEnd(h) / 2);
@@ -219,21 +238,21 @@ describe('after a roll', () => {
     }
   });
 
-  it('keeps how held dice lay, and scoops the others from how they lay', () => {
+  it('squares held dice, and scoops the others from how they lay', () => {
     const turned: Quat = mul(fromAxisAngle([0, 1, 0], Math.PI / 2), restQuat(5));
     const before = [turned, turned, null, null, null];
     const r = plan([5, 5, 1, 2, 3], [true, true, false, false, false], 2, { before });
     const t = timing(r);
-    sameTurn(poseAt(r, 0, t.end).quat, turned);
-    sameTurn(settledQuat(r, 1), turned);
+    sameTurn(poseAt(r, 0, t.end).quat, restQuat(5));
+    sameTurn(settledQuat(r, 1), restQuat(5));
     const rr = plan([5, 2, 3, 4, 6], ALL_FREE, 2, { before: [turned, null, null, null, null] });
     sameTurn(poseAt(rr, 0, rr.start).quat, turned);
   });
 
-  it('hops a die to the shelf without turning it', () => {
+  it('turns a die square on its hop to the shelf', () => {
     const turned: Quat = mul(fromAxisAngle([0, 1, 0], Math.PI / 2), restQuat(2));
     const h = { start: 0, die: 3, value: 2, toShelf: true, speed: 1, reduced: false, quat: turned };
-    sameTurn(hopPose(h, hopEnd(h) + 500).quat, turned);
+    sameTurn(hopPose(h, hopEnd(h) + 500).quat, restQuat(2));
   });
 });
 

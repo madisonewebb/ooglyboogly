@@ -8,12 +8,14 @@ import { Sparkles } from '../Sparkles';
 import type { SceneProps, SlotRect } from './DiceScene';
 import { STAGE_ASPECT } from './framing';
 import { loadTumbles, tumblesNow } from './loadTumbles';
+import { holdOrder, shelfSeats } from './holdOrder';
 import type { Quat } from './quat';
 import {
   celebrationFor,
   type HopPlan,
   type RollPlan,
   rollSounds,
+  restQuat,
   settledQuat,
   SHAKE_EASE,
   timing,
@@ -103,14 +105,19 @@ export function DiceTray({
   const speed = prefs.fastRolls ? 0.5 : 1;
   // How each die lies, kept between rolls so nothing snaps when a roll ends.
   const rests = useRef<{ value: number | null; quat: Quat }[]>([]);
+  // Held dice always lie in the standard orientation.
   const restsNow = useMemo(
     () =>
       values.map((v, i) => {
         const r = rests.current[i];
-        return r && r.value === v ? r.quat : null;
+        return !held[i] && r && r.value === v ? r.quat : null;
       }),
-    [values, plan],
+    [values, plan, held],
   );
+  // Held dice line up on the shelf in the order they were held.
+  const orderRef = useRef<number[]>([]);
+  const order = useMemo(() => (orderRef.current = holdOrder(orderRef.current, held)), [held]);
+  const seats = useMemo(() => shelfSeats(order, values.length), [order, values.length]);
   const rattleUntil = useRef(0);
   const rattleLoop = useRef<number | undefined>(undefined);
 
@@ -123,6 +130,7 @@ export function DiceTray({
       values: values.map((v) => v ?? 1),
       free,
       held,
+      seats,
       hadDice: free.some((i) => values[i] !== null),
       path: null,
       mirror: false,
@@ -181,6 +189,7 @@ export function DiceTray({
       values: values.map((v) => v ?? 1),
       free,
       held,
+      seats,
       hadDice: held_ ? held_.hadDice : !roll.first,
       path: reduced ? null : (tumbles?.[free.length - 1]?.[roll.tumble % PATHS_PER_COUNT] ?? null),
       mirror: Math.floor(roll.tumble / PATHS_PER_COUNT) % 2 === 1,
@@ -232,6 +241,10 @@ export function DiceTray({
     const changed = held.flatMap((h, i) => (h !== before[i] ? [i] : []));
     if (changed.length === 0 || changed.length > 2 || rolling) return;
     const now = performance.now();
+    const landed = (die: number) => {
+      const r = rests.current[die];
+      return held[die] && r && r.value === values[die] ? r.quat : undefined;
+    };
     setHops((hs) => [
       ...hs.filter((h) => !changed.includes(h.die)),
       ...changed.map((die) => ({
@@ -241,9 +254,16 @@ export function DiceTray({
         toShelf: held[die]!,
         speed,
         reduced: reducedMotion || !three,
-        quat: restsNow[die] ?? undefined,
+        seat: seats[die],
+        // Holding turns the die from how it landed to the standard orientation.
+        quat: landed(die),
       })),
     ]);
+    // Once on the shelf a die lies square; released, it stays so.
+    for (const die of changed) {
+      if (held[die])
+        rests.current[die] = { value: values[die] ?? null, quat: restQuat(values[die] ?? 1) };
+    }
     if (!reducedMotion && three) playHop(260 * speed, held[changed[0]!]!);
   }, [held]);
 
@@ -257,6 +277,7 @@ export function DiceTray({
   const sceneProps: SceneProps = {
     values,
     held,
+    seats,
     roll: plan ?? pending,
     hops,
     colors: SCHEMES[prefs.scheme].themes[theme],
@@ -296,7 +317,7 @@ export function DiceTray({
               : rolling && !isHeld
                 ? `Die ${i + 1}, rolling`
                 : `Die ${i + 1}: ${value}`;
-          const spot = slots?.[isHeld ? 'shelf' : 'tray'][i];
+          const spot = slots?.[isHeld ? 'shelf' : 'tray'][isHeld ? seats[i]! : i];
           const disabled = !onToggle || value === null || rolling;
           return (
             <button
@@ -321,7 +342,7 @@ export function DiceTray({
                       top: `${spot.y * 100}%`,
                       width: `${spot.size * 100}%`,
                     }
-                  : { order: isHeld ? i : 10 + i }
+                  : { order: isHeld ? seats[i]! : 10 + i }
               }
             >
               {!three && <FlatFace value={rolling && !isHeld ? null : value} />}

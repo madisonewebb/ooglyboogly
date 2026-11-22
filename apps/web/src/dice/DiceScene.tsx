@@ -44,6 +44,8 @@ export interface SlotRect {
 export interface SceneProps {
   values: readonly (number | null)[];
   held: readonly boolean[];
+  /** The shelf seat of each die when held. */
+  seats: readonly number[];
   roll: RollPlan | null;
   hops: readonly HopPlan[];
   colors: Tokens;
@@ -356,6 +358,7 @@ const LIFT = 0.16;
 function Dice({
   values,
   held,
+  seats,
   roll,
   hops,
   colors,
@@ -399,7 +402,10 @@ function Dice({
   }, [rig, reduced, invalidate]);
 
   // Any change to what's shown needs a fresh frame.
-  useEffect(() => invalidate(), [values, held, roll, hops, colors, hover, rests, invalidate]);
+  useEffect(
+    () => invalidate(),
+    [values, held, seats, roll, hops, colors, hover, rests, invalidate],
+  );
 
   useFrame((_, delta) => {
     const now = performance.now();
@@ -416,7 +422,7 @@ function Dice({
         pose = hopPose(hop, now);
         animating = true;
       } else {
-        pose = restPose(i, values[i] ?? null, held[i] ?? false, rests[i]);
+        pose = restPose(i, values[i] ?? null, held[i] ?? false, rests[i], seats[i]);
       }
       // The die under the pointer rises to meet it.
       const want = hover === i && !rolling && !hop ? 1 : 0;
@@ -642,6 +648,7 @@ export default function DiceScene(props: SceneProps) {
       <Dice
         values={props.values}
         held={props.held}
+        seats={props.seats}
         roll={props.roll}
         hops={props.hops}
         colors={props.colors}
