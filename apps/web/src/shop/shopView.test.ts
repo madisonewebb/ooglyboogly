@@ -96,6 +96,7 @@ describe('shopSections', () => {
       'diceSkin',
       'brew',
       'celebration',
+      'hair',
       'hat',
       'face',
       'held',

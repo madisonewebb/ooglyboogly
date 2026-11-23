@@ -34,6 +34,8 @@ export interface Pose {
   droop: number;
   /** 0 normal face, 1 big smile. */
   joy: number;
+  /** 0 arms at rest, 1 arms thrown up and legs kicking. */
+  cheer: number;
   /** How hard the jelly body ripples: 0 is rigid, 0.1 a calm idle, higher after a bounce. */
   wobble: number;
 }
@@ -47,6 +49,7 @@ export const REST: Pose = {
   blink: 0,
   droop: 0,
   joy: 0,
+  cheer: 0,
   wobble: 0,
 };
 
@@ -106,6 +109,7 @@ export function poseAt(t: number, seed: number, cue: MoodCue | null, reduced: bo
     pose.scaleX += land * 0.7;
     pose.tilt = Math.sin(age * 9) * 0.08 * (1 - age / HAPPY_SECONDS);
     pose.joy = smooth(age / 0.1) * (1 - smooth((age - 0.8) / 0.3));
+    pose.cheer = smooth(age / 0.12) * (1 - smooth((age - 0.8) / 0.3));
     pose.blink = 0;
     pose.wobble += 0.1 * (1 - age / HAPPY_SECONDS);
   } else {

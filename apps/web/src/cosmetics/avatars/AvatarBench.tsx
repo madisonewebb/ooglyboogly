@@ -10,7 +10,7 @@ import { AvatarFigure, avatars3d } from './AvatarFigure';
 import { clockNow, type Mood, type MoodCue } from './animation';
 import './avatars.css';
 
-const SLOT_ORDER: Slot[] = ['hat', 'face', 'held', 'aura'];
+const SLOT_ORDER: Slot[] = ['hair', 'hat', 'face', 'held', 'aura'];
 const TINT_IDS = Object.keys(TINTS) as TintId[];
 
 /** Everything at once, to see the items together. */

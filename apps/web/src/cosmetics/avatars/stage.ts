@@ -16,8 +16,11 @@ import { buildRig, type Rig } from './model';
 const FPS = 30;
 /** The hidden canvas is never bigger than this, however large an avatar is asked for. */
 const MAX_PX = 256;
-/** What the camera sees: x from -1 to 1, y from -0.12 to 1.88, so auras and hats have room. */
-const VIEW = { left: -1, right: 1, bottom: -0.12, top: 1.88 };
+/**
+ * What the camera sees: x from -1 to 1 and y from -0.12 to 1.88, so auras and hats have room. An
+ * orthographic frustum is measured from the camera, so it is 2 units square and centered on this.
+ */
+const CENTER_Y = 0.88;
 
 export interface AvatarHandle {
   /** Changes what the avatar wears or the tint, rebuilding it. */
@@ -43,14 +46,7 @@ interface Entry {
 class Stage {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
-  private camera = new THREE.OrthographicCamera(
-    VIEW.left,
-    VIEW.right,
-    VIEW.top,
-    VIEW.bottom,
-    0.1,
-    20,
-  );
+  private camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 20);
   private entries = new Set<Entry>();
   private raf = 0;
   private last = 0;
@@ -67,8 +63,8 @@ class Stage {
       e.preventDefault();
       this.fail();
     });
-    this.camera.position.set(0, 0.8, 6);
-    this.camera.lookAt(0, 0.8, 0);
+    this.camera.position.set(0, CENTER_Y, 6);
+    this.camera.lookAt(0, CENTER_Y, 0);
     this.scene.add(new THREE.HemisphereLight('#ffffff', '#cfc4ee', 1.8));
     const key = new THREE.DirectionalLight('#ffffff', 1.7);
     key.position.set(-2, 3, 4);

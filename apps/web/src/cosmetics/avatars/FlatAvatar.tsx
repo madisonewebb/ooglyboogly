@@ -3,14 +3,71 @@
  * Same soft blob, same items, drawn simply. Pure markup, so it needs no WebGL and no script.
  */
 import type { ReactNode } from 'react';
-import { bodyColorOf } from './colors';
-import type { AvatarLook } from './items';
+import { bodyColorOf, mixHex } from './colors';
+import { type AvatarLook, HAIR_COLOR } from './items';
 
 const INK = '#2A2440';
 const GOLD = '#E8C766';
 const PLUM = '#4D3F69';
 const BLUSH = '#D98BA6';
 const LILAC = '#9B86E0';
+
+/** The part of each hairstyle behind the body, and the part over the head. */
+const hairCap = (c: string) => (
+  <path d="M25 56 Q22 36 50 33 Q78 36 75 56 Q66 45 50 44 Q34 45 25 56 Z" fill={c} />
+);
+
+const HAIR_BACK: Record<NonNullable<AvatarLook['hair']>, (c: string) => ReactNode> = {
+  bob: (c) => <path d="M20 62 Q18 36 50 32 Q82 36 80 62 L78 76 Q50 80 22 76 Z" fill={c} />,
+  pigtails: () => null,
+  spaceBuns: () => null,
+  longWaves: (c) => (
+    <path d="M18 66 Q14 34 50 30 Q86 34 82 66 Q86 84 70 86 L30 86 Q14 84 18 66 Z" fill={c} />
+  ),
+};
+
+const HAIR_FRONT: Record<NonNullable<AvatarLook['hair']>, (c: string) => ReactNode> = {
+  bob: hairCap,
+  longWaves: hairCap,
+  pigtails: (c) => (
+    <>
+      {hairCap(c)}
+      <g stroke={c} strokeWidth="9" strokeLinecap="round">
+        <path d="M25 47 L15 66" />
+        <path d="M75 47 L85 66" />
+      </g>
+      <circle cx="24.5" cy="48" r="2.6" fill={BLUSH} />
+      <circle cx="75.5" cy="48" r="2.6" fill={BLUSH} />
+    </>
+  ),
+  spaceBuns: (c) => (
+    <>
+      {hairCap(c)}
+      <circle cx="35" cy="33" r="7.5" fill={c} />
+      <circle cx="65" cy="33" r="7.5" fill={c} />
+      <path d="M31 40 L39 40 M61 40 L69 40" stroke={LILAC} strokeWidth="2" strokeLinecap="round" />
+    </>
+  ),
+};
+
+/** A stubby limb: a rounded line with an outline, like the body. No hands, no feet. */
+function Limb({
+  from,
+  to,
+  color,
+}: {
+  from: [number, number];
+  to: [number, number];
+  color: string;
+}) {
+  const d = `M${from[0]} ${from[1]} L${to[0]} ${to[1]}`;
+  return (
+    <>
+      <path d={d} stroke={INK} strokeWidth="9.4" strokeLinecap="round" fill="none" />
+      <path d={d} stroke={color} strokeWidth="6" strokeLinecap="round" fill="none" />
+    </>
+  );
+}
 
 const HATS: Record<NonNullable<AvatarLook['hat']>, ReactNode> = {
   partyHat: (
@@ -125,11 +182,20 @@ const AURAS: Record<NonNullable<AvatarLook['aura']>, ReactNode> = {
  * The body is an uneven bean, a little wider at the base, with two dot eyes and a small smile.
  */
 export function FlatAvatar({ look, tintHex }: { look: AvatarLook; tintHex: string }) {
+  // A shade deeper than the body, like the 3D limbs.
+  const limbColor = mixHex(bodyColorOf(tintHex), INK, 0.14);
   return (
     <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" focusable="false">
       {look.aura && AURAS[look.aura]}
+      <g>
+        <Limb from={[28, 62]} to={[19, 75]} color={limbColor} />
+        <Limb from={[72, 62]} to={[81, 75]} color={limbColor} />
+        <Limb from={[41, 82]} to={[40, 94]} color={limbColor} />
+        <Limb from={[59, 82]} to={[60, 94]} color={limbColor} />
+      </g>
+      {look.hair && HAIR_BACK[look.hair](HAIR_COLOR[look.hair])}
       <path
-        d="M24 82 Q22 58 36 46 Q50 36 65 46 Q79 57 77 80 Q76 94 50 94 Q26 94 24 82 Z"
+        d="M24 77 Q22 58 36 46 Q50 36 65 46 Q79 57 77 75 Q76 87 50 87 Q26 87 24 77 Z"
         fill={bodyColorOf(tintHex)}
         stroke={INK}
         strokeWidth="2"
@@ -147,6 +213,7 @@ export function FlatAvatar({ look, tintHex }: { look: AvatarLook; tintHex: strin
       <ellipse cx="34" cy="66" rx="4" ry="2.4" fill={BLUSH} fillOpacity="0.7" />
       <ellipse cx="66" cy="66" rx="4" ry="2.4" fill={BLUSH} fillOpacity="0.7" />
       <ellipse cx="38" cy="50" rx="4" ry="2.2" fill="#fff" fillOpacity="0.45" />
+      {look.hair && HAIR_FRONT[look.hair](HAIR_COLOR[look.hair])}
       {look.face && FACES[look.face]}
       {look.hat && HATS[look.hat]}
       {look.held && HELD[look.held]}

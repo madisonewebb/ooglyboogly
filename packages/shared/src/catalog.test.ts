@@ -41,7 +41,7 @@ describe('catalog', () => {
   });
 
   it('offers three to five avatar items per avatar slot', () => {
-    for (const slot of ['hat', 'face', 'held', 'aura'] as const) {
+    for (const slot of ['hair', 'hat', 'face', 'held', 'aura'] as const) {
       const n = CATALOG.filter((i) => i.slot === slot).length;
       expect(n).toBeGreaterThanOrEqual(3);
       expect(n).toBeLessThanOrEqual(5);
