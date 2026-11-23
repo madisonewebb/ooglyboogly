@@ -1,0 +1,76 @@
+/* Nudges: a small pill button under the turn banner, and a passing line. */
+.nudge-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.nudge-bar:not(:has(button)):has(.nudge-note:empty) {
+  display: none;
+}
+
+.nudge-button {
+  min-height: 2.2rem;
+  padding: 0.2rem 0.95rem;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  background: var(--pad);
+  color: var(--strong);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.nudge-note {
+  margin: 0;
+  color: var(--quiet);
+  font-weight: 700;
+  animation: nudge-in var(--dur) var(--ease-out);
+}
+
+.nudge-note:empty {
+  display: none;
+}
+
+/* Aimed at you: a little more present, still soft. */
+.nudge-note.to-you {
+  padding: 0.25rem 0.9rem;
+  border-radius: 999px;
+  background: var(--band);
+  color: var(--on-band);
+}
+
+@keyframes nudge-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.4rem);
+  }
+}
+
+/* The nudged player's face gives a gentle wiggle (the flag is never set with reduced motion). */
+.turn-banner:has(+ .nudge-bar[data-nudged]) .avatar {
+  animation: nudge-wiggle 700ms var(--ease-out) 2;
+}
+
+@keyframes nudge-wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-9deg);
+  }
+  45% {
+    transform: rotate(7deg);
+  }
+  70% {
+    transform: rotate(-4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nudge-note {
+    animation: none;
+  }
+}

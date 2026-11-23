@@ -18,6 +18,7 @@ import {
 import { type Lobby, MSG_HOLD, MSG_ROLL, MSG_SCORE } from '@rollhouse/shared';
 import { BrandBar } from '../Brand';
 import { Avatar } from '../Avatar';
+import { NudgeBar } from '../Nudge';
 import { ReactionFloats, ReactionPicker } from '../Reactions';
 import { YatzyStage } from '../celebrations/yatzy/YatzyStage';
 import { devCosmetics } from '../cosmetics/devCosmetics';
@@ -450,6 +451,7 @@ export function Game({ game, lobby, table, seat, cdnBase }: Props) {
                 </span>
               ) : null}
             </div>
+            <NudgeBar game={game} lobby={lobby} seat={seat} table={table} />
             <ReactionPicker send={table.send} />
 
             <DiceTray

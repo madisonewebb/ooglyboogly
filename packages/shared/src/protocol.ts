@@ -179,6 +179,7 @@ export type ErrorCode =
   | 'STARTED'
   | 'NOT_STARTED'
   | 'BAD_INTENT'
+  | 'TOO_SOON'
   | ShopErrorCode;
 
 export interface ErrorMessage {
@@ -305,6 +306,28 @@ export interface ReactionMessage {
 
 /** One sticker per person this often, at most; extras are dropped quietly. */
 export const REACTION_COOLDOWN_MS = 1200;
+
+/* ---------- Nudges ---------- */
+
+/**
+ * A gentle poke for someone who is taking a while. Any seated player who is not
+ * up can nudge whoever is. The server only allows it once that player has been
+ * idle this long (since their turn began, or since their last move).
+ */
+export const NUDGE_AFTER_MS = 30_000;
+/** One nudge per target, and one per sender, in this long. Extras are dropped quietly. */
+export const NUDGE_COOLDOWN_MS = 20_000;
+
+/** Client → server: nudge whoever is up. No payload. */
+export const MSG_NUDGE = 'nudge';
+
+/** Server → every client: `fromUserId` nudged `toUserId`. `id` counts up per table. */
+export const MSG_NUDGED = 'nudged';
+export interface NudgedMessage {
+  id: number;
+  fromUserId: string;
+  toUserId: string;
+}
 
 /** Guest sessions (local dev and e2e only) have ids starting with "guest-". */
 export const isGuestId = (id: string): boolean => id.startsWith('guest-');

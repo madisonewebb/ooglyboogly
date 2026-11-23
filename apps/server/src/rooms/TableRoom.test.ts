@@ -35,6 +35,9 @@ import {
   MSG_USE_POWER,
   MSG_EQUIP,
   MSG_GOAL,
+  MSG_NUDGE,
+  MSG_NUDGED,
+  type NudgedMessage,
   MSG_REACT,
   MSG_REACTION,
   MSG_WALLET,
@@ -72,6 +75,7 @@ class Player {
   moves: Move[] = [];
   errors: ErrorMessage[] = [];
   reactions: ReactionMessage[] = [];
+  nudges: NudgedMessage[] = [];
   /** The latest payout message, once the game has been paid. */
   payout: PayoutMessage | null = null;
   /** This player's own account: from the snapshot, then every wallet message. */
@@ -101,6 +105,7 @@ class Player {
     });
     room.onMessage(MSG_ERROR, (e: ErrorMessage) => this.errors.push(e));
     room.onMessage(MSG_REACTION, (r: ReactionMessage) => this.reactions.push(r));
+    room.onMessage(MSG_NUDGED, (n: NudgedMessage) => this.nudges.push(n));
     room.onMessage(MSG_PAYOUT, (m: PayoutMessage) => (this.payout = m));
   }
 
@@ -320,6 +325,91 @@ describe('table room', () => {
     expect(a.reactions.map((r) => r.sticker)).toEqual(['ooglyBoogly', 'steamingGarbage']);
 
     expect(await a.expectError(MSG_REACT, { sticker: 'confetti' })).toBe('BAD_INTENT');
+  });
+
+  describe('nudges', () => {
+    const settle = () => new Promise((r) => setTimeout(r, 100));
+
+    it('refuses a nudge before the player has been idle long enough', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 60_000 } });
+      const a = await join('Madi');
+      const b = await join('Mom');
+      await startGame(a, [b], { cardsPerPlayer: 1 });
+      // Madi is up; Mom's nudge is too early.
+      expect(await b.expectError(MSG_NUDGE)).toBe('TOO_SOON');
+      await settle();
+      expect(a.nudges).toEqual([]);
+    });
+
+    it('lets a waiting player nudge whoever is up once the delay has passed', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 0 } });
+      const a = await join('Madi');
+      const b = await join('Mom');
+      await startGame(a, [b], { cardsPerPlayer: 1 });
+      b.room.send(MSG_NUDGE);
+      await until(() => a.nudges.length === 1 && b.nudges.length === 1, 'the nudge');
+      expect(a.nudges[0]).toEqual({ id: 1, fromUserId: 'u-Mom', toUserId: 'u-Madi' });
+    });
+
+    it('does not let the player who is up, or a spectator, nudge', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 0 } });
+      const a = await join('Madi');
+      const b = await join('Mom');
+      await startGame(a, [b], { cardsPerPlayer: 1 });
+      const c = await join('Mema');
+      expect(await c.expectError(MSG_NUDGE)).toBe('NOT_SEATED');
+      a.room.send(MSG_NUDGE); // nobody else is up to nudge
+      await settle();
+      expect(b.nudges).toEqual([]);
+      expect(c.nudges).toEqual([]);
+    });
+
+    it('is not available before the game starts', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 0 } });
+      const a = await join('Madi');
+      expect(await a.expectError(MSG_NUDGE)).toBe('NOT_STARTED');
+    });
+
+    it('restarts the clock when a turn passes', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 400 } });
+      const a = await join('Madi');
+      const b = await join('Mom');
+      await startGame(a, [b], { cardsPerPlayer: 1 });
+      await new Promise((r) => setTimeout(r, 450));
+      await playTurn(a);
+      // It is Mom's turn now, and it only just began.
+      expect(await a.expectError(MSG_NUDGE)).toBe('TOO_SOON');
+    });
+
+    it('allows one nudge per sender and per target in the cooldown', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 0, nudgeCooldownMs: 400 } });
+      const a = await join('Madi');
+      const b = await join('Mom');
+      const c = await join('Mema');
+      await startGame(a, [b, c], { cardsPerPlayer: 1 });
+      b.room.send(MSG_NUDGE);
+      await until(() => a.nudges.length === 1, 'the first nudge');
+      b.room.send(MSG_NUDGE); // same sender
+      c.room.send(MSG_NUDGE); // same target
+      await settle();
+      expect(a.nudges).toHaveLength(1);
+      await new Promise((r) => setTimeout(r, 400));
+      c.room.send(MSG_NUDGE);
+      await until(() => a.nudges.length === 2, 'a nudge after the cooldown');
+      expect(a.nudges[1]).toMatchObject({ fromUserId: 'u-Mema', toUserId: 'u-Madi' });
+    });
+
+    it('in Play together nudges everyone who still has boxes and has been idle', async () => {
+      t = await startTestServer({}, { table: { nudgeAfterMs: 0 } });
+      const a = await join('Madi');
+      const b = await join('Mom');
+      await startGame(a, [b], { cardsPerPlayer: 1, playStyle: 'together' });
+      a.room.send(MSG_NUDGE);
+      await until(() => b.nudges.length === 1, 'the nudge');
+      expect(b.nudges[0]).toMatchObject({ fromUserId: 'u-Madi', toUserId: 'u-Mom' });
+      await settle();
+      expect(a.nudges).toHaveLength(1); // only Mom was nudged
+    });
   });
 
   it('seats late arrivals as spectators who cannot act', async () => {
