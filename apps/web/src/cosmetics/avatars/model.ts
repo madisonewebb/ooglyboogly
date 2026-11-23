@@ -6,8 +6,8 @@
  */
 import * as THREE from 'three';
 import type { Pose } from './animation';
-import { bodyColorOf } from './colors';
-import type { AvatarLook } from './items';
+import { bodyColorOf, mixHex } from './colors';
+import { type AvatarLook, HAIR_COLOR } from './items';
 
 const INK = '#2A2440';
 const GOLD = '#E8C766';
@@ -77,6 +77,104 @@ const star = (r: number) =>
     }
     return new THREE.ExtrudeGeometry(s, { depth: r * 0.3, bevelEnabled: false });
   });
+
+// Hair. Each style is a cap over the crown (the front of the head stays clear for the face) plus
+// whatever hangs or sits off it. Colors are the style's own, not the tint's.
+
+/** The cap that all hair starts from: the top of the head, set a touch back so the fringe clears the eyes. */
+function hairCap(color: string, reach = 1.0): THREE.Mesh {
+  const cap = mesh(
+    geo(`hairCap${reach}`, () => new THREE.SphereGeometry(0.545, 24, 12, 0, Math.PI * 2, 0, reach)),
+    lit(color),
+  );
+  cap.scale.set(1, 1.1, 1.02);
+  cap.position.set(0, 0.55, -0.03);
+  // Tipped back, so the hairline is higher at the front and the fringe sits on the forehead.
+  cap.rotation.x = -0.3;
+  return cap;
+}
+
+function hair(id: NonNullable<AvatarLook['hair']>): Part {
+  const color = HAIR_COLOR[id];
+  const g = new THREE.Group();
+  const swing: THREE.Object3D[] = [];
+  switch (id) {
+    case 'bob': {
+      g.add(hairCap(color, 1.05));
+      // The sides fall to the jaw, and a back panel fills in behind the head.
+      for (const s of [-1, 1]) {
+        const side = mesh(sphere(0.2), lit(color));
+        side.scale.set(0.55, 1.35, 0.9);
+        g.add(place(side, s * 0.44, 0.6, -0.03));
+      }
+      const back = mesh(sphere(0.5), lit(color));
+      back.scale.set(0.98, 1.0, 0.45);
+      g.add(place(back, 0, 0.6, -0.28));
+      break;
+    }
+    case 'pigtails': {
+      g.add(hairCap(color, 0.95));
+      for (const s of [-1, 1]) {
+        const pivot = new THREE.Group();
+        pivot.position.set(s * 0.42, 0.88, -0.02);
+        const tail = mesh(
+          geo('tail', () => new THREE.CapsuleGeometry(0.07, 0.28, 6, 10)),
+          lit(color),
+        );
+        tail.position.y = -0.2;
+        pivot.add(tail);
+        const tie = mesh(
+          geo('tie', () => new THREE.TorusGeometry(0.075, 0.025, 6, 12)),
+          lit(BLUSH),
+        );
+        tie.rotation.x = Math.PI / 2;
+        pivot.add(place(tie, 0, -0.02, 0));
+        pivot.rotation.z = s * 0.55;
+        pivot.userData['base'] = s * 0.55;
+        pivot.userData['side'] = s;
+        swing.push(pivot);
+        g.add(pivot);
+      }
+      break;
+    }
+    case 'spaceBuns': {
+      g.add(hairCap(color, 0.95));
+      for (const s of [-1, 1]) {
+        g.add(place(mesh(sphere(0.15), lit(color)), s * 0.26, 1.13, -0.02));
+        const tie = mesh(
+          geo('bunTie', () => new THREE.TorusGeometry(0.11, 0.022, 6, 14)),
+          lit(LILAC),
+        );
+        tie.rotation.x = Math.PI / 2;
+        tie.rotation.z = s * 0.25;
+        g.add(place(tie, s * 0.24, 1.03, -0.02));
+      }
+      break;
+    }
+    case 'longWaves': {
+      g.add(hairCap(color, 1.1));
+      // A long mane behind the head and shoulders, with a soft flare at each side.
+      const mane = mesh(sphere(0.5), lit(color));
+      mane.scale.set(0.98, 1.05, 0.42);
+      g.add(place(mane, 0, 0.55, -0.3));
+      for (const s of [-1, 1]) {
+        const flare = mesh(sphere(0.16), lit(color));
+        flare.scale.set(1, 1.5, 0.8);
+        g.add(place(flare, s * 0.47, 0.34, -0.12));
+      }
+      break;
+    }
+  }
+  return {
+    object: g,
+    tick: (t) => {
+      for (const p of swing) {
+        const side = p.userData['side'] as number;
+        p.rotation.z = (p.userData['base'] as number) + Math.sin(t * 2.1 + side) * 0.06;
+      }
+    },
+  };
+}
 
 // Hats. Each sits on the crown of the head (y about 1.1).
 
@@ -451,6 +549,64 @@ function aura(id: NonNullable<AvatarLook['aura']>): Part {
   return { object: g };
 }
 
+// Arms and legs: stubby capsules, no hands and no feet. They hang from the body and swing from
+// their top ends, so each is a group pivoted at the shoulder or hip.
+
+const SHOULDER = { x: 0.44, y: 0.62 };
+const HIP = { x: 0.17, y: 0.3 };
+/** How far each arm hangs out from the body at rest, radians. */
+const ARM_REST = 0.38;
+/** The arm that holds an item reaches out a little more, toward where the item is drawn. */
+const ARM_HOLDING = 0.5;
+const LEG_SPLAY = 0.08;
+
+interface Limbs {
+  group: THREE.Group;
+  update(t: number, pose: Pose, holding: boolean): void;
+}
+
+function makeLimbs(bodyColor: string): Limbs {
+  const group = new THREE.Group();
+  // A shade deeper than the body, so they read against it.
+  const mat = lit(mixHex(bodyColor, INK, 0.14));
+  const limb = (key: string, radius: number, length: number, x: number, y: number) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, y, 0);
+    const shape = mesh(
+      geo(key, () => new THREE.CapsuleGeometry(radius, length, 6, 12)),
+      mat,
+    );
+    shape.position.y = -(length / 2 + radius * 0.9);
+    pivot.add(shape);
+    group.add(pivot);
+    return pivot;
+  };
+  const arms = [-1, 1].map((s) => limb('arm', 0.058, 0.17, s * SHOULDER.x, SHOULDER.y));
+  const legs = [-1, 1].map((s) => limb('leg', 0.068, 0.17, s * HIP.x, HIP.y));
+  return {
+    group,
+    update(t, pose, holding) {
+      const flutter = Math.sin(t * 15);
+      arms.forEach((arm, i) => {
+        const s = i === 0 ? -1 : 1;
+        const hold = holding && s === 1;
+        // Idle sway follows the bob; droop lets them hang; a cheer throws them up and waves them.
+        let angle = (hold ? ARM_HOLDING : ARM_REST) + Math.sin(t * 1.9 + i * 1.3) * 0.05;
+        angle -= pose.droop * 0.26;
+        angle += hold
+          ? pose.cheer * 0.2
+          : pose.cheer * (2.55 + flutter * 0.18 * (i === 0 ? 1 : -1));
+        arm.rotation.z = s * angle;
+      });
+      legs.forEach((leg, i) => {
+        const s = i === 0 ? -1 : 1;
+        const kick = Math.sin(t * 14 + (i === 0 ? 0 : Math.PI)) * pose.cheer * 0.38;
+        leg.rotation.z = s * LEG_SPLAY + kick;
+      });
+    },
+  };
+}
+
 /**
  * The blob's own body: a deformed sphere, one geometry per avatar because it wobbles. Each vertex
  * keeps its direction from the center; the wobble moves it in and out along that direction with
@@ -510,7 +666,12 @@ export function buildRig(look: AvatarLook, tintHex: string): Rig {
   body.position.y = 0.55;
   bob.add(body);
 
-  // A light blush on each side. No limbs: the blob is all one squishy body.
+  // Little arms and legs behind the body, so they come out from under it.
+  const limbs = makeLimbs(bodyColorOf(tintHex));
+  limbs.group.position.z = -0.02;
+  bob.add(limbs.group);
+
+  // A light blush on each side.
   for (const s of [-1, 1]) {
     const cheek = mesh(sphere(0.07), lit(BLUSH, { alpha: 0.7 }));
     cheek.scale.set(1.2, 0.7, 0.4);
@@ -536,6 +697,7 @@ export function buildRig(look: AvatarLook, tintHex: string): Rig {
   mouth.rotation.z = Math.PI;
 
   const parts: Part[] = [];
+  if (look.hair) parts.push(hair(look.hair));
   if (look.face) parts.push(face(look.face));
   if (look.hat) parts.push(hat(look.hat));
   if (look.held) parts.push(held(look.held));
@@ -556,6 +718,7 @@ export function buildRig(look: AvatarLook, tintHex: string): Rig {
     },
     update(t, pose) {
       blob.wobble(t, pose.wobble);
+      limbs.update(t, pose, look.held !== null);
       bob.position.y = pose.y;
       bob.scale.set(pose.scaleX, pose.scaleY, pose.scaleX);
       bob.rotation.set(0, pose.yaw, pose.tilt);

@@ -6,7 +6,16 @@
  */
 
 /** What a player can wear. One item per slot is equipped at a time; none means the default look. */
-export const SLOTS = ['diceSkin', 'brew', 'celebration', 'hat', 'face', 'held', 'aura'] as const;
+export const SLOTS = [
+  'diceSkin',
+  'brew',
+  'celebration',
+  'hair',
+  'hat',
+  'face',
+  'held',
+  'aura',
+] as const;
 export type Slot = (typeof SLOTS)[number];
 
 export const RARITIES = ['common', 'spooky', 'legendary'] as const;
@@ -17,6 +26,7 @@ export const PRICES: Record<Slot, Record<Rarity, number>> = {
   diceSkin: { common: 40, spooky: 100, legendary: 300 },
   brew: { common: 40, spooky: 100, legendary: 300 },
   celebration: { common: 40, spooky: 100, legendary: 300 },
+  hair: { common: 40, spooky: 100, legendary: 300 },
   hat: { common: 40, spooky: 100, legendary: 300 },
   face: { common: 40, spooky: 100, legendary: 300 },
   held: { common: 40, spooky: 100, legendary: 300 },
@@ -106,6 +116,20 @@ export const CELEBRATIONS: readonly Item[] = [
 ];
 
 /** The avatar's cosmetics, drawn by the web client's avatar scene. */
+export const HAIR: readonly Item[] = [
+  item('hair', 'bob', 'Bob', 'common', 'A neat chestnut bob with a fringe.', true),
+  item('hair', 'pigtails', 'Pigtails', 'common', 'Honey-blonde, tied with little ribbons.', true),
+  item('hair', 'spaceBuns', 'Space Buns', 'spooky', 'Two round buns, high and proud.', true),
+  item(
+    'hair',
+    'longWaves',
+    'Long Waves',
+    'legendary',
+    'Auburn waves down past the shoulders.',
+    true,
+  ),
+];
+
 export const HATS: readonly Item[] = [
   item('hat', 'partyHat', 'Party Hat', 'common', 'A striped cone with a gold pom.', true),
   item('hat', 'bow', 'Bow', 'common', 'A soft lilac bow, tied on top.', true),
@@ -151,6 +175,7 @@ export const CATALOG: readonly Item[] = [
   ...DICE_SKINS,
   ...BREWS,
   ...CELEBRATIONS,
+  ...HAIR,
   ...HATS,
   ...FACES,
   ...HELD,

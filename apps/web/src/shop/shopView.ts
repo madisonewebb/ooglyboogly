@@ -77,6 +77,7 @@ const SLOT_SECTIONS: { slot: Slot; title: string; blurb: string }[] = [
   { slot: 'diceSkin', title: 'Dice skins', blurb: 'A new look for all five dice.' },
   { slot: 'brew', title: 'Brews', blurb: 'What bubbles in the cauldron.' },
   { slot: 'celebration', title: 'Celebrations', blurb: 'How your big moments are marked.' },
+  { slot: 'hair', title: 'Hair', blurb: 'A style for your little blob.' },
   { slot: 'hat', title: 'Hats', blurb: 'Something for your little blob to wear on top.' },
   { slot: 'face', title: 'Faces', blurb: 'Glasses, mustaches and other fine details.' },
   { slot: 'held', title: 'Held items', blurb: 'What your blob carries about.' },

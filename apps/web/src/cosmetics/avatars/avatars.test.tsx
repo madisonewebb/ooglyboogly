@@ -2,7 +2,7 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { Box3, Vector3 } from 'three';
 import { applyMove, createGame, type GameSetup, type Move } from '@rollhouse/rules';
-import { AURAS, FACES, HATS, HELD } from '@rollhouse/shared';
+import { AURAS, FACES, HAIR, HATS, HELD } from '@rollhouse/shared';
 import { mixHex } from './colors';
 import {
   blinkAt,
@@ -15,13 +15,23 @@ import {
   type MoodCue,
 } from './animation';
 import { FlatAvatar } from './FlatAvatar';
-import { AURA_IDS, avatarLookOf, BARE_LOOK, FACE_IDS, HAT_IDS, HELD_IDS, lookKey } from './items';
+import {
+  AURA_IDS,
+  avatarLookOf,
+  BARE_LOOK,
+  FACE_IDS,
+  HAIR_IDS,
+  HAT_IDS,
+  HELD_IDS,
+  lookKey,
+} from './items';
 import { buildRig } from './model';
 
 const ids = (items: readonly { id: string }[]) => items.map((i) => i.id).sort();
 
 describe('avatar items match the catalog', () => {
-  it('draws every item the catalog sells in the four avatar slots, and nothing else', () => {
+  it('draws every item the catalog sells in the five avatar slots, and nothing else', () => {
+    expect([...HAIR_IDS].sort()).toEqual(ids(HAIR));
     expect([...HAT_IDS].sort()).toEqual(ids(HATS));
     expect([...FACE_IDS].sort()).toEqual(ids(FACES));
     expect([...HELD_IDS].sort()).toEqual(ids(HELD));
@@ -29,7 +39,7 @@ describe('avatar items match the catalog', () => {
   });
 
   it('marks them all available', () => {
-    for (const i of [...HATS, ...FACES, ...HELD, ...AURAS]) expect(i.available).toBe(true);
+    for (const i of [...HAIR, ...HATS, ...FACES, ...HELD, ...AURAS]) expect(i.available).toBe(true);
   });
 });
 
@@ -40,14 +50,15 @@ describe('avatarLookOf', () => {
   });
 
   it('reads each slot, and ignores unknown ids and ids from another slot', () => {
-    expect(avatarLookOf({ hat: 'crown', face: 'monocle', held: 'wand', aura: 'sparkles' })).toEqual(
-      {
-        hat: 'crown',
-        face: 'monocle',
-        held: 'wand',
-        aura: 'sparkles',
-      },
-    );
+    expect(
+      avatarLookOf({ hair: 'bob', hat: 'crown', face: 'monocle', held: 'wand', aura: 'sparkles' }),
+    ).toEqual({
+      hair: 'bob',
+      hat: 'crown',
+      face: 'monocle',
+      held: 'wand',
+      aura: 'sparkles',
+    });
     expect(avatarLookOf({ hat: 'wand', face: 'gone' })).toEqual(BARE_LOOK);
     expect(avatarLookOf({ diceSkin: 'bone', brew: 'swamp' })).toEqual(BARE_LOOK);
   });
@@ -59,6 +70,7 @@ describe('avatarLookOf', () => {
 
 describe('the 3D model', () => {
   const every = [
+    ...HAIR_IDS.map((hair) => ({ ...BARE_LOOK, hair })),
     ...HAT_IDS.map((hat) => ({ ...BARE_LOOK, hat })),
     ...FACE_IDS.map((face) => ({ ...BARE_LOOK, face })),
     ...HELD_IDS.map((held) => ({ ...BARE_LOOK, held })),
@@ -74,6 +86,37 @@ describe('the 3D model', () => {
       expect(rig.root.children.length).toBeGreaterThan(0);
       rig.dispose();
     }
+  });
+
+  it('stands on little legs: the feet reach the ground, with no hands or feet beyond the limbs', () => {
+    const rig = buildRig(BARE_LOOK, '#E0708F');
+    rig.update(0, REST);
+    rig.root.updateMatrixWorld(true);
+    const box = new Box3().setFromObject(rig.root);
+    expect(box.min.y).toBeGreaterThan(-0.02);
+    expect(box.min.y).toBeLessThan(0.04);
+    rig.dispose();
+  });
+
+  it('throws the arms up on a cheer, and lets them hang on a droop', () => {
+    /** The box around just the two arms (the capsules with the arm radius). */
+    const arms = (pose: typeof REST) => {
+      const rig = buildRig(BARE_LOOK, '#E0708F');
+      rig.update(0, pose);
+      rig.root.updateMatrixWorld(true);
+      const box = new Box3();
+      rig.root.traverse((o) => {
+        const g = (o as { geometry?: { type: string; parameters?: { radius?: number } } }).geometry;
+        if (g?.type === 'CapsuleGeometry' && g.parameters?.radius === 0.058) box.expandByObject(o);
+      });
+      rig.dispose();
+      return box;
+    };
+    const rest = arms(REST);
+    expect(arms({ ...REST, cheer: 1 }).max.y).toBeGreaterThan(rest.max.y + 0.15);
+    expect(arms({ ...REST, droop: 1 }).getSize(new Vector3()).x).toBeLessThan(
+      rest.getSize(new Vector3()).x,
+    );
   });
 
   it('keeps the wobbling body finite and near its size', () => {
@@ -109,6 +152,8 @@ describe('animation', () => {
     const idle = poseAt(10.25, 0, null, false);
     expect(poseAt(10.25, 0, happy, false).y).toBeGreaterThan(idle.y + 0.2);
     expect(poseAt(10.25, 0, happy, false).wobble).toBeGreaterThan(idle.wobble);
+    expect(poseAt(10.25, 0, happy, false).cheer).toBeGreaterThan(0.9);
+    expect(idle.cheer).toBe(0);
     expect(poseAt(10 + HAPPY_SECONDS + 0.1, 0, happy, false)).toEqual(
       poseAt(10 + HAPPY_SECONDS + 0.1, 0, null, false),
     );
@@ -163,7 +208,7 @@ describe('the flat fallback', () => {
     const bare = renderToString(<FlatAvatar look={BARE_LOOK} tintHex="#A07BD6" />);
     const dressed = renderToString(
       <FlatAvatar
-        look={{ hat: 'crown', face: 'glasses', held: 'wand', aura: 'sparkles' }}
+        look={{ hair: 'bob', hat: 'crown', face: 'glasses', held: 'wand', aura: 'sparkles' }}
         tintHex="#A07BD6"
       />,
     );
