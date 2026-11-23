@@ -375,3 +375,11 @@ export function playYatzyFanfare(quiet = false) {
   }
   if (!quiet) burst(a, out, at + 0.62, 'highpass', 6500, 0.5, 0.05, 1.2);
 }
+
+/** Someone nudged you: two soft low bells, gentler than the turn chime. */
+export function playNudge() {
+  const ok = audio();
+  if (!ok) return;
+  const { a, out } = ok;
+  [587, 740].forEach((f, i) => bell(a, out, a.currentTime + i * 0.16, f, 0.09, 0.6));
+}

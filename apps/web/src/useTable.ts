@@ -13,6 +13,8 @@ import {
   MSG_LOBBY,
   MSG_MOVE,
   MSG_PAYOUT,
+  MSG_NUDGED,
+  type NudgedMessage,
   MSG_REACTION,
   type ReactionMessage,
   MSG_SNAPSHOT,
@@ -47,6 +49,8 @@ export interface Table {
   lastRoll: LiveRoll | null;
   /** Stickers sent in this session, newest last (only the last few are kept). */
   reactions: ReactionMessage[];
+  /** Nudges sent in this session, newest last (only the last few are kept). */
+  nudges: NudgedMessage[];
   /** What the finished game paid, once it has: null until then, and when nobody was paid. */
   payout: PayoutMessage | null;
   /** The viewer's own coins, items and goal; null until the table has answered. */
@@ -89,6 +93,7 @@ export function useTable(auth: Auth): Table {
   const [lostReason, setLostReason] = useState<string | null>(null);
   const [lastRoll, setLastRoll] = useState<LiveRoll | null>(null);
   const [reactions, setReactions] = useState<ReactionMessage[]>([]);
+  const [nudges, setNudges] = useState<NudgedMessage[]>([]);
   const [payout, setPayout] = useState<PayoutMessage | null>(null);
   const [wallet, setWallet] = useState<WalletMessage | null>(null);
   const roomRef = useRef<Room | null>(null);
@@ -134,6 +139,9 @@ export function useTable(auth: Auth): Table {
         });
         room.onMessage(MSG_REACTION, (r: ReactionMessage) =>
           setReactions((prev) => [...prev.slice(-11), r]),
+        );
+        room.onMessage(MSG_NUDGED, (n: NudgedMessage) =>
+          setNudges((prev) => [...prev.slice(-5), n]),
         );
         room.onMessage(MSG_PAYOUT, (p: PayoutMessage) => {
           setPayout(p);
@@ -183,6 +191,7 @@ export function useTable(auth: Auth): Table {
     error,
     lastRoll,
     reactions,
+    nudges,
     payout,
     wallet,
     clearError: useCallback(() => setError(null), []),

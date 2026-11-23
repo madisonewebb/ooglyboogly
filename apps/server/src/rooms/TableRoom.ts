@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
 import { type Client, Room, ServerError } from '@colyseus/core';
 import {
+  activePlayers,
   BOXES,
   computePayouts,
   createGame,
@@ -46,6 +47,11 @@ import {
   isPowerId,
   MSG_EQUIP,
   MSG_GOAL,
+  MSG_NUDGE,
+  MSG_NUDGED,
+  type NudgedMessage,
+  NUDGE_AFTER_MS,
+  NUDGE_COOLDOWN_MS,
   MSG_REACT,
   MSG_REACTION,
   MSG_WALLET,
@@ -88,6 +94,10 @@ export interface TableConfig {
   guestPayouts: boolean;
   /** Finds what is for sale by id. Defaults to the real catalog; tests swap it to make items coming soon. */
   shopLookup?: (id: unknown) => ShopEntry | undefined;
+  /** How idle a player must be before they can be nudged. Defaults to NUDGE_AFTER_MS; tests shorten it. */
+  nudgeAfterMs?: number;
+  /** The per-target and per-sender nudge limit. Defaults to NUDGE_COOLDOWN_MS. */
+  nudgeCooldownMs?: number;
 }
 
 export const EMPTY_TIMEOUT_MS = 15 * 60 * 1000;
@@ -184,6 +194,12 @@ export function createTableRoom(cfg: TableConfig) {
     /** When each user last sent a sticker, for the cooldown. */
     private lastReaction = new Map<string, number>();
     private reactions = 0;
+    /** When each seat last moved, or (Take turns) when their turn began. For nudges. */
+    private idleSince = new Map<number, number>();
+    /** Last nudge sent by, and last nudge received by, each user id. */
+    private lastNudgeBy = new Map<string, number>();
+    private lastNudgeTo = new Map<string, number>();
+    private nudges = 0;
 
     override onCreate(options: Partial<JoinOptions>) {
       const id = options?.instanceId;
@@ -301,6 +317,9 @@ export function createTableRoom(cfg: TableConfig) {
         this.game = createGame(setup);
         this.setup = setup;
         this.gameId = randomUUID();
+        this.idleSince.clear();
+        const started = Date.now();
+        for (const p of activePlayers(this.game)) this.idleSince.set(p, started);
         for (const c of this.clients) this.sendSnapshot(c);
       },
 
@@ -399,6 +418,34 @@ export function createTableRoom(cfg: TableConfig) {
         this.lastReaction.set(userId, now);
         const body: ReactionMessage = { id: ++this.reactions, userId, sticker: intent['sticker'] };
         this.broadcast(MSG_REACTION, body);
+      },
+
+      // A seated player who is not up can nudge the player(s) who are, once they have been idle a while.
+      [MSG_NUDGE]: (client: Client) => {
+        const seat = this.seatOf(client);
+        if (seat === null) return;
+        const game = this.game!;
+        const now = Date.now();
+        const after = cfg.nudgeAfterMs ?? NUDGE_AFTER_MS;
+        const cooldown = cfg.nudgeCooldownMs ?? NUDGE_COOLDOWN_MS;
+        const targets = activePlayers(game).filter((p) => p !== seat);
+        if (targets.length === 0) return;
+        const senderId = this.seats[seat]!.user.id;
+        if (now - (this.lastNudgeBy.get(senderId) ?? -Infinity) < cooldown) return;
+        const ready = targets.filter((p) => now - (this.idleSince.get(p) ?? now) >= after);
+        if (ready.length === 0) {
+          return this.sendError(client, 'TOO_SOON', 'give them a little longer');
+        }
+        let sent = false;
+        for (const p of ready) {
+          const toUserId = this.seats[p]!.user.id;
+          if (now - (this.lastNudgeTo.get(toUserId) ?? -Infinity) < cooldown) continue;
+          this.lastNudgeTo.set(toUserId, now);
+          const body: NudgedMessage = { id: ++this.nudges, fromUserId: senderId, toUserId };
+          this.broadcast(MSG_NUDGED, body);
+          sent = true;
+        }
+        if (sent) this.lastNudgeBy.set(senderId, now);
       },
 
       [MSG_UNDO]: (client: Client) => {
@@ -585,8 +632,14 @@ export function createTableRoom(cfg: TableConfig) {
     private apply(client: Client, move: Move) {
       const result = tryMove(this.game!, move);
       if (!result.ok) return this.sendError(client, result.error.code, result.error.message);
+      const before = activePlayers(this.game!);
       this.game = result.state;
       this.moves.push(move);
+      // The mover is no longer idle, and in Take turns the next player's turn just began.
+      const moved = Date.now();
+      this.idleSince.set(move.player, moved);
+      for (const p of activePlayers(this.game))
+        if (!before.includes(p)) this.idleSince.set(p, moved);
       const message: MoveMessage = { index: this.moves.length - 1, move };
       // Which recorded tumble to play. Drawn after the dice, and only for looks.
       if (move.type === 'roll') message.tumble = randomInt(0, 2 ** 30);
