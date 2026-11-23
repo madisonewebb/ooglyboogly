@@ -927,7 +927,8 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
 
 .table-layout {
   display: grid;
-  grid-template-columns: minmax(24rem, 1.18fr) minmax(0, 1fr);
+  /* The pad needs about 30.5rem for its label and three cards; the tray takes the rest. */
+  grid-template-columns: minmax(24rem, 1.18fr) minmax(30.5rem, 1fr);
   gap: 1.5rem;
   align-items: stretch;
 }
@@ -1658,7 +1659,7 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
 
 /* ---------- Laptop: everything in one window ---------- */
 
-@media (min-width: 52.01rem) {
+@media (min-width: 58.01rem) {
   .screen.game {
     /* The band takes its 3.4rem; the table fills the rest of the window. */
     height: calc(100dvh - 3.4rem);
@@ -1717,9 +1718,15 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
   }
 }
 
-@media (max-width: 52rem) {
+@media (max-width: 58rem) {
   .table-layout {
     grid-template-columns: 1fr;
+  }
+
+  /* Stacked, the tray is as wide as the window but no taller than about half of it, so Roll stays in view. */
+  .dice-stage {
+    width: min(100%, calc(56dvh * var(--stage-aspect, 1.4)));
+    margin-inline: auto;
   }
 }
 
@@ -1997,6 +2004,15 @@ body:has(.topbar) .corner .icon:hover:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .hotbar-slot:hover:not(:disabled) {
     transform: none;
+  }
+}
+
+/* Laptop-sized windows: the bar won't fit one line, so it makes two even rows (5 and 5) instead of leaving Edit alone. */
+@media (min-width: 58.01rem) and (max-width: 70rem) {
+  .hotbar-row {
+    display: grid;
+    grid-template-columns: repeat(5, auto);
+    justify-content: start;
   }
 }
 
