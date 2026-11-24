@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@colyseus/core": "0.18.28",
+    "@colyseus/core": "0.18.29",
     "@colyseus/ws-transport": "0.18.5",
     "express": "5.3.0"
   },
